@@ -770,6 +770,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
             <th>Artisti</th>
             <th>Tonaliteti</th>
             <th>PDFs</th>
+            <th>📊 Stats</th>
             <th style="width:160px">Veprime</th>
           </tr></thead>
           <tbody id="adminSongsTbody"></tbody>
@@ -1045,6 +1046,29 @@ function toggleCapoField() {
   if (capoField) capoField.style.display = guitarChecked ? 'block' : 'none';
 }
 
+// ── STATISTICS TRACKING ──
+async function trackStat(songId, type) {
+  const sb = getSB();
+  if (!sb || !songId) return;
+  try {
+    // Upsert: increment counter
+    await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
+  } catch(e) {
+    // Silent fail — stats are not critical
+  }
+}
+
+async function loadStats() {
+  const sb = getSB();
+  if (!sb) return {};
+  try {
+    const { data } = await sb.from('song_stats').select('song_id, views, downloads');
+    const result = {};
+    (data || []).forEach(r => result[r.song_id] = { views: r.views || 0, downloads: r.downloads || 0 });
+    return result;
+  } catch(e) { return {}; }
+}
+
 function toEmbedUrl(url) {
   if (!url) return '';
   // Already an embed URL
@@ -1108,7 +1132,13 @@ function parseLyricsText(raw){
   const sections = [];
   let cur = null;
   const SEC_RE = /^\[?(V\d*|CH\d*|BR\d*|PR\d*|INST\d*|Strofa\s*\d*|Refreni\s*(?:Fund)?\s*\d*|Ura\s*\d*|ParaRefreni\s*\d*)\]?:?\s*(.*)$/i;
-  const SEC_COLORS = {'CH':'var(--red)','CH2':'var(--red)','CH3':'var(--red)','BR':'#5a4a8a','BR2':'#5a4a8a','BR3':'#5a4a8a','PR':'#2a6a3a','PR2':'#2a6a3a','INST':'var(--text3)'};
+  const SEC_COLORS = {
+    'V1':'#1a3a6a','V2':'#1a3a6a','V3':'#1a3a6a','V4':'#1a3a6a',  // Blue — Verse
+    'CH':'#8B1A1A','CH2':'#8B1A1A','CH3':'#8B1A1A',                // Red — Chorus
+    'BR':'#5a4a8a','BR2':'#6a3a7a','BR3':'#6a3a7a',                // Purple — Bridge
+    'PR':'#2a6a3a','PR2':'#2a6a3a',                                 // Green — Pre-chorus
+    'INST':'#4a4a6a','INST2':'#4a4a6a',                            // Dark — Instrumental
+  };
   const LABEL_MAP = {'Strofa':'V1','Strofa1':'V1','Strofa2':'V2','Strofa3':'V3','Refreni':'CH','RefreniFund':'CH','Ura':'BR','Ura1':'BR','Ura2':'BR2','ParaRefreni':'PR'};
 
   for(let raw_line of lines){
@@ -1633,12 +1663,13 @@ let currentSong=null,currentInst='Guitar',transposeSteps=0;
 async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id);
   currentInst='Guitar';transposeSteps=0;
-  // Always reload PDFs from Supabase so download buttons are accurate
   PDFS = await loadPDFsAsync();
   renderSong();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-song').classList.add('active');
   window.scrollTo(0,0);
+  // Track view
+  trackStat(id, 'view');
 }
 
 function renderSong(){
@@ -1725,6 +1756,8 @@ function downloadPDF(songId,instrument){
   const song=SONGS.find(s=>s.id===songId);
   a.download=`${song?.title||'song'}_${instrument}.pdf`;
   a.click();
+  // Track download
+  trackStat(songId, 'download');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1810,6 +1843,7 @@ async function refreshAdminSongs(){
   else { SONGS=loadData(); ARTISTS=loadArtists(); }
   SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title);});
   PDFS = await loadPDFsAsync();
+  const STATS = await loadStats();
   const count = document.getElementById('songCount');
   if(count) count.textContent = `(${SONGS.length} këngë)`;
   const tbody=document.getElementById('adminSongsTbody');
@@ -1824,6 +1858,7 @@ async function refreshAdminSongs(){
       `<span class="pdf-badge ${pdfsForSong[i]?'ok':'missing'}">${i==='Guitar'?'🎸':'🎹'} ${pdfsForSong[i]?'✓':'–'}</span>`
     ).join(' ');
     const thumbSrc=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
+    const stat = STATS[s.id] || { views: 0, downloads: 0 };
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td><img class="thumb-mini" src="${thumbSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover"/></td>
@@ -1832,6 +1867,10 @@ async function refreshAdminSongs(){
       <td style="font-size:13px">${s.artist}</td>
       <td><span class="tag tag-blue" style="font-size:11px">${s.key}</span></td>
       <td style="white-space:nowrap">${pdfBadges}</td>
+      <td style="white-space:nowrap;font-size:12px">
+        <span title="Shikime" style="margin-right:6px">👁 ${stat.views}</span>
+        <span title="Shkarkime">⬇ ${stat.downloads}</span>
+      </td>
       <td>
         <div class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
