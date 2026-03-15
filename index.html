@@ -1245,10 +1245,18 @@ async function upsertSongAsync(song) {
     lyrics_guitar: song.lyricsRaw?.Guitar || null,
     lyrics_piano:  song.lyricsRaw?.Piano  || null,
   };
-  // If editing (numeric id from DB), include id for upsert
-  if (song.id && typeof song.id === 'number' && song.id < 1e12) row.id = song.id;
-  const { data, error } = await sb.from('songs').upsert(row).select().single();
-  if (error) { console.error('Supabase upsert song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
+
+  // Existing DB song (has a real DB id) → UPDATE
+  const isDbId = song.id && typeof song.id === 'number' && song.id < 1e12;
+  if (isDbId) {
+    const { data, error } = await sb.from('songs').update(row).eq('id', song.id).select().single();
+    if (error) { console.error('Supabase update song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
+    return { ...song, id: data.id };
+  }
+
+  // New song → INSERT (let DB generate id)
+  const { data, error } = await sb.from('songs').insert(row).select().single();
+  if (error) { console.error('Supabase insert song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
   return { ...song, id: data.id };
 }
 
@@ -2477,28 +2485,27 @@ function loadAnthropicKeyIntoForm() {
 }
 
 function extractChordsFromPDFItems(items) {
-  // Group items by y-position (same line = within 3px)
+  if (!items || !items.length) return '';
   const lines = {};
   items.forEach(item => {
-    const y = Math.round(item.transform[5] / 3) * 3; // round to 3px grid
+    if (!item || !item.transform) return;
+    const y = Math.round(item.transform[5] / 3) * 3;
     if (!lines[y]) lines[y] = [];
-    lines[y].push({ x: item.transform[4], text: item.str, bold: item.fontName && (item.fontName.toLowerCase().includes('bold') || item.fontName.toLowerCase().includes('heavy')) });
+    lines[y].push({ x: item.transform[4], text: item.str || '', bold: item.fontName && (item.fontName.toLowerCase().includes('bold') || item.fontName.toLowerCase().includes('heavy')) });
   });
 
-  // Sort lines by y descending (PDF y goes bottom-up)
   const sortedY = Object.keys(lines).map(Number).sort((a, b) => b - a);
   const result = [];
 
   for (const y of sortedY) {
     const lineItems = lines[y].sort((a, b) => a.x - b.x);
-    // Build line text preserving spacing
     let lineText = '';
     let prevX = lineItems[0]?.x || 0;
     for (const item of lineItems) {
       const gap = item.x - prevX;
       if (gap > 8 && lineText.length > 0) lineText += ' '.repeat(Math.round(gap / 6));
-      lineText += item.str;
-      prevX = item.x + (item.str.length * 6);
+      lineText += item.text;
+      prevX = item.x + ((item.text.length || 1) * 6);
     }
     if (lineText.trim()) result.push(lineText);
   }
