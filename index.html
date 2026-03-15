@@ -2339,7 +2339,9 @@ async function handleInstrPDF(event, instrument) {
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 
-    const loadingTask = pdfjsLib.getDocument({ data: uint8 });
+    // Use .slice() to give PDF.js its own copy — prevents ArrayBuffer detachment error
+    const safeCopy = uint8.slice(0);
+    const loadingTask = pdfjsLib.getDocument({ data: safeCopy });
     const pdf = await loadingTask.promise;
     let fullText = '';
 
@@ -2350,14 +2352,21 @@ async function handleInstrPDF(event, instrument) {
     }
 
     const textarea = document.getElementById(instrument === 'Guitar' ? 'fLyricsGuitar' : 'fLyricsPiano');
-    textarea.value = cleanPDFText(fullText);
-    textarea.dispatchEvent(new Event('input')); // trigger any listeners
-    showToast('✅ PDF u lexua! Teksti u vendos automatikisht.', 'success');
+    const cleaned  = cleanPDFText(fullText);
+
+    if (!cleaned.trim()) {
+      // PDF parsed OK but no text found — likely a scanned/image PDF
+      showToast('⚠️ PDF u ruajt! Por ky PDF duket se është imazh (skan) — nuk ka tekst të lexueshëm. Shkruaje manualisht.', '');
+    } else {
+      textarea.value = cleaned;
+      textarea.dispatchEvent(new Event('input'));
+      showToast('✅ PDF u lexua! Teksti u vendos automatikisht.', 'success');
+    }
 
   } catch (err) {
     console.error('PDF.js parse error:', err);
     // PDF stored successfully even if text extraction failed
-    showToast('⚠️ PDF u ruajt por teksti nuk u lexua automatikisht. Shkruaje manualisht.', '');
+    showToast('⚠️ PDF u ruajt por teksti nuk u lexua automatikisht. Shkruaje manualisht. (Gabim: ' + (err?.message || err) + ')', '');
   }
 }
 
