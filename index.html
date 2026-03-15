@@ -2836,19 +2836,21 @@ async function saveSong() {
   if (!artist) { showToast('Artisti është i detyrueshëm!', 'error'); document.getElementById('fArtist').focus(); return; }
 
   const editId = document.getElementById('editSongId').value;
+  const editIdNum = editId ? Number(editId) : null;
+  console.log('saveSong editId:', editId, 'editIdNum:', editIdNum);
   const insts = [];
   if (document.getElementById('fGuitar').checked) insts.push('Guitar');
   if (document.getElementById('fPiano').checked) insts.push('Piano');
 
   // Build thumbnail: uploaded file > URL > existing (only if not explicitly cleared) > generated
   let thumb = formState.thumbData || document.getElementById('fThumbUrl').value.trim() || null;
-  if (!thumb && !formState.thumbCleared && editId) {
-    const existing = SONGS.find(s => s.id === parseInt(editId));
+  if (!thumb && !formState.thumbCleared && editIdNum) {
+    const existing = SONGS.find(s => Number(s.id) === editIdNum);
     if (existing) thumb = existing.thumb;
   }
 
   const song = {
-    id: editId ? parseInt(editId) : Date.now(),
+    id: editIdNum || Date.now(),
     title,
     original: document.getElementById('fOriginal').value.trim(),
     artist,
@@ -2857,7 +2859,7 @@ async function saveSong() {
     popular: document.getElementById('fPopular').value === 'true',
     bilingual: document.getElementById('fBilingual').value !== 'false',
     capo: document.getElementById('fGuitar').checked ? parseInt(document.getElementById('fCapo').value) || 0 : 0,
-    recent: !editId,
+    recent: !editIdNum,
     youtube: document.getElementById('fYoutube').value.trim() || null,
     thumb: thumb,
     thumbGrad: ['#1a2a4a','#2c4074','#5a80c0'],
@@ -2961,10 +2963,12 @@ function resetSongForm() {
 
 // ── PATCHED editSong — loads PDFs into form state ──
 function editSong(id) {
-  const s = SONGS.find(x => x.id === id); if (!s) return;
+  const numId = Number(id);
+  const s = SONGS.find(x => Number(x.id) === numId); 
+  if (!s) { console.error('Song not found:', id, 'SONGS:', SONGS.map(x=>x.id)); return; }
   switchAdminTab('addSong', document.getElementById('atab-addSong'));
   document.getElementById('formTitle').textContent = '✏️ Edito: ' + s.title.slice(0, 30) + (s.title.length > 30 ? '…' : '');
-  document.getElementById('editSongId').value = id;
+  document.getElementById('editSongId').value = numId;
   document.getElementById('fTitle').value = s.title;
   document.getElementById('fOriginal').value = s.original || '';
   document.getElementById('fArtist').value = s.artist;
