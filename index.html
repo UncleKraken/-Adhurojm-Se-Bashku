@@ -157,9 +157,9 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .sec-lbl{display:inline-block;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:2px 9px;border-radius:6px;margin-bottom:8px}
 .lyric-block{margin-bottom:26px}
 .lyric-line{margin-bottom:5px}
-.chord-row{font-size:12.5px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.1em;min-height:17px}
+.chord-row{font-size:12.5px;font-weight:700;color:var(--red);font-family:monospace;letter-spacing:.1em;min-height:17px;white-space:pre;overflow-x:auto}
 [data-theme=dark] .chord-row{color:#f08080}
-.lyric-sq{font-weight:600;color:var(--text)}
+.lyric-sq{font-weight:600;color:var(--text);font-family:'Poppins',sans-serif}
 .lyric-en{color:var(--text3);font-size:13px;font-style:italic}
 .dl-bar{margin-top:28px;padding:20px 24px;background:var(--gold-muted);border:1px solid rgba(201,151,58,0.3);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .dl-text{font-size:14px;font-weight:600;color:var(--text)}
@@ -1576,9 +1576,11 @@ function renderLibrary(){
 // ═══════════════════════════════════════════════════════
 let currentSong=null,currentInst='Guitar',transposeSteps=0;
 
-function openSong(id){
+async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id);
   currentInst='Guitar';transposeSteps=0;
+  // Always reload PDFs from Supabase so download buttons are accurate
+  PDFS = await loadPDFsAsync();
   renderSong();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-song').classList.add('active');
@@ -1595,7 +1597,7 @@ function renderSong(){
     const lines=sec.lines.map(l=>{
       const transposedChords=l.chords?transposeChordLine(l.chords,transposeSteps):'';
       return `<div class="lyric-line">
-        <div class="chord-row">${transposedChords}</div>
+        <div class="chord-row" style="white-space:pre;font-family:monospace">${transposedChords}</div>
         <div class="lyric-sq">${l.sq}</div>
         ${l.en?`<div class="lyric-en">${l.en}</div>`:''}
       </div>`;
@@ -1819,8 +1821,9 @@ async function deleteSong(id){
 // ═══════════════════════════════════════════════════════
 //  ADMIN — PDF MANAGEMENT
 // ═══════════════════════════════════════════════════════
-function refreshPDFPanel(){
-  SONGS=loadData(); PDFS=loadPDFs();
+async function refreshPDFPanel(){
+  if(isOnline()){ SONGS = await loadSongsAsync(); PDFS = await loadPDFsAsync(); }
+  else { SONGS=loadData(); PDFS=loadPDFs(); }
   const container=document.getElementById('pdfManageList');
   if(!container) return;
   container.innerHTML='';
