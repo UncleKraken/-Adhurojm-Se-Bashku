@@ -1916,8 +1916,8 @@ async function refreshAdminSongs(){
       </td>
       <td>
         <div class="td-actions">
-          <button class="btn btn-outline btn-sm" onclick="editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
+          <button class="btn btn-outline btn-sm" onclick="window.editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
+          <button class="btn btn-danger btn-sm" onclick="window.deleteSong(${s.id})" style="font-size:12px">🗑</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -1925,6 +1925,7 @@ async function refreshAdminSongs(){
 }
 
 // editSong defined below (full version with PDF and bilingual support)
+window.editSong = function(id) { editSong(id); };
 
 async function deleteSong(id){
   if(!confirm('Jeni i sigurt që doni të fshini këtë këngë?')) return;
@@ -1935,6 +1936,69 @@ async function deleteSong(id){
   await refreshSiteData();
   refreshAdminSongs();
   showToast('✅ Kënga u fshi.','success');
+}
+
+// ── editSong — loads all fields + PDFs into form ──
+function editSong(id) {
+  const numId = Number(id);
+  const s = SONGS.find(x => Number(x.id) === numId);
+  if (!s) { console.error('Song not found:', id, 'SONGS:', SONGS.map(x=>x.id)); return; }
+  switchAdminTab('addSong', document.getElementById('atab-addSong'));
+  document.getElementById('formTitle').textContent = '✏️ Edito: ' + s.title.slice(0, 30) + (s.title.length > 30 ? '…' : '');
+  document.getElementById('editSongId').value = numId;
+  document.getElementById('fTitle').value = s.title;
+  document.getElementById('fOriginal').value = s.original || '';
+  document.getElementById('fArtist').value = s.artist;
+
+  const keyEl = document.getElementById('fKey');
+  keyEl.value = s.key;
+  if (!keyEl.value) {
+    const opt = document.createElement('option'); opt.value = s.key; opt.textContent = s.key;
+    keyEl.appendChild(opt); keyEl.value = s.key;
+  }
+
+  document.getElementById('fGuitar').checked = s.instruments.includes('Guitar');
+  document.getElementById('fPiano').checked = s.instruments.includes('Piano');
+  document.getElementById('fYoutube').value = s.youtube || '';
+  document.getElementById('fPopular').value = s.popular ? 'true' : 'false';
+  document.getElementById('fBilingual').value = s.bilingual === false ? 'false' : 'true';
+  document.getElementById('fCapo').value = s.capo || 0;
+  toggleCapoField();
+  document.getElementById('fLyricsGuitar').value = s.lyricsRaw?.Guitar || '';
+  document.getElementById('fLyricsPiano').value = s.lyricsRaw?.Piano || '';
+  document.getElementById('lyricsPreviewBox').style.display = 'none';
+
+  formState.thumbData = null;
+  if (s.thumb && !s.thumb.startsWith('data:image/png;base64,/9j/')) {
+    formState.thumbData = s.thumb;
+    showThumbPreview(s.thumb);
+    document.getElementById('clearThumbBtn').style.display = 'inline-block';
+  } else {
+    showThumbPreview(null);
+    document.getElementById('clearThumbBtn').style.display = 'none';
+  }
+
+  formState.guitarPdfData = null;
+  formState.pianoPdfData = null;
+  const existingPdfs = PDFS[numId] || {};
+  if (existingPdfs['Guitar']) {
+    formState.guitarPdfData = existingPdfs['Guitar'];
+    document.getElementById('guitarPdfStatus').className = 'pdf-badge ok';
+    document.getElementById('guitarPdfStatus').textContent = '✓ PDF ekzistues';
+    document.getElementById('guitarPdfUploadArea').classList.add('has-file');
+    document.getElementById('clearGuitarPdf').style.display = 'inline-block';
+    const aiG = document.getElementById('aiReadGuitarBtn');
+    if (aiG) aiG.style.display = 'inline-block';
+  } else { clearInstrPDF('Guitar'); }
+  if (existingPdfs['Piano']) {
+    formState.pianoPdfData = existingPdfs['Piano'];
+    document.getElementById('pianoPdfStatus').className = 'pdf-badge ok';
+    document.getElementById('pianoPdfStatus').textContent = '✓ PDF ekzistues';
+    document.getElementById('pianoPdfUploadArea').classList.add('has-file');
+    document.getElementById('clearPianoPdf').style.display = 'inline-block';
+    const aiP = document.getElementById('aiReadPianoBtn');
+    if (aiP) aiP.style.display = 'inline-block';
+  } else { clearInstrPDF('Piano'); }
 }
 
 // saveSong and resetSongForm defined below (async versions)
@@ -2961,75 +3025,7 @@ function resetSongForm() {
   if (dl) { dl.innerHTML = ''; ARTISTS.forEach(a => { const o=document.createElement('option');o.value=a;dl.appendChild(o); }); }
 }
 
-// ── PATCHED editSong — loads PDFs into form state ──
-function editSong(id) {
-  const numId = Number(id);
-  const s = SONGS.find(x => Number(x.id) === numId); 
-  if (!s) { console.error('Song not found:', id, 'SONGS:', SONGS.map(x=>x.id)); return; }
-  switchAdminTab('addSong', document.getElementById('atab-addSong'));
-  document.getElementById('formTitle').textContent = '✏️ Edito: ' + s.title.slice(0, 30) + (s.title.length > 30 ? '…' : '');
-  document.getElementById('editSongId').value = numId;
-  document.getElementById('fTitle').value = s.title;
-  document.getElementById('fOriginal').value = s.original || '';
-  document.getElementById('fArtist').value = s.artist;
-
-  // Set key
-  const keyEl = document.getElementById('fKey');
-  keyEl.value = s.key;
-  if (!keyEl.value) { // key not in options, add it
-    const opt = document.createElement('option'); opt.value = s.key; opt.textContent = s.key;
-    keyEl.appendChild(opt); keyEl.value = s.key;
-  }
-
-  document.getElementById('fGuitar').checked = s.instruments.includes('Guitar');
-  document.getElementById('fPiano').checked = s.instruments.includes('Piano');
-  document.getElementById('fYoutube').value = s.youtube || '';
-  document.getElementById('fPopular').value = s.popular ? 'true' : 'false';
-  document.getElementById('fBilingual').value = s.bilingual === false ? 'false' : 'true';
-  document.getElementById('fCapo').value = s.capo || 0;
-  toggleCapoField();
-  document.getElementById('fLyricsGuitar').value = s.lyricsRaw?.Guitar || '';
-  document.getElementById('fLyricsPiano').value = s.lyricsRaw?.Piano || '';
-  document.getElementById('lyricsPreviewBox').style.display = 'none';
-
-  // Load thumbnail
-  formState.thumbData = null;
-  if (s.thumb && !s.thumb.startsWith('data:image/png;base64,/9j/')) { // not a generated one
-    formState.thumbData = s.thumb;
-    showThumbPreview(s.thumb);
-    document.getElementById('clearThumbBtn').style.display = 'inline-block';
-  } else {
-    showThumbPreview(null);
-    document.getElementById('clearThumbBtn').style.display = 'none';
-  }
-
-  // Load existing PDFs into form state display
-  formState.guitarPdfData = null;
-  formState.pianoPdfData = null;
-  const existingPdfs = PDFS[id] || {};
-  if (existingPdfs['Guitar']) {
-    formState.guitarPdfData = existingPdfs['Guitar'];
-    document.getElementById('guitarPdfStatus').className = 'pdf-badge ok';
-    document.getElementById('guitarPdfStatus').textContent = '✓ PDF ekzistues';
-    document.getElementById('guitarPdfUploadArea').classList.add('has-file');
-    document.getElementById('clearGuitarPdf').style.display = 'inline-block';
-    const aiG = document.getElementById('aiReadGuitarBtn');
-    if (aiG) aiG.style.display = 'inline-block';
-  } else {
-    clearInstrPDF('Guitar');
-  }
-  if (existingPdfs['Piano']) {
-    formState.pianoPdfData = existingPdfs['Piano'];
-    document.getElementById('pianoPdfStatus').className = 'pdf-badge ok';
-    document.getElementById('pianoPdfStatus').textContent = '✓ PDF ekzistues';
-    document.getElementById('pianoPdfUploadArea').classList.add('has-file');
-    document.getElementById('clearPianoPdf').style.display = 'inline-block';
-    const aiP = document.getElementById('aiReadPianoBtn');
-    if (aiP) aiP.style.display = 'inline-block';
-  } else {
-    clearInstrPDF('Piano');
-  }
-}
+// saveSong and resetSongForm defined below
 
 </script>
 </body>
