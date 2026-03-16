@@ -1706,15 +1706,17 @@ function renderLibrary(){
 let currentSong=null,currentInst='Guitar',transposeSteps=0;
 
 async function openSong(id){
-  currentSong=SONGS.find(s=>s.id===id);
-  currentInst='Guitar';transposeSteps=0;
+  currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
+  if(!currentSong) return;
+  // Set default instrument to first available one
+  currentInst = currentSong.instruments?.[0] || 'Guitar';
+  transposeSteps=0;
   PDFS = await loadPDFsAsync();
   renderSong();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-song').classList.add('active');
   window.scrollTo(0,0);
-  // Track view
-  trackStat(id, 'view');
+  trackStat(currentSong.id, 'view');
 }
 
 function renderSong(){
