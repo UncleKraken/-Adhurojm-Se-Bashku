@@ -2150,12 +2150,16 @@ function previewLyrics(inst){
   if(!sections.length){ box.style.display='none'; return; }
   const html_content = sections.map(sec=>{
     const color=sec.color||'var(--blue)';
-    const lines=sec.lines.map(l=>`<div style="margin-bottom:4px">
-      ${l.chords?`<div style="font-size:12px;font-weight:700;color:var(--red);font-family:monospace">${l.chords}</div>`:''}
-      <div style="font-weight:600">${l.sq}</div>
-      ${l.en?`<div style="color:var(--text3);font-size:12px;font-style:italic">${l.en}</div>`:''}
-    </div>`).join('');
-    return `<div style="margin-bottom:18px"><span style="background:${color};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.06em">${sec.label}</span><div style="margin-top:6px">${lines}</div></div>`;
+    const lines=sec.lines.map(l=>{
+      const chordLine = l.chords ? `<span style="color:var(--red);font-weight:700;display:block;white-space:pre;">${l.chords}</span>` : '';
+      const lyricLine = `<span style="font-weight:600;display:block;white-space:pre;">${l.sq}</span>`;
+      const englishLine = l.en ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
+      return `<div style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
+    }).join('');
+    return `<div style="margin-bottom:18px;font-family:'Roboto Mono','Courier New',monospace;font-size:14px;line-height:1.6;">
+      <span style="background:${color};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.06em;font-family:'Poppins',sans-serif">${sec.label}</span>
+      <div style="margin-top:6px">${lines}</div>
+    </div>`;
   }).join('');
   content.innerHTML = html_content;
   box.style.display = 'block';
