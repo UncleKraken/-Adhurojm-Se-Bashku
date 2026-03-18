@@ -1729,13 +1729,13 @@ function renderSong(){
     const color=sec.color||'var(--blue)';
     const lines=sec.lines.map(l=>{
       const transposedChords=l.chords?transposeChordLine(l.chords,transposeSteps):'';
-      return `<div class="lyric-line">
-        <div class="chord-row" style="white-space:pre;font-family:monospace">${transposedChords}</div>
-        <div class="lyric-sq">${l.sq}</div>
-        ${(l.en && s.bilingual !== false)?`<div class="lyric-en">${l.en}</div>`:''}
-      </div>`;
+      // Render chord+lyric as a single pre block so spacing is pixel-perfect
+      const chordLine = transposedChords ? `<span style="color:var(--red);font-weight:700;display:block;white-space:pre;">${transposedChords}</span>` : '';
+      const lyricLine = `<span style="font-weight:600;display:block;white-space:pre;">${l.sq}</span>`;
+      const englishLine = (l.en && s.bilingual !== false) ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
+      return `<div class="lyric-line" style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
     }).join('');
-    return `<div class="lyric-block"><span class="sec-lbl" style="background:${color}">${sec.label}</span><div style="margin-top:7px">${lines}</div></div>`;
+    return `<div class="lyric-block"><span class="sec-lbl" style="background:${color}">${sec.label}</span><div style="margin-top:7px;font-family:'Roboto Mono','Courier New',monospace;font-size:14px;line-height:1.6;">${lines}</div></div>`;
   }).join('')||'<p style="color:var(--text3);padding:8px 0">Tekstet nuk janë ngarkuar ende. Admini mund t\'i shtojë nëpërmjet panelit të administrimit.</p>';
 
   const videoHtml=s.youtube
