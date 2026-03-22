@@ -2049,7 +2049,7 @@ async function refreshPDFPanel(){
               <div style="font-size:11px;color:var(--text3);margin-top:2px">Kliko ose zvarrit skedarin .pdf</div>
             </div>
             ${hasPDF?`<div style="display:flex;gap:6px;margin-top:8px">
-              <button class="btn btn-outline btn-sm" style="flex:1;font-size:11px" onclick="downloadPDF(${s.id},'${inst}')">⬇ Shkarko</button>
+              <button class="btn btn-outline btn-sm" style="flex:1;font-size:11px" onclick="downloadPDFPanel(${s.id},'${inst}')">⬇ Shkarko</button>
               <button class="btn btn-danger btn-sm" style="font-size:11px" onclick="deletePDF(${s.id},'${inst}')">🗑</button>
             </div>`:''}
           </div>`;
@@ -2060,27 +2060,66 @@ async function refreshPDFPanel(){
   });
 }
 
-function handlePDFUpload(event,songId,instrument){
-  const file=event.target.files[0];
-  if(!file)return;
-  if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){showToast('Skedari duhet të jetë PDF!','error');return;}
+function downloadPDFPanel(songId, instrument){
+  const pdfs = PDFS[songId] || {};
+  const data = pdfs[instrument];
+  if(!data){ showToast('PDF nuk gjendet!','error'); return; }
+  const a = document.createElement('a');
+  if(data.startsWith('http')){ a.href = data; a.target = '_blank'; }
+  else { a.href = data.startsWith('data:') ? data : 'data:application/pdf;base64,'+data; }
+  const song = SONGS.find(s => Number(s.id) === Number(songId));
+  a.download = `${song?.title||'song'}_${instrument}.pdf`;
+  a.click();
+}
+
+async function handlePDFUpload(event, songId, instrument){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.type!=='application/pdf' && !file.name.endsWith('.pdf')){showToast('Skedari duhet të jetë PDF!','error');return;}
   if(file.size>10*1024*1024){showToast('PDF është shumë i madh (max 10MB)','error');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    if(!PDFS[songId])PDFS[songId]={};
-    PDFS[songId][instrument]=e.target.result;
-    savePDFs(PDFS);
-    showToast(`PDF për ${instrument} u ngarkua!`,'success');
-    refreshPDFPanel();
+
+  showToast('⏳ Duke ngarkuar PDF...','');
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const dataUrl = e.target.result;
+    if(isOnline()){
+      const url = await uploadFileAsync('pdfs', `${songId}_${instrument}.pdf`, dataUrl, 'application/pdf');
+      if(url){
+        const sb = getSB();
+        await sb.from('song_pdfs').upsert({song_id: songId, instrument, pdf_url: url},{onConflict:'song_id,instrument'});
+        if(!PDFS[songId]) PDFS[songId]={};
+        PDFS[songId][instrument] = url;
+        showToast(`✅ PDF për ${instrument} u ngarkua!`,'success');
+        refreshPDFPanel();
+      } else {
+        showToast('❌ Gabim gjatë ngarkimit!','error');
+      }
+    } else {
+      if(!PDFS[songId]) PDFS[songId]={};
+      PDFS[songId][instrument] = dataUrl;
+      savePDFs(PDFS);
+      showToast(`✅ PDF për ${instrument} u ngarkua!`,'success');
+      refreshPDFPanel();
+    }
   };
   reader.readAsDataURL(file);
 }
 
-function deletePDF(songId,instrument){
-  if(!confirm('Fshi PDF-in për këtë instrument?'))return;
-  if(PDFS[songId])delete PDFS[songId][instrument];
-  savePDFs(PDFS);refreshPDFPanel();
-  showToast('PDF u fshi.','success');
+async function deletePDF(songId, instrument){
+  if(!confirm('Fshi PDF-in për këtë instrument?')) return;
+  showToast('Duke fshirë...','');
+  if(isOnline()){
+    const sb = getSB();
+    // Delete from storage
+    await deleteFileAsync('pdfs', `${songId}_${instrument}.pdf`);
+    // Delete from song_pdfs table
+    await sb.from('song_pdfs').delete().eq('song_id', songId).eq('instrument', instrument);
+  }
+  if(PDFS[songId]) delete PDFS[songId][instrument];
+  savePDFs(PDFS);
+  refreshPDFPanel();
+  showToast('✅ PDF u fshi.','success');
 }
 
 // ═══════════════════════════════════════════════════════
