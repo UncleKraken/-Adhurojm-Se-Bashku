@@ -793,6 +793,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-pdfs" onclick="switchAdminTab('pdfs',this)">📄 PDF Files</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
+      <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
   </div>
@@ -1072,6 +1073,16 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
     </div>
 
+    <!-- ── TAB: STATS ── -->
+    <div class="admin-panel" id="tab-stats">
+      <div class="admin-section-title">📊 Statistika</div>
+      <div style="padding:18px">
+        <div id="statsContent">
+          <div style="text-align:center;padding:40px;color:var(--text3)">⏳ Duke ngarkuar statistikat...</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 <script>
@@ -1126,6 +1137,180 @@ function toEmbedUrl(url) {
   const shortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
   if (shortsMatch) return `https://www.youtube-nocookie.com/embed/${shortsMatch[1]}`;
   return url;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ⭐ FAVORITES
+// ═══════════════════════════════════════════════════════
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('aa_favorites') || '[]'); } catch(e) { return []; }
+}
+function saveFavorites(favs) { localStorage.setItem('aa_favorites', JSON.stringify(favs)); }
+
+function toggleFavorite(songId) {
+  const id = Number(songId);
+  let favs = getFavorites();
+  const idx = favs.indexOf(id);
+  if (idx >= 0) {
+    favs.splice(idx, 1);
+    showToast('💔 Hoqe nga të preferuarat', '');
+  } else {
+    favs.push(id);
+    showToast('❤️ Shtua te të preferuarat!', 'success');
+  }
+  saveFavorites(favs);
+  renderSong(); // re-render to update heart
+}
+
+// ═══════════════════════════════════════════════════════
+//  📊 STATS DASHBOARD
+// ═══════════════════════════════════════════════════════
+async function renderStatsDashboard() {
+  const container = document.getElementById('statsContent');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">⏳ Duke ngarkuar...</div>';
+
+  const STATS = await loadStats();
+  const allSongs = [...SONGS];
+
+  // Sort by views
+  const byViews = [...allSongs].sort((a,b) => (STATS[b.id]?.views||0) - (STATS[a.id]?.views||0)).slice(0,10);
+  const byDownloads = [...allSongs].sort((a,b) => (STATS[b.id]?.downloads||0) - (STATS[a.id]?.downloads||0)).slice(0,10);
+
+  const totalViews = Object.values(STATS).reduce((s,r) => s + (r.views||0), 0);
+  const totalDownloads = Object.values(STATS).reduce((s,r) => s + (r.downloads||0), 0);
+
+  container.innerHTML = `
+    <!-- Summary cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:28px">
+      <div style="background:var(--blue-light);border-radius:var(--r);padding:20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--blue-mid)">${SONGS.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">🎵 Këngë Totale</div>
+      </div>
+      <div style="background:var(--red-muted);border-radius:var(--r);padding:20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--red)">${totalViews}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">👁 Shikime Totale</div>
+      </div>
+      <div style="background:var(--gold-muted);border-radius:var(--r);padding:20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:var(--gold)">${totalDownloads}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">⬇ Shkarkime Totale</div>
+      </div>
+    </div>
+
+    <!-- Top by views -->
+    <div style="margin-bottom:24px">
+      <div class="admin-section-title" style="margin-bottom:12px">👁 Top 10 — Shikimet</div>
+      ${byViews.map((s,i) => {
+        const stat = STATS[s.id] || {views:0, downloads:0};
+        const maxV = STATS[byViews[0]?.id]?.views || 1;
+        const pct = Math.round((stat.views / maxV) * 100);
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--text3);min-width:18px">${i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+            <div style="height:6px;background:var(--bg3);border-radius:4px;margin-top:4px">
+              <div style="height:6px;background:var(--red);border-radius:4px;width:${pct}%;transition:width .5s"></div>
+            </div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--red);min-width:36px;text-align:right">👁 ${stat.views}</span>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Top by downloads -->
+    <div>
+      <div class="admin-section-title" style="margin-bottom:12px">⬇ Top 10 — Shkarkimet</div>
+      ${byDownloads.map((s,i) => {
+        const stat = STATS[s.id] || {views:0, downloads:0};
+        const maxD = STATS[byDownloads[0]?.id]?.downloads || 1;
+        const pct = Math.round((stat.downloads / maxD) * 100);
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--text3);min-width:18px">${i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+            <div style="height:6px;background:var(--bg3);border-radius:4px;margin-top:4px">
+              <div style="height:6px;background:var(--gold);border-radius:4px;width:${pct}%;transition:width .5s"></div>
+            </div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--gold);min-width:36px;text-align:right">⬇ ${stat.downloads}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  📄 TRANSPOSED PDF DOWNLOAD
+// ═══════════════════════════════════════════════════════
+function downloadTransposedPDF() {
+  const s = currentSong;
+  if (!s) return;
+
+  const rawText = s.lyricsRaw?.[currentInst] || '';
+  if (!rawText.trim()) { showToast('Nuk ka tekst për të gjeneruar PDF!', 'error'); return; }
+
+  // Build text content with transposed chords
+  const sections = parseLyricsText(rawText);
+  let content = `${s.title}\n`;
+  if (s.original) content += `(${s.original})\n`;
+  content += `${s.artist} | Tonaliteti: ${currentSong.key}`;
+  if (transposeSteps !== 0) {
+    const origKeyIdx = noteToIdx(s.key.replace('m','').replace(/\d/g,'')) || 0;
+    const transposedKeyIdx = ((origKeyIdx + transposeSteps) % 12 + 12) % 12;
+    const dispKey = SHARP_DISPLAY[transposedKeyIdx] + (s.key.includes('m') && !s.key.includes('maj') ? 'm' : '');
+    content += ` → ${dispKey} (Transpose ${transposeSteps > 0 ? '+' : ''}${transposeSteps})`;
+  }
+  if (s.capo > 0) content += ` | Capo ${s.capo}`;
+  content += `\n${'─'.repeat(50)}\n\n`;
+
+  sections.forEach(sec => {
+    content += `[${sec.label}]\n`;
+    sec.lines.forEach(l => {
+      const chords = l.chords ? transposeChordLine(l.chords, transposeSteps) : '';
+      if (chords.trim()) content += chords + '\n';
+      content += l.sq + '\n';
+      if (l.en && s.bilingual !== false) content += l.en + '\n';
+      content += '\n';
+    });
+  });
+
+  content += `\n${'─'.repeat(50)}\nAdhurojmë Së Bashku — unclekraken.github.io/-Adhurojm-Se-Bashku/`;
+
+  // Create and download as .txt (universal, no library needed)
+  // But let's make it a proper PDF-like format using HTML print
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`<!DOCTYPE html><html><head>
+    <title>${s.title} — Transposed</title>
+    <style>
+      body { font-family: 'Courier New', monospace; font-size: 14px; padding: 30px; max-width: 700px; margin: 0 auto; }
+      h1 { font-size: 20px; margin-bottom: 4px; }
+      .meta { color: #555; font-size: 13px; margin-bottom: 20px; }
+      .section-label { display: inline-block; background: #1a2a4a; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; margin-top: 14px; }
+      .chord { color: #8B1A1A; font-weight: 700; white-space: pre; display: block; }
+      .lyric { font-weight: 600; white-space: pre; display: block; }
+      .english { color: #888; font-style: italic; display: block; }
+      .line { margin-bottom: 8px; }
+      .footer { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 11px; color: #999; }
+      @media print { button { display: none; } }
+    </style>
+  </head><body>
+    <button onclick="window.print()" style="margin-bottom:20px;padding:8px 18px;background:#1a2a4a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">🖨️ Printo / Ruaj si PDF</button>
+    <h1>${s.title}</h1>
+    <div class="meta">${s.original ? `(${s.original}) — ` : ''}${s.artist} | 🎵 ${s.key}${transposeSteps !== 0 ? ` → transposed ${transposeSteps > 0 ? '+' : ''}${transposeSteps}` : ''}${s.capo > 0 ? ` | Capo ${s.capo}` : ''} | ${currentInst}</div>
+    ${sections.map(sec => {
+      const color = sec.label.startsWith('CH') ? '#8B1A1A' : sec.label.startsWith('BR') ? '#5a4a8a' : sec.label.startsWith('PR') ? '#2a6a3a' : '#1a2a4a';
+      return `<div><span class="section-label" style="background:${color}">${sec.label}</span>
+      ${sec.lines.map(l => {
+        const chords = l.chords ? transposeChordLine(l.chords, transposeSteps) : '';
+        return `<div class="line">
+          ${chords.trim() ? `<span class="chord">${chords}</span>` : ''}
+          <span class="lyric">${l.sq}</span>
+          ${l.en && s.bilingual !== false ? `<span class="english">${l.en}</span>` : ''}
+        </div>`;
+      }).join('')}</div>`;
+    }).join('')}
+    <div class="footer">Adhurojmë Së Bashku — unclekraken.github.io/-Adhurojm-Se-Bashku/</div>
+  </body></html>`);
+  printWindow.document.close();
 }
 
 function noteToIdx(n){const r=FLAT_MAP[n]||n;return CHROMATIC.indexOf(r)}
@@ -1752,8 +1937,9 @@ function renderSong(){
   const transposedKeyIdx=((origKeyIdx+transposeSteps)%12+12)%12;
   const dispKey=transposeSteps===0?s.key:SHARP_DISPLAY[transposedKeyIdx]+(s.key.includes('m')&&!s.key.includes('maj')?'m':'');
 
-  // PDF download buttons
+  // PDF download buttons — original + transposed
   const pdfs=PDFS[s.id]||{};
+  const isFav = getFavorites().includes(s.id);
   const dlBtns=s.instruments.map(i=>{
     const pdfData=pdfs[i];
     if(pdfData){
@@ -1762,11 +1948,21 @@ function renderSong(){
     return `<button class="btn btn-outline btn-sm" disabled style="opacity:.5">⬇ ${i==='Guitar'?'🎸':'🎹'} PDF ${i} (nuk ka)</button>`;
   }).join('');
 
+  // Transposed PDF button
+  const transposedPdfBtn = transposeSteps !== 0
+    ? `<button class="btn btn-primary btn-sm" onclick="downloadTransposedPDF()" style="background:var(--blue)">🎵 PDF +${transposeSteps > 0 ? transposeSteps : transposeSteps} (${dispKey})</button>`
+    : '';
+
   document.getElementById('songDetail').innerHTML=`
     <button class="back-btn" onclick="showPage('songs')">${t('back-btn')}</button>
     <div style="margin-bottom:28px">
-      <h1 class="song-htitle">${s.title}</h1>
-      <div class="song-horig">${s.original||''} ${s.artist?'– '+s.artist:''}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div>
+          <h1 class="song-htitle">${s.title}</h1>
+          <div class="song-horig">${s.original||''} ${s.artist?'– '+s.artist:''}</div>
+        </div>
+        <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?'Hiq nga të preferuarat':'Shto te të preferuarat'}">${isFav?'❤️':'🤍'}</button>
+      </div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
         ${s.instruments.map(i => `<span class="tag tag-gold">${i==='Guitar'?'🎸 '+(currentLang==='sq'?'Kitarë':'Guitar'):'🎹 Piano'}</span>`).join('')}
@@ -1789,7 +1985,7 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
     <div class="lyrics-box">${lyricsHtml}</div>
     <div class="dl-bar">
       <div><div class="dl-text">${t('dl-text')}</div><div class="dl-sub">${t('dl-sub')}</div></div>
-      <div class="dl-btns">${dlBtns}</div>
+      <div class="dl-btns">${dlBtns}${transposedPdfBtn}</div>
     </div>`;
 }
 
@@ -1880,6 +2076,7 @@ function switchAdminTab(tab,el){
   if(tab==='artists') renderArtistsList();
   if(tab==='songs') refreshAdminSongs();
   if(tab==='social'){ loadSocialAdminForm(); setTimeout(loadAnthropicKeyIntoForm, 50); }
+  if(tab==='stats') renderStatsDashboard();
   if(tab==='addSong'){ 
     const dl=document.getElementById('artistDatalist');
     if(dl){ dl.innerHTML=''; ARTISTS.forEach(a=>{const o=document.createElement('option');o.value=a;dl.appendChild(o);}); }
