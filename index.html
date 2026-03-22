@@ -462,6 +462,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <ul class="nav-links" id="navLinks">
         <li><a class="active" onclick="showPage('home',this)" data-sq="Home" data-en="Home">Home</a></li>
         <li><a onclick="showPage('songs',this)" data-sq="Songs" data-en="Songs">Songs</a></li>
+        <li><a onclick="showPage('favorites',this)" data-sq="❤️ Preferuarat" data-en="❤️ Favorites" id="favNavLink">❤️ Preferuarat</a></li>
         <li><a onclick="showPage('about',this)">Rreth Nesh</a></li>
         <li><a onclick="showPage('guide',this)" data-sq="Udhëzues" data-en="Guide">Udhëzues</a></li>
         <li><a onclick="showPage('contact',this)" data-sq="Kontakt" data-en="Contact">Kontakt</a></li>
@@ -507,6 +508,12 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="songs-grid" id="popularGrid"></div>
     </div>
   </section>
+  <section class="section" id="favSection" style="display:none">
+    <div class="section-inner">
+      <div class="section-hdr"><h2 class="section-title">❤️ Të Preferuarat e Tua</h2><span class="see-all" onclick="clearFavorites()" style="color:var(--text3);font-size:12px">✕ Pastro</span></div>
+      <div class="songs-grid" id="favGrid"></div>
+    </div>
+  </section>
   <section class="section">
     <div class="section-inner">
       <div class="section-hdr"><h2 class="section-title">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
@@ -545,6 +552,21 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 <!-- ═══════ SONG DETAIL ═══════ -->
 <div class="page" id="page-song">
   <div class="song-wrap" id="songDetail"></div>
+</div>
+
+<!-- ═══════ FAVORITES ═══════ -->
+<div class="page" id="page-favorites">
+  <div class="page-hero" style="background:linear-gradient(135deg,#4a1a2a,#8B1A1A)">
+    <h1 data-sq="❤️ Këngët e Preferuara" data-en="❤️ Favorite Songs">❤️ Këngët e Preferuara</h1>
+    <p data-sq="Këngët që ke shënuar si të preferuara" data-en="Songs you've marked as favorites">Këngët që ke shënuar si të preferuara</p>
+  </div>
+  <section class="section">
+    <div class="section-inner">
+      <div id="favPageContent">
+        <div class="songs-grid" id="favPageGrid"></div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <!-- ═══════ ABOUT ═══════ -->
@@ -1011,6 +1033,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="admin-section-title">🔗 Lidhjet Sociale & Kontakt</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Vendos lidhjet tua. Shfaqen automatikisht në faqen e Kontaktit.</p>
       <div class="admin-form">
+        <!-- Social Media -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">📱 Rrjetet Sociale</div>
         <div class="social-settings-grid">
           <div class="form-group">
             <label class="form-label">📸 Instagram URL</label>
@@ -1025,6 +1049,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
             <input class="form-input" id="sFacebook" placeholder="https://facebook.com/kishakanaan"/>
           </div>
           <div class="form-group">
+            <label class="form-label">▶️ YouTube Channel URL</label>
+            <input class="form-input" id="sYoutube" placeholder="https://youtube.com/@kishakanaan"/>
+          </div>
+          <div class="form-group">
             <label class="form-label">📧 Email</label>
             <input class="form-input" id="sEmail" placeholder="info@kishakanaan.al"/>
           </div>
@@ -1037,6 +1065,38 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
             <input class="form-input" id="sLocationText" placeholder="Rruga Dritan Hoxha, Tiranë"/>
           </div>
         </div>
+
+        <!-- Apps -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">🎵 Apps & Platforma Muzikore</div>
+        <div class="social-settings-grid">
+          <div class="form-group">
+            <label class="form-label">🟢 Spotify URL</label>
+            <input class="form-input" id="sSpotify" placeholder="https://open.spotify.com/artist/..."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🍎 Apple Music URL</label>
+            <input class="form-input" id="sAppleMusic" placeholder="https://music.apple.com/..."/>
+          </div>
+        </div>
+
+        <!-- References -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">🌐 Referenca & Website</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="refsContainer"></div>
+        <button class="btn btn-outline btn-sm" onclick="addRefField()" style="margin-top:10px">➕ Shto Referencë</button>
+
+        <!-- Donations -->
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">☕ Donacione</div>
+        <div class="social-settings-grid">
+          <div class="form-group">
+            <label class="form-label">☕ Buy Me a Coffee URL</label>
+            <input class="form-input" id="sBuyMeCoffee" placeholder="https://buymeacoffee.com/..."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">💙 PayPal URL</label>
+            <input class="form-input" id="sPaypal" placeholder="https://paypal.me/..."/>
+          </div>
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-primary" onclick="saveSocialLinks()">💾 Ruaj Lidhjet</button>
         </div>
@@ -1159,7 +1219,9 @@ function toggleFavorite(songId) {
     showToast('❤️ Shtua te të preferuarat!', 'success');
   }
   saveFavorites(favs);
-  renderSong(); // re-render to update heart
+  updateFavBadge();
+  renderHome();
+  renderSong(); // re-render heart button
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1798,7 +1860,38 @@ function showPage(page,el){
   if(el)el.classList.add('active');
   document.getElementById('navLinks').classList.remove('open');
   window.scrollTo(0,0);
-  if(page==='songs')renderLibrary();
+  if(page==='songs') renderLibrary();
+  if(page==='favorites') renderFavoritesPage();
+}
+
+function renderFavoritesPage(){
+  const grid = document.getElementById('favPageGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const favIds = getFavorites();
+  const favSongs = SONGS.filter(s => favIds.includes(Number(s.id)));
+  if(!favSongs.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:48px;margin-bottom:12px">🤍</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">${currentLang==='sq'?'Nuk ke ende këngë të preferuara':'No favorite songs yet'}</div>
+      <div style="font-size:13px">${currentLang==='sq'?'Kliko ❤️ në çdo këngë për ta shtuar këtu':'Click ❤️ on any song to add it here'}</div>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="showPage('songs')">${currentLang==='sq'?'Shiko Këngët →':'Browse Songs →'}</button>
+    </div>`;
+  } else {
+    favSongs.forEach(s => grid.appendChild(buildCard(s)));
+  }
+  // Update nav badge
+  updateFavBadge();
+}
+
+function updateFavBadge(){
+  const count = getFavorites().length;
+  const navLink = document.getElementById('favNavLink');
+  if(navLink){
+    navLink.innerHTML = count > 0
+      ? `❤️ ${currentLang==='sq'?'Preferuarat':'Favorites'} <span style="background:var(--red);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${count}</span>`
+      : `🤍 ${currentLang==='sq'?'Preferuarat':'Favorites'}`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1845,15 +1938,31 @@ function acKey(e,listId){
 // ═══════════════════════════════════════════════════════
 function renderHome(){
   const p=document.getElementById('popularGrid'),r=document.getElementById('recentGrid');
-  p.innerHTML='';r.innerHTML='';
+  const fav=document.getElementById('favGrid'), favSec=document.getElementById('favSection');
+  p.innerHTML='';r.innerHTML='';fav.innerHTML='';
 
   // Popular songs
   SONGS.filter(s=>s.popular).forEach(s=>p.appendChild(buildCard(s)));
 
-  // Recently added — use created_at order (Supabase returns newest first)
-  // Show last 8 songs regardless of recent flag
-  const recentSongs = SONGS.slice(0, 8);
-  recentSongs.forEach(s=>r.appendChild(buildCard(s)));
+  // Favorites
+  const favIds = getFavorites();
+  const favSongs = SONGS.filter(s => favIds.includes(Number(s.id)));
+  if(favSongs.length > 0){
+    favSec.style.display = 'block';
+    favSongs.forEach(s=>fav.appendChild(buildCard(s)));
+  } else {
+    favSec.style.display = 'none';
+  }
+
+  // Recently added — newest 8
+  SONGS.slice(0, 8).forEach(s=>r.appendChild(buildCard(s)));
+}
+
+function clearFavorites(){
+  if(!confirm('Fshi të gjitha të preferuarat?')) return;
+  saveFavorites([]);
+  renderHome();
+  showToast('Të preferuarat u fshinë.','');
 }
 function doHeroSearch(){
   const q=document.getElementById('heroSearch').value.trim();
@@ -2596,10 +2705,24 @@ const DEFAULT_SOCIAL = {
 
 function loadSocialLinks(){ const r=localStorage.getItem('aa_social'); return r?JSON.parse(r):{...DEFAULT_SOCIAL}; }
 async function saveSocialLinks(){
+  // Collect references
+  const refs = [];
+  document.querySelectorAll('.ref-item').forEach(item => {
+    const title = item.querySelector('.ref-title')?.value.trim();
+    const url = item.querySelector('.ref-url')?.value.trim();
+    if(title && url) refs.push({title, url});
+  });
+
   const s={
     instagram:document.getElementById('sInstagram').value.trim(),
     instagramHandle:document.getElementById('sInstagramHandle').value.trim(),
     facebook:document.getElementById('sFacebook').value.trim(),
+    youtube:document.getElementById('sYoutube').value.trim(),
+    spotify:document.getElementById('sSpotify').value.trim(),
+    appleMusic:document.getElementById('sAppleMusic').value.trim(),
+    buyMeCoffee:document.getElementById('sBuyMeCoffee').value.trim(),
+    paypal:document.getElementById('sPaypal').value.trim(),
+    references: refs,
     location:document.getElementById('sLocation').value.trim(),
     locationText:document.getElementById('sLocationText').value.trim(),
     email:document.getElementById('sEmail').value.trim()
@@ -2609,14 +2732,34 @@ async function saveSocialLinks(){
   showToast('✅ Lidhjet sociale u ruajtën!','success');
 }
 
+function addRefField(title='', url=''){
+  const container = document.getElementById('refsContainer');
+  const div = document.createElement('div');
+  div.className = 'ref-item';
+  div.style.cssText = 'display:flex;gap:8px;align-items:center';
+  div.innerHTML = `
+    <input class="form-input ref-title" placeholder="Titulli (p.sh. Kisha Kanaan Website)" value="${title}" style="flex:1"/>
+    <input class="form-input ref-url" placeholder="https://..." value="${url}" style="flex:2"/>
+    <button onclick="this.parentElement.remove()" style="background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);color:#dc2626;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;white-space:nowrap">✕</button>`;
+  container.appendChild(div);
+}
+
 function loadSocialAdminForm(){
   const s=loadSocialLinks();
   document.getElementById('sInstagram').value=s.instagram||'';
   document.getElementById('sInstagramHandle').value=s.instagramHandle||'';
   document.getElementById('sFacebook').value=s.facebook||'';
+  document.getElementById('sYoutube').value=s.youtube||'';
+  document.getElementById('sSpotify').value=s.spotify||'';
+  document.getElementById('sAppleMusic').value=s.appleMusic||'';
+  document.getElementById('sBuyMeCoffee').value=s.buyMeCoffee||'';
+  document.getElementById('sPaypal').value=s.paypal||'';
   document.getElementById('sLocation').value=s.location||'';
   document.getElementById('sLocationText').value=s.locationText||'';
   document.getElementById('sEmail').value=s.email||'';
+  // Load references
+  const container = document.getElementById('refsContainer');
+  if(container){ container.innerHTML=''; (s.references||[]).forEach(r=>addRefField(r.title,r.url)); }
 }
 
 // ── EMAILJS CONTACT FORM ──
@@ -2672,6 +2815,24 @@ function renderSocialLinks(){
       <div><div class="social-label">Facebook</div><div class="social-sub">Kisha Kanaan</div></div>
     </a>`);
   }
+  if(s.youtube){
+    cards.push(`<a class="social-card" href="${s.youtube}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:rgba(255,0,0,0.15)">▶️</div>
+      <div><div class="social-label">YouTube</div><div class="social-sub">Kanali ynë</div></div>
+    </a>`);
+  }
+  if(s.spotify){
+    cards.push(`<a class="social-card" href="${s.spotify}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:rgba(30,215,96,0.15)">🟢</div>
+      <div><div class="social-label">Spotify</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
+    </a>`);
+  }
+  if(s.appleMusic){
+    cards.push(`<a class="social-card" href="${s.appleMusic}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:rgba(252,60,68,0.15)">🍎</div>
+      <div><div class="social-label">Apple Music</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
+    </a>`);
+  }
   if(s.location){
     cards.push(`<a class="social-card" href="${s.location}" target="_blank" rel="noopener">
       <div class="social-icon si-loc">📍</div>
@@ -2684,6 +2845,26 @@ function renderSocialLinks(){
       <div><div class="social-label">Email</div><div class="social-sub">${s.email}</div></div>
     </a>`);
   }
+  if(s.buyMeCoffee){
+    cards.push(`<a class="social-card" href="${s.buyMeCoffee}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:rgba(255,221,0,0.2)">☕</div>
+      <div><div class="social-label">Buy Me a Coffee</div><div class="social-sub">Mbështetni punën tonë</div></div>
+    </a>`);
+  }
+  if(s.paypal){
+    cards.push(`<a class="social-card" href="${s.paypal}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:rgba(0,112,243,0.15)">💙</div>
+      <div><div class="social-label">PayPal</div><div class="social-sub">Bëni një donacion</div></div>
+    </a>`);
+  }
+  // References
+  (s.references||[]).forEach(ref => {
+    cards.push(`<a class="social-card" href="${ref.url}" target="_blank" rel="noopener">
+      <div class="social-icon" style="background:var(--blue-light)">🌐</div>
+      <div><div class="social-label">${ref.title}</div><div class="social-sub">${ref.url.replace(/^https?:\/\//,'').split('/')[0]}</div></div>
+    </a>`);
+  });
+
   if(!cards.length){
     container.innerHTML='<p style="color:var(--text3);font-size:13px;grid-column:1/-1">Admini nuk ka shtuar ende lidhjet sociale.</p>';
   } else {
@@ -2713,6 +2894,7 @@ function switchCopyTab(lang,el){
 // Init
 renderSocialLinks();
 setLang(currentLang);
+setTimeout(updateFavBadge, 500);
 
 
 // ═══════════════════════════════════════════════════════
