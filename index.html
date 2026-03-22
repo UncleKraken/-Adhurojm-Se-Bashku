@@ -510,7 +510,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   </section>
   <section class="section" id="favSection" style="display:none">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title">❤️ Të Preferuarat e Tua</h2><span class="see-all" onclick="clearFavorites()" style="color:var(--text3);font-size:12px">✕ Pastro</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="favTitle">❤️ Të Preferuarat e Tua</h2><span class="see-all" onclick="clearFavorites()" style="color:var(--text3);font-size:12px">✕ Pastro</span></div>
       <div class="songs-grid" id="favGrid"></div>
     </div>
   </section>
@@ -2570,7 +2570,7 @@ const TRANSLATIONS = {
     'hero-sub':'Një bibliotekë falas për muzikantët dhe ekipet e adhurimit në territoret shqipfolëse.',
     'hero-placeholder':'Kërko këngë...',
     // SECTIONS
-    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','see-all':'Shiko të gjitha →',
+    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','fav-title':'❤️ Të Preferuarat e Tua','see-all':'Shiko të gjitha →',
     // LIBRARY
     'library-title':'Biblioteka e Këngëve','library-sub':'Gjej, filtro dhe shfaq çdo këngë adhurimi',
     'search-placeholder':'Kërko këngë...','all-artists':'Të gjithë artistët','any-key':'Çdo tonalitet','any-inst':'Çdo instrument',
@@ -2602,7 +2602,7 @@ const TRANSLATIONS = {
     'hero-tagline':'The Albanian worship song archive',
     'hero-sub':'A free library for musicians and worship teams in Albanian-speaking territories.',
     'hero-placeholder':'Search songs...',
-    'popular-title':'Popular Songs','recent-title':'Recently Added','see-all':'View all →',
+    'popular-title':'Popular Songs','recent-title':'Recently Added','fav-title':'❤️ Your Favorites','see-all':'View all →',
     'library-title':'Song Library','library-sub':'Find, filter and view every worship song',
     'search-placeholder':'Search songs...','all-artists':'All artists','any-key':'Any key','any-inst':'Any instrument',
     'back-btn':'← Back to Library',
@@ -2655,8 +2655,10 @@ function applyLang(){
   const homeSections = document.querySelectorAll('#page-home .section-title');
   const popularTitle = document.getElementById('popularTitle');
   const recentTitle = document.getElementById('recentTitle');
+  const favTitle = document.getElementById('favTitle');
   if(popularTitle) popularTitle.textContent = t('popular-title');
   if(recentTitle) recentTitle.textContent = t('recent-title');
+  if(favTitle) favTitle.textContent = t('fav-title');
   document.querySelectorAll('.see-all').forEach(el=>el.textContent = t('see-all'));
   // Library
   const libHero = document.querySelector('#page-songs .page-hero');
