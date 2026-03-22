@@ -702,6 +702,17 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div class="g-block-title" data-sq="📲 Na Gjeni Këtu" data-en="📲 Find Us Here">📲 Na Gjeni Këtu</div>
         <div class="social-grid" id="socialLinksDisplay"></div>
       </div>
+      <!-- Donations -->
+      <div class="g-block" style="margin-bottom:24px;background:var(--gold-muted);border-color:rgba(201,151,58,0.3)" id="donationsBlock">
+        <div class="g-block-title" data-sq="💝 Mbështetni Punën Tonë" data-en="💝 Support Our Work">💝 Mbështetni Punën Tonë</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px" data-sq="Nëse kjo faqe ju ka ndihmuar, mund të mbështetni punën tonë me një donacion vullnetar." data-en="If this website has helped you, you can support our work with a voluntary donation.">Nëse kjo faqe ju ka ndihmuar, mund të mbështetni punën tonë me një donacion vullnetar.</p>
+        <div class="social-grid" id="donationsDisplay"></div>
+      </div>
+      <!-- References -->
+      <div class="g-block" style="margin-bottom:24px" id="referencesBlock">
+        <div class="g-block-title" data-sq="🌐 Referenca & Burime" data-en="🌐 References & Resources">🌐 Referenca & Burime</div>
+        <div class="social-grid" id="referencesDisplay"></div>
+      </div>
       <!-- Contact Form -->
       <div class="g-block">
         <div class="g-block-title" data-sq="📬 Na Kontaktoni" data-en="📬 Get In Touch">📬 Na Kontaktoni</div>
@@ -2801,74 +2812,74 @@ async function sendContactEmail() {
 function renderSocialLinks(){
   const s=loadSocialLinks();
   const container=document.getElementById('socialLinksDisplay');
-  if(!container)return;
-  const cards=[];
-  if(s.instagram){
-    cards.push(`<a class="social-card" href="${s.instagram}" target="_blank" rel="noopener">
-      <div class="social-icon si-ig">📸</div>
-      <div><div class="social-label">Instagram</div><div class="social-sub">${s.instagramHandle||s.instagram}</div></div>
-    </a>`);
-  }
-  if(s.facebook){
-    cards.push(`<a class="social-card" href="${s.facebook}" target="_blank" rel="noopener">
-      <div class="social-icon si-fb">👥</div>
-      <div><div class="social-label">Facebook</div><div class="social-sub">Kisha Kanaan</div></div>
-    </a>`);
-  }
-  if(s.youtube){
-    cards.push(`<a class="social-card" href="${s.youtube}" target="_blank" rel="noopener">
-      <div class="social-icon" style="background:rgba(255,0,0,0.15)">▶️</div>
-      <div><div class="social-label">YouTube</div><div class="social-sub">Kanali ynë</div></div>
-    </a>`);
-  }
-  if(s.spotify){
-    cards.push(`<a class="social-card" href="${s.spotify}" target="_blank" rel="noopener">
-      <div class="social-icon" style="background:rgba(30,215,96,0.15)">🟢</div>
-      <div><div class="social-label">Spotify</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
-    </a>`);
-  }
-  if(s.appleMusic){
-    cards.push(`<a class="social-card" href="${s.appleMusic}" target="_blank" rel="noopener">
-      <div class="social-icon" style="background:rgba(252,60,68,0.15)">🍎</div>
-      <div><div class="social-label">Apple Music</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
-    </a>`);
-  }
-  if(s.location){
-    cards.push(`<a class="social-card" href="${s.location}" target="_blank" rel="noopener">
-      <div class="social-icon si-loc">📍</div>
-      <div><div class="social-label">${currentLang==='en'?'Location':'Adresa'}</div><div class="social-sub">${s.locationText||'Shiko hartën'}</div></div>
-    </a>`);
-  }
-  if(s.email){
-    cards.push(`<a class="social-card" href="mailto:${s.email}">
-      <div class="social-icon si-email">✉️</div>
-      <div><div class="social-label">Email</div><div class="social-sub">${s.email}</div></div>
-    </a>`);
-  }
-  if(s.buyMeCoffee){
-    cards.push(`<a class="social-card" href="${s.buyMeCoffee}" target="_blank" rel="noopener">
-      <div class="social-icon" style="background:rgba(255,221,0,0.2)">☕</div>
-      <div><div class="social-label">Buy Me a Coffee</div><div class="social-sub">Mbështetni punën tonë</div></div>
-    </a>`);
-  }
-  if(s.paypal){
-    cards.push(`<a class="social-card" href="${s.paypal}" target="_blank" rel="noopener">
-      <div class="social-icon" style="background:rgba(0,112,243,0.15)">💙</div>
-      <div><div class="social-label">PayPal</div><div class="social-sub">Bëni një donacion</div></div>
-    </a>`);
-  }
-  // References
+  const donContainer=document.getElementById('donationsDisplay');
+  const refContainer=document.getElementById('referencesDisplay');
+  if(!container) return;
+
+  const socialCards=[];
+  const donCards=[];
+  const refCards=[];
+
+  // ── Social ──
+  if(s.instagram) socialCards.push(`<a class="social-card" href="${s.instagram}" target="_blank" rel="noopener">
+    <div class="social-icon si-ig">📸</div>
+    <div><div class="social-label">Instagram</div><div class="social-sub">${s.instagramHandle||s.instagram}</div></div>
+  </a>`);
+  if(s.facebook) socialCards.push(`<a class="social-card" href="${s.facebook}" target="_blank" rel="noopener">
+    <div class="social-icon si-fb">👥</div>
+    <div><div class="social-label">Facebook</div><div class="social-sub">Kisha Kanaan</div></div>
+  </a>`);
+  if(s.youtube) socialCards.push(`<a class="social-card" href="${s.youtube}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:rgba(255,0,0,0.15)">▶️</div>
+    <div><div class="social-label">YouTube</div><div class="social-sub">Kanali ynë</div></div>
+  </a>`);
+  if(s.spotify) socialCards.push(`<a class="social-card" href="${s.spotify}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:rgba(30,215,96,0.15)">🟢</div>
+    <div><div class="social-label">Spotify</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
+  </a>`);
+  if(s.appleMusic) socialCards.push(`<a class="social-card" href="${s.appleMusic}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:rgba(252,60,68,0.15)">🍎</div>
+    <div><div class="social-label">Apple Music</div><div class="social-sub">Dëgjo muzikën tonë</div></div>
+  </a>`);
+  if(s.location) socialCards.push(`<a class="social-card" href="${s.location}" target="_blank" rel="noopener">
+    <div class="social-icon si-loc">📍</div>
+    <div><div class="social-label">${currentLang==='en'?'Location':'Adresa'}</div><div class="social-sub">${s.locationText||'Shiko hartën'}</div></div>
+  </a>`);
+  if(s.email) socialCards.push(`<a class="social-card" href="mailto:${s.email}">
+    <div class="social-icon si-email">✉️</div>
+    <div><div class="social-label">Email</div><div class="social-sub">${s.email}</div></div>
+  </a>`);
+
+  // ── Donations ──
+  if(s.buyMeCoffee) donCards.push(`<a class="social-card" href="${s.buyMeCoffee}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:rgba(255,221,0,0.2)">☕</div>
+    <div><div class="social-label">Buy Me a Coffee</div><div class="social-sub">${currentLang==='en'?'Support our work':'Mbështetni punën tonë'}</div></div>
+  </a>`);
+  if(s.paypal) donCards.push(`<a class="social-card" href="${s.paypal}" target="_blank" rel="noopener">
+    <div class="social-icon" style="background:rgba(0,112,243,0.15)">💙</div>
+    <div><div class="social-label">PayPal</div><div class="social-sub">${currentLang==='en'?'Make a donation':'Bëni një donacion'}</div></div>
+  </a>`);
+
+  // ── References ──
   (s.references||[]).forEach(ref => {
-    cards.push(`<a class="social-card" href="${ref.url}" target="_blank" rel="noopener">
+    refCards.push(`<a class="social-card" href="${ref.url}" target="_blank" rel="noopener">
       <div class="social-icon" style="background:var(--blue-light)">🌐</div>
       <div><div class="social-label">${ref.title}</div><div class="social-sub">${ref.url.replace(/^https?:\/\//,'').split('/')[0]}</div></div>
     </a>`);
   });
 
-  if(!cards.length){
-    container.innerHTML='<p style="color:var(--text3);font-size:13px;grid-column:1/-1">Admini nuk ka shtuar ende lidhjet sociale.</p>';
-  } else {
-    container.innerHTML=cards.join('');
+  container.innerHTML = socialCards.length ? socialCards.join('') : '<p style="color:var(--text3);font-size:13px">Admini nuk ka shtuar ende lidhjet sociale.</p>';
+
+  if(donContainer){
+    const donBlock = document.getElementById('donationsBlock');
+    if(donCards.length){ donContainer.innerHTML = donCards.join(''); if(donBlock) donBlock.style.display='block'; }
+    else { if(donBlock) donBlock.style.display='none'; }
+  }
+
+  if(refContainer){
+    const refBlock = document.getElementById('referencesBlock');
+    if(refCards.length){ refContainer.innerHTML = refCards.join(''); if(refBlock) refBlock.style.display='block'; }
+    else { if(refBlock) refBlock.style.display='none'; }
   }
 }
 
