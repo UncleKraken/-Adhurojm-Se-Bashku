@@ -1661,11 +1661,14 @@ function acKey(e,listId){
 function renderHome(){
   const p=document.getElementById('popularGrid'),r=document.getElementById('recentGrid');
   p.innerHTML='';r.innerHTML='';
+
+  // Popular songs
   SONGS.filter(s=>s.popular).forEach(s=>p.appendChild(buildCard(s)));
-  // Show songs with recent=true, fallback to last 8 songs added
-  const recentSongs = SONGS.filter(s=>s.recent);
-  const toShow = recentSongs.length > 0 ? recentSongs : SONGS.slice(0, 8);
-  toShow.forEach(s=>r.appendChild(buildCard(s)));
+
+  // Recently added — use created_at order (Supabase returns newest first)
+  // Show last 8 songs regardless of recent flag
+  const recentSongs = SONGS.slice(0, 8);
+  recentSongs.forEach(s=>r.appendChild(buildCard(s)));
 }
 function doHeroSearch(){
   const q=document.getElementById('heroSearch').value.trim();
