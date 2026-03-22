@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 
 <!-- ── PRIMARY SEO ── -->
-<title>Adhurojmë Së Bashku — Biblioteka Shqipe e Këngëve të Adhurimit</title>
+<title>Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF</title>
 <meta name="description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF për shkarkimit. Ideal për muzikantët dhe ekipet e adhurimit shqipfolëse."/>
-<meta name="keywords" content="këngë adhurimi shqip, akorde kitarë shqip, worship songs albanian, chord sheets albanian, Kisha Kanaan, adhurim shqip, këngë kishë"/>
+<meta name="keywords" content="këngë adhurimi shqip, akorde kitarë shqip, worship songs albanian, chord sheets albanian, Kisha Kanaan, adhurim shqip, këngë kishë, akorde piano shqip, Albanian worship, Hillsong shqip, Bethel shqip"/>
 <meta name="author" content="Kisha Kanaan Media Team"/>
 <meta name="robots" content="index, follow"/>
 <link rel="canonical" href="https://unclekraken.github.io/-Adhurojm-Se-Bashku/"/>
@@ -15,7 +15,7 @@
 <!-- ── OPEN GRAPH (Facebook, WhatsApp, LinkedIn) ── -->
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://unclekraken.github.io/-Adhurojm-Se-Bashku/"/>
-<meta property="og:title" content="Adhurojmë Së Bashku — Biblioteka Shqipe e Këngëve të Adhurimit"/>
+<meta property="og:title" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF"/>
 <meta property="og:description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF për shkarkim. Ideal për muzikantët dhe ekipet e adhurimit shqipfolëse."/>
 <meta property="og:image" content="https://unclekraken.github.io/-Adhurojm-Se-Bashku/og-image.jpg"/>
 <meta property="og:locale" content="sq_AL"/>
@@ -23,7 +23,7 @@
 
 <!-- ── TWITTER CARD ── -->
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Adhurojmë Së Bashku — Biblioteka Shqipe e Këngëve të Adhurimit"/>
+<meta name="twitter:title" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF"/>
 <meta name="twitter:description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde dhe PDF për shkarkim."/>
 <meta name="twitter:image" content="https://unclekraken.github.io/-Adhurojm-Se-Bashku/og-image.jpg"/>
 
@@ -1742,7 +1742,7 @@ function renderSong(){
     ?`<iframe src="${toEmbedUrl(s.youtube)}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`
     :`<div class="video-placeholder"><div style="font-size:44px;margin-bottom:8px">🎵</div><p>Kjo këngë aktualisht nuk ka video zyrtare.</p></div>`;
 
-  const instBtns=s.instruments.map(i=>`<button class="inst-btn ${i===currentInst?'active':''}" onclick="selectInst('${i}')">${i==='Guitar'?'🎸 Kitarë':'🎹 Piano'}</button>`).join('');
+  const instBtns=s.instruments.map(i=>`<button class="inst-btn ${i===currentInst?'active':''}" onclick="selectInst('${i}')">${i==='Guitar'?'🎸 '+(currentLang==='sq'?'Kitarë':'Guitar'):'🎹 Piano'}</button>`).join('');
 
   // Transpose display: show current transposed key
   const origKeyIdx=noteToIdx(s.key.replace('m','').replace(/\d/g,''))||0;
@@ -1766,7 +1766,7 @@ function renderSong(){
       <div class="song-horig">${s.original||''} ${s.artist?'– '+s.artist:''}</div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
-        ${s.instruments.map(i => `<span class="tag tag-gold">${i==='Guitar'?'🎸':'🎹'} ${i==='Guitar'?'Guitar':'Piano'}</span>`).join('')}
+        ${s.instruments.map(i => `<span class="tag tag-gold">${i==='Guitar'?'🎸 '+(currentLang==='sq'?'Kitarë':'Guitar'):'🎹 Piano'}</span>`).join('')}
         ${s.capo > 0 ? `<span class="tag tag-gold">🎸 Capo ${s.capo}</span>` : ''}
         <span class="tag tag-red" id="bilingualTag">${s.bilingual !== false ? t('bilingual-tag') : t('monolingual-tag')}</span>
       </div>
