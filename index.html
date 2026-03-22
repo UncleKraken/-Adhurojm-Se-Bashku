@@ -504,7 +504,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   </section>
   <section class="section" style="background:var(--bg2)">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title">Këngët e Njohura</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="popularTitle">Këngët e Njohura</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="popularGrid"></div>
     </div>
   </section>
@@ -516,7 +516,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   </section>
   <section class="section">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="recentTitle">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="recentGrid"></div>
     </div>
   </section>
@@ -2653,8 +2653,10 @@ function applyLang(){
   if(heroSrch) heroSrch.placeholder = t('hero-placeholder');
   // Section titles (home page only)
   const homeSections = document.querySelectorAll('#page-home .section-title');
-  if(homeSections[0]) homeSections[0].textContent = t('popular-title');
-  if(homeSections[1]) homeSections[1].textContent = t('recent-title');
+  const popularTitle = document.getElementById('popularTitle');
+  const recentTitle = document.getElementById('recentTitle');
+  if(popularTitle) popularTitle.textContent = t('popular-title');
+  if(recentTitle) recentTitle.textContent = t('recent-title');
   document.querySelectorAll('.see-all').forEach(el=>el.textContent = t('see-all'));
   // Library
   const libHero = document.querySelector('#page-songs .page-hero');
