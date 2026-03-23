@@ -1920,17 +1920,37 @@ function toggleTheme(){
 //  AUTOCOMPLETE
 // ═══════════════════════════════════════════════════════
 let acIdx=-1;
+function normalizeSearch(str){
+  if(!str) return '';
+  return str.toLowerCase()
+    .replace(/ë/g,'e').replace(/ç/g,'c')
+    .replace(/à|á|â|ã|ä/g,'a')
+    .replace(/è|é|ê/g,'e')
+    .replace(/ì|í|î/g,'i')
+    .replace(/ò|ó|ô|õ|ö/g,'o')
+    .replace(/ù|ú|û|ü/g,'u');
+}
+
 function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
 function updateAC(inputId,listId){
   const inp=document.getElementById(inputId),list=document.getElementById(listId);
-  const q=inp.value.trim().toLowerCase();acIdx=-1;
+  const q=inp.value.trim();
+  const qn=normalizeSearch(q);
+  acIdx=-1;
   if(!q){closeAC(listId);return;}
-  const matches=SONGS.filter(s=>s.title.toLowerCase().includes(q)||s.original?.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q)).slice(0,3);
+  const matches=SONGS.filter(s=>
+    normalizeSearch(s.title).includes(qn)||
+    normalizeSearch(s.original||'').includes(qn)||
+    normalizeSearch(s.artist||'').includes(qn)
+  ).slice(0,5);
   if(!matches.length){closeAC(listId);return;}
-  list.innerHTML=matches.map(s=>`<div class="ac-item" data-id="${s.id}">
-    <img class="ac-thumb" src="${s.thumb||''}" alt=""/>
-    <div><div class="ac-name">${hilite(s.title,inp.value.trim())}</div><div class="ac-sub">${s.original||''} · <em>${s.artist}</em></div></div>
-  </div>`).join('');
+  list.innerHTML=matches.map(s=>{
+    const thumb=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
+    return `<div class="ac-item" data-id="${s.id}">
+      <img class="ac-thumb" src="${thumb}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0" alt=""/>
+      <div style="min-width:0"><div class="ac-name">${hilite(s.title,q)}</div><div class="ac-sub">${s.original?s.original+' · ':''}<em>${s.artist}</em></div></div>
+    </div>`;
+  }).join('');
   list.querySelectorAll('.ac-item').forEach(item=>item.onclick=()=>{openSong(parseInt(item.dataset.id));closeAC(listId);});
   list.classList.add('open');
 }
@@ -1999,7 +2019,8 @@ function renderLibrary(){
   const inst=document.getElementById('filterInst').value;
   const grid=document.getElementById('libraryGrid');grid.innerHTML='';
   const f=SONGS.filter(s=>{
-    if(q&&!s.title.toLowerCase().includes(q)&&!s.original?.toLowerCase().includes(q)&&!s.artist.toLowerCase().includes(q))return false;
+    const qn=normalizeSearch(q);
+    if(qn&&!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.original||'').includes(qn)&&!normalizeSearch(s.artist||'').includes(qn))return false;
     if(artist&&s.artist!==artist)return false;
     if(key&&s.key!==key)return false;
     if(inst&&!s.instruments.includes(inst))return false;
