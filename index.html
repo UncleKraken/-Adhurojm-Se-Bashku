@@ -188,7 +188,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .video-box{background:var(--bg3);border-radius:var(--r);aspect-ratio:16/9;overflow:hidden;margin:24px 0;display:flex;align-items:center;justify-content:center}
 .video-box iframe{width:100%;height:100%;border:none}
 .video-placeholder{text-align:center;color:var(--text3);font-size:14px}
-.ctrl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.ctrl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px;padding:14px 0}
 .inst-btn{padding:7px 18px;border-radius:100px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:var(--text2);transition:all .18s}
 .inst-btn.active,.inst-btn:hover{border-color:var(--blue-mid);background:var(--blue-light);color:var(--blue-mid)}
 [data-theme=dark] .inst-btn.active{color:#8aabff}
@@ -197,7 +197,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .transpose-ctrl span{font-size:13px;font-weight:700;color:var(--text);min-width:44px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 8px}
 .t-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;font-weight:700;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all .18s}
 .t-btn:hover{background:var(--gold-muted);border-color:var(--gold);color:var(--gold)}
-.lyrics-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;font-size:14px;line-height:1.9}
+.lyrics-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;font-size:14px;line-height:1.9;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sec-lbl{display:inline-block;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:2px 9px;border-radius:6px;margin-bottom:8px}
 .lyric-block{margin-bottom:26px}
 .lyric-line{margin-bottom:5px}
@@ -339,8 +339,58 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   .form-grid{grid-template-columns:1fr}
   .pdf-grid{grid-template-columns:1fr}
   .admin-tabs{gap:2px}.admin-tab{font-size:12px;padding:5px 10px}
+
+  /* Song detail page */
+  .song-wrap{padding:20px 16px 48px}
+  .song-htitle{font-size:1.5rem !important}
+  .ctrl-row{gap:8px;padding:12px 0}
+  .transpose-ctrl{margin-left:0;width:100%;justify-content:flex-start;margin-top:4px}
+  .lyrics-box{padding:18px 16px;font-size:13px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dl-bar{padding:16px}
+  .dl-btns{flex-direction:column;width:100%}
+  .dl-btns .btn{width:100%;justify-content:center;text-align:center}
+  .tag-row{gap:6px}
+  .tag{font-size:11px;padding:3px 9px}
+  .inst-btn{padding:6px 14px;font-size:12px}
+
+  /* Hero section */
+  .hero-title{font-size:2.4rem !important}
+  .hero-search-wrap{padding:0 8px}
+
+  /* Song cards */
+  .card-body{padding:10px 12px 12px}
+  .card-body .card-title{font-size:13px}
+  .card-body .card-artist{font-size:11px}
+
+  /* Section spacing */
+  .section{padding:28px 0}
+  .section-inner{padding:0 16px}
+  .section-hdr{margin-bottom:14px}
+
+  /* Social grid on mobile */
+  .social-grid{grid-template-columns:1fr;gap:10px;margin-top:14px}
+  .social-card{padding:13px 16px;gap:12px}
+
+  /* Page hero */
+  .page-hero{padding:36px 20px 28px}
+  .page-hero h1{font-size:1.6rem}
+
+  /* Admin */
+  .admin-body{padding:16px}
+  .songs-table th:nth-child(3),.songs-table td:nth-child(3){display:none}
 }
-@media(max-width:420px){.songs-grid{grid-template-columns:1fr 1fr}}
+
+/* Extra small screens */
+@media(max-width:420px){
+  .songs-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .hero-title{font-size:2rem !important}
+  .song-htitle{font-size:1.3rem !important}
+  .lyrics-box{font-size:12.5px;padding:14px 12px}
+  .nav-bar{padding:0 12px}
+  .section-inner{padding:0 12px}
+  .song-wrap{padding:16px 12px 40px}
+  .dl-btns .btn{font-size:12px;padding:8px 12px}
+}
 
 /* ── HERO ANIMATED BG ────────────────────────── */
 .hero-bg-canvas{position:absolute;inset:0;overflow:hidden}
