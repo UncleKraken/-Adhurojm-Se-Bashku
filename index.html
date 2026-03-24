@@ -1474,7 +1474,7 @@ function isChordLine(line){
   if(!trimmed) return false;
   const tokens = trimmed.split(/\s+/).filter(t=>t.length>0);
   if(!tokens.length) return false;
-  const chordRE = /^[A-G][#b]?(m|maj7?|min|dim|aug|sus[24]?|add[29]?|[0-9]+)?(?:\/[A-G][#b]?)?$/;
+  const chordRE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|dim7?|aug|sus[24]?|add[29]?|[0-9]+)?(?:\/[A-G][#b]?(m7|m9|m)?)?$/;
   const chordCount = tokens.filter(t => chordRE.test(t)).length;
   return chordCount / tokens.length > 0.55;
 }
@@ -3349,7 +3349,7 @@ function cleanPDFText(raw) {
   };
 
   // Chord line detector — line is mostly chord tokens
-  const CHORD_RE = /^[A-G][#b]?(m|maj7?|min|dim|aug|sus[24]?|add\d?|[0-9]+)?(?:\/[A-G][#b]?)?$/;
+  const CHORD_RE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|dim7?|aug|sus[24]?|add[29]?|[0-9]+)?(?:\/[A-G][#b]?(m7|m9|m)?)?$/;
   function isChordOnlyLine(line) {
     const tokens = line.trim().split(/\s+/).filter(t => t.length > 0);
     if (!tokens.length) return false;
