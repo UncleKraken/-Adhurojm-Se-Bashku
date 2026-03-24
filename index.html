@@ -1715,28 +1715,39 @@ async function loadSocialAsync() {
   const sb = getSB();
   if (!sb) return loadSocialLinks();
   const { data, error } = await sb.from('social_links').select('*');
-  if (error) return loadSocialLinks();
+  if (error || !data?.length) return loadSocialLinks();
   const obj = {};
-  (data||[]).forEach(r => obj[r.platform] = r.url || '');
-  // Also get display texts
-  const sl = loadSocialLinks(); // merge with local for display texts
-  return { ...sl, ...obj };
+  (data||[]).forEach(r => {
+    if (r.platform === 'references') {
+      try { obj.references = JSON.parse(r.url || '[]'); } catch(e) { obj.references = []; }
+    } else {
+      obj[r.platform] = r.url || '';
+    }
+  });
+  localStorage.setItem('aa_social', JSON.stringify(obj)); // update local cache
+  return obj;
 }
 async function saveSocialAsync(social) {
   const sb = getSB();
-  if (!sb) { localStorage.setItem('aa_social', JSON.stringify(social)); return; }
+  localStorage.setItem('aa_social', JSON.stringify(social)); // always cache locally
+  if (!sb) return;
   const rows = [
-    { platform:'instagram',    url: social.instagram    || '' },
+    { platform:'instagram',       url: social.instagram       || '' },
     { platform:'instagramHandle', url: social.instagramHandle || '' },
-    { platform:'facebook',     url: social.facebook     || '' },
-    { platform:'email',        url: social.email        || '' },
-    { platform:'location',     url: social.location     || '' },
-    { platform:'locationText', url: social.locationText || '' },
+    { platform:'facebook',        url: social.facebook        || '' },
+    { platform:'youtube',         url: social.youtube         || '' },
+    { platform:'spotify',         url: social.spotify         || '' },
+    { platform:'appleMusic',      url: social.appleMusic      || '' },
+    { platform:'buyMeCoffee',     url: social.buyMeCoffee     || '' },
+    { platform:'paypal',          url: social.paypal          || '' },
+    { platform:'email',           url: social.email           || '' },
+    { platform:'location',        url: social.location        || '' },
+    { platform:'locationText',    url: social.locationText    || '' },
+    { platform:'references',      url: JSON.stringify(social.references || []) },
   ];
   for (const row of rows) {
     await sb.from('social_links').upsert(row, { onConflict: 'platform' });
   }
-  localStorage.setItem('aa_social', JSON.stringify(social));  // local cache
 }
 
 // ── PDF / IMAGE STORAGE ──
@@ -1831,6 +1842,9 @@ async function initData() {
     SONGS   = await loadSongsAsync();
     ARTISTS = await loadArtistsAsync();
     SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+    // Load social links from Supabase so they work on ALL devices
+    const social = await loadSocialAsync();
+    localStorage.setItem('aa_social', JSON.stringify(social));
   } catch(e) {
     console.warn('initData fallback:', e);
     SONGS   = loadData();
@@ -1839,6 +1853,7 @@ async function initData() {
   }
   showLoadingState(false);
   renderHome();
+  renderSocialLinks();
   populateFilters();
   setLang(currentLang);
 }
