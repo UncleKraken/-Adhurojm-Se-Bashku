@@ -53,6 +53,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
+  --chord-color:#8B1A1A;
   --red:#8B1A1A;--red-l:#B22222;--red-muted:rgba(139,26,26,0.1);
   --gold:#C9973A;--gold-l:#E8C06A;--gold-muted:rgba(201,151,58,0.12);
   --blue:#1A2A4A;--blue-mid:#2C4074;--blue-light:rgba(44,64,116,0.1);
@@ -65,6 +66,7 @@
   --r:16px;--rs:10px;
 }
 [data-theme=dark]{
+  --chord-color:#f08080;
   --bg:#0C0D14;--bg2:#111320;--bg3:#191B2A;
   --surface:#191B2A;--border:#252740;
   --text:#EEEEF8;--text2:#8888AA;--text3:#50507A;
@@ -201,7 +203,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .sec-lbl{display:inline-block;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:2px 9px;border-radius:6px;margin-bottom:8px}
 .lyric-block{margin-bottom:26px}
 .lyric-line{margin-bottom:5px}
-.chord-row{font-size:14px;font-weight:700;color:var(--red);font-family:'Roboto Mono','Courier New',monospace;min-height:18px;white-space:pre;overflow-x:auto;line-height:1.4}
+.chord-row{font-size:14px;font-weight:700;color:var(--chord-color);font-family:'Roboto Mono','Courier New',monospace;min-height:18px;white-space:pre;overflow-x:auto;line-height:1.4}
 [data-theme=dark] .chord-row{color:#f08080}
 .lyric-sq{font-weight:600;color:var(--text);font-family:'Roboto Mono','Courier New',monospace;font-size:14px;line-height:1.7}
 .lyric-en{color:var(--text3);font-size:13px;font-style:italic;font-family:'Roboto Mono','Courier New',monospace}
@@ -2183,7 +2185,7 @@ function renderSong(){
     const lines=sec.lines.map(l=>{
       const transposedChords=l.chords?transposeChordLine(l.chords,transposeSteps):'';
       // Render chord+lyric as a single pre block so spacing is pixel-perfect
-      const chordLine = transposedChords ? `<span style="color:var(--red);font-weight:700;display:block;white-space:pre;">${transposedChords}</span>` : '';
+      const chordLine = transposedChords ? `<span style="color:var(--chord-color);font-weight:700;display:block;white-space:pre;">${transposedChords}</span>` : '';
       const lyricLine = `<span style="font-weight:600;display:block;white-space:pre;">${l.sq}</span>`;
       const englishLine = (l.en && s.bilingual !== false) ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
       return `<div class="lyric-line" style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
@@ -2655,7 +2657,7 @@ function previewLyrics(inst){
   const html_content = sections.map(sec=>{
     const color=sec.color||'var(--blue)';
     const lines=sec.lines.map(l=>{
-      const chordLine = l.chords ? `<span style="color:var(--red);font-weight:700;display:block;white-space:pre;">${l.chords}</span>` : '';
+      const chordLine = l.chords ? `<span style="color:var(--chord-color);font-weight:700;display:block;white-space:pre;">${l.chords}</span>` : '';
       const lyricLine = `<span style="font-weight:600;display:block;white-space:pre;">${l.sq}</span>`;
       const englishLine = l.en ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
       return `<div style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
