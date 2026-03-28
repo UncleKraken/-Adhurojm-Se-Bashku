@@ -1284,14 +1284,12 @@ function toggleCapoField() {
 
 // ── STATISTICS TRACKING ──
 async function trackStat(songId, type) {
+  if(window._adminOpen) return; // don't count admin views
   const sb = getSB();
   if (!sb || !songId) return;
   try {
-    // Upsert: increment counter
     await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
-  } catch(e) {
-    // Silent fail — stats are not critical
-  }
+  } catch(e) {}
 }
 
 async function loadStats() {
@@ -1530,7 +1528,7 @@ function isChordLine(line){
   if(!trimmed) return false;
   const tokens = trimmed.split(/\s+/).filter(t=>t.length>0);
   if(!tokens.length) return false;
-  const chordRE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|min|dim7?|aug|sus[24]?|add[29]?|m|[0-9]+)?(?:\/[A-G][#b]?(m7|m9|m)?)?$/;
+  const chordRE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|min|dim7?|aug|sus[24]?|add[29]?|m|[0-9]+)?(?:\/[A-G][#b]?[0-9]?(m7|m9|m)?)?$/;
   const chordCount = tokens.filter(t => chordRE.test(t)).length;
   return chordCount / tokens.length > 0.55;
 }
@@ -2321,6 +2319,7 @@ async function checkAdminLogin(){
 }
 function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
+  window._adminOpen = true; // flag to skip stat tracking
   // Set admin logo
   const navLogo = document.querySelector('.nav-logo img');
   const adminLogo = document.getElementById('adminNavLogo');
@@ -2332,7 +2331,7 @@ function openAdmin(){
   document.getElementById('atab-songs').classList.add('active');
   refreshAdminSongs();
 }
-function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open');}
+function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
 function switchAdminTab(tab,el){
   document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
@@ -2501,9 +2500,13 @@ async function refreshPDFPanel(){
         </div>
       </div>
       <div class="pdf-grid">
-        ${s.instruments.map(inst=>{
+        ${['Guitar','Piano'].map(inst=>{
+          const hasInst = s.instruments.includes(inst);
           const hasPDF=!!pdfsForSong[inst];
           const icon=inst==='Guitar'?'🎸':'🎹';
+          if(!hasInst){
+            return `<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">${icon} ${inst} PDF nuk është aktivizuar</div>`;
+          }
           return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <span style="font-size:13px;font-weight:700;color:var(--text)">${icon} ${inst} PDF</span>
@@ -2521,7 +2524,6 @@ async function refreshPDFPanel(){
             </div>`:''}
           </div>`;
         }).join('')}
-        ${s.instruments.length<2?`<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">Piano PDF nuk është aktivizuar</div>`:''}
       </div>`;
     container.appendChild(block);
   });
@@ -3405,7 +3407,7 @@ function cleanPDFText(raw) {
   };
 
   // Chord line detector — line is mostly chord tokens
-  const CHORD_RE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|min|dim7?|aug|sus[24]?|add[29]?|m|[0-9]+)?(?:\/[A-G][#b]?(m7|m9|m)?)?$/;
+  const CHORD_RE = /^[A-G][#b]?(maj7|maj9|maj11|maj13|m7|m9|m11|m13|m6|mM7|min7?|min|dim7?|aug|sus[24]?|add[29]?|m|[0-9]+)?(?:\/[A-G][#b]?[0-9]?(m7|m9|m)?)?$/;
   function isChordOnlyLine(line) {
     const tokens = line.trim().split(/\s+/).filter(t => t.length > 0);
     if (!tokens.length) return false;
