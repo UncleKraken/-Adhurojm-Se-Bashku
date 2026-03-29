@@ -47,10 +47,12 @@
   }
 }
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --chord-color:#8B1A1A;
@@ -582,7 +584,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="filters-row">
         <div class="lib-search-wrap">
           <input type="text" class="f-input" id="libSearch" placeholder="Kërko këngë..." autocomplete="off"
-            oninput="updateAC('libSearch','libAC');renderLibrary()"
+            oninput="updateAC('libSearch','libAC');debouncedRenderLibrary()"
             onkeydown="acKey(event,'libAC')"
             onfocus="updateAC('libSearch','libAC')" onblur="setTimeout(()=>closeAC('libAC'),200)"/>
           <span class="f-icon">🔍</span>
@@ -1774,11 +1776,30 @@ const DEFAULT_ARTISTS = ["Oasis Worship","Hillsong Worship","Matt Maher","Bethel
 // ── READ SONGS ──
 async function loadSongsAsync() {
   const sb = getSB();
-  if (!sb) return loadData();  // fallback to localStorage
+  if (!sb) return loadData();
+  // Serve from cache instantly, refresh in background
+  const cached = localStorage.getItem('aa_songs_cache');
+  const cacheTime = localStorage.getItem('aa_songs_cache_time');
+  const AGE = Date.now() - Number(cacheTime||0);
+  if(cached && AGE < 5*60*1000){ // 5 min cache
+    // Return cache immediately, refresh in background silently
+    setTimeout(async ()=>{
+      try{
+        const {data,error} = await sb.from('songs').select('*').order('created_at',{ascending:false});
+        if(!error&&data){ localStorage.setItem('aa_songs_cache',JSON.stringify(data)); localStorage.setItem('aa_songs_cache_time',Date.now()); }
+      }catch(e){}
+    }, 100);
+    return JSON.parse(cached).map(mapRow);
+  }
   const { data, error } = await sb.from('songs').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Supabase loadSongs:', error); return loadData(); }
-  // Map Supabase rows → app format
-  return (data || []).map(row => ({
+  localStorage.setItem('aa_songs_cache', JSON.stringify(data));
+  localStorage.setItem('aa_songs_cache_time', Date.now());
+  return (data||[]).map(mapRow);
+}
+
+function mapRow(row){
+  return {
     id: row.id,
     title: row.title,
     original: row.original || '',
@@ -1793,10 +1814,30 @@ async function loadSongsAsync() {
     thumb: row.thumb_url || null,
     thumbGrad: ['#1a2a4a','#2c4074','#5a80c0'],
     lyricsRaw: { Guitar: row.lyrics_guitar || '', Piano: row.lyrics_piano || '' }
-  }));
+  };
 }
 
-// ── UPSERT SONG ──
+async function loadPDFsAsync(){
+  const sb = getSB();
+  if(!sb) return loadPDFs();
+  // Cache PDFs — rarely change
+  const cached = localStorage.getItem('aa_pdfs_cache');
+  const cacheTime = localStorage.getItem('aa_pdfs_cache_time');
+  const AGE = Date.now() - Number(cacheTime||0);
+  if(cached && AGE < 10*60*1000){ // 10 min cache
+    return JSON.parse(cached);
+  }
+  const { data, error } = await sb.from('song_pdfs').select('song_id,instrument,pdf_url');
+  if(error || !data) return loadPDFs();
+  const result = {};
+  data.forEach(row => {
+    if(!result[row.song_id]) result[row.song_id]={};
+    result[row.song_id][row.instrument] = row.pdf_url;
+  });
+  localStorage.setItem('aa_pdfs_cache', JSON.stringify(result));
+  localStorage.setItem('aa_pdfs_cache_time', Date.now());
+  return result;
+}
 async function upsertSongAsync(song) {
   const sb = getSB();
   if (!sb) { saveSongLocal(song); return song; }
@@ -1989,15 +2030,22 @@ let PDFS    = loadPDFs();
 async function initData() {
   showLoadingState(true);
   try {
-    SONGS   = await loadSongsAsync();
-    ARTISTS = await loadArtistsAsync();
+    // Load songs and PDFs in parallel — much faster!
+    const [songs, pdfs, social] = await Promise.all([
+      loadSongsAsync(),
+      loadPDFsAsync(),
+      loadSocialAsync()
+    ]);
+    SONGS = songs;
+    PDFS = pdfs;
     SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
-    const social = await loadSocialAsync();
+    ARTISTS = await loadArtistsAsync();
     localStorage.setItem('aa_social', JSON.stringify(social));
   } catch(e) {
     console.warn('initData fallback:', e);
     SONGS   = loadData();
     ARTISTS = loadArtists();
+    PDFS    = loadPDFs();
     SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
   }
   showLoadingState(false);
@@ -2005,7 +2053,7 @@ async function initData() {
   renderSocialLinks();
   populateFilters();
   setLang(currentLang);
-  await checkUrlSong(); // open song from URL if present
+  await checkUrlSong();
 }
 
 function showLoadingState(on) {
@@ -2051,6 +2099,13 @@ SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.t
 // ═══════════════════════════════════════════════════════
 //  CARD BUILDER
 // ═══════════════════════════════════════════════════════
+// ── DEBOUNCE ──
+function debounce(fn, ms){
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(()=>fn(...args), ms); };
+}
+const debouncedRenderLibrary = debounce(renderLibrary, 200);
+
 function buildCard(song){
   const d=document.createElement('div');
   d.className='song-card';
@@ -2277,17 +2332,18 @@ async function openSong(id){
   if(!currentSong) return;
   currentInst = currentSong.instruments?.[0] || 'Guitar';
   transposeSteps=0;
-  PDFS = await loadPDFsAsync();
+  // Only load PDFs if not already cached
+  if(!PDFS || Object.keys(PDFS).length === 0){
+    PDFS = await loadPDFsAsync();
+  }
   renderSong();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-song').classList.add('active');
   window.scrollTo(0,0);
   trackStat(currentSong.id, 'view');
-  // Update URL without page reload
   const url = new URL(window.location.href);
   url.searchParams.set('song', currentSong.id);
   window.history.pushState({songId: currentSong.id}, '', url.toString());
-  // Update meta tags for sharing
   updateMetaTags(currentSong);
 }
 
@@ -2789,8 +2845,14 @@ async function deleteArtist(name){
 //  REFRESH SITE AFTER ADMIN CHANGES
 // ═══════════════════════════════════════════════════════
 async function refreshSiteData(){
+  // Clear cache so fresh data loads
+  localStorage.removeItem('aa_songs_cache');
+  localStorage.removeItem('aa_songs_cache_time');
+  localStorage.removeItem('aa_pdfs_cache');
+  localStorage.removeItem('aa_pdfs_cache_time');
   if(isOnline()){
     SONGS = await loadSongsAsync();
+    PDFS  = await loadPDFsAsync();
   } else {
     SONGS = loadData();
   }
