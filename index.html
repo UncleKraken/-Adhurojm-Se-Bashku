@@ -1777,25 +1777,15 @@ const DEFAULT_ARTISTS = ["Oasis Worship","Hillsong Worship","Matt Maher","Bethel
 async function loadSongsAsync() {
   const sb = getSB();
   if (!sb) return loadData();
-  // Serve from cache instantly, refresh in background
-  const cached = localStorage.getItem('aa_songs_cache');
-  const cacheTime = localStorage.getItem('aa_songs_cache_time');
-  const AGE = Date.now() - Number(cacheTime||0);
-  if(cached && AGE < 5*60*1000){ // 5 min cache
-    // Return cache immediately, refresh in background silently
-    setTimeout(async ()=>{
-      try{
-        const {data,error} = await sb.from('songs').select('*').order('created_at',{ascending:false});
-        if(!error&&data){ localStorage.setItem('aa_songs_cache',JSON.stringify(data)); localStorage.setItem('aa_songs_cache_time',Date.now()); }
-      }catch(e){}
-    }, 100);
-    return JSON.parse(cached).map(mapRow);
-  }
   const { data, error } = await sb.from('songs').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Supabase loadSongs:', error); return loadData(); }
-  localStorage.setItem('aa_songs_cache', JSON.stringify(data));
-  localStorage.setItem('aa_songs_cache_time', Date.now());
-  return (data||[]).map(mapRow);
+  const songs = (data||[]).map(mapRow);
+  // Cache for next visit
+  try {
+    localStorage.setItem('aa_songs_cache', JSON.stringify(songs));
+    localStorage.setItem('aa_songs_cache_time', Date.now());
+  } catch(e){}
+  return songs;
 }
 
 function mapRow(row){
@@ -1820,13 +1810,6 @@ function mapRow(row){
 async function loadPDFsAsync(){
   const sb = getSB();
   if(!sb) return loadPDFs();
-  // Cache PDFs — rarely change
-  const cached = localStorage.getItem('aa_pdfs_cache');
-  const cacheTime = localStorage.getItem('aa_pdfs_cache_time');
-  const AGE = Date.now() - Number(cacheTime||0);
-  if(cached && AGE < 10*60*1000){ // 10 min cache
-    return JSON.parse(cached);
-  }
   const { data, error } = await sb.from('song_pdfs').select('song_id,instrument,pdf_url');
   if(error || !data) return loadPDFs();
   const result = {};
@@ -1834,8 +1817,7 @@ async function loadPDFsAsync(){
     if(!result[row.song_id]) result[row.song_id]={};
     result[row.song_id][row.instrument] = row.pdf_url;
   });
-  localStorage.setItem('aa_pdfs_cache', JSON.stringify(result));
-  localStorage.setItem('aa_pdfs_cache_time', Date.now());
+  try { localStorage.setItem('aa_pdfs_cache', JSON.stringify(result)); } catch(e){}
   return result;
 }
 async function upsertSongAsync(song) {
