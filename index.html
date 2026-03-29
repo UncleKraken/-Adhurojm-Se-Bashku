@@ -1495,6 +1495,8 @@ function downloadTransposedPDF() {
   printWindow.document.close();
 }
 
+function noteToIdx(n){const r=FLAT_MAP[n]||n;return CHROMATIC.indexOf(r);}
+
 function shareSong(platform){
   const s = currentSong;
   if(!s) return;
