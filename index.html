@@ -51,7 +51,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
@@ -2012,17 +2012,11 @@ let PDFS    = loadPDFs();
 async function initData() {
   showLoadingState(true);
   try {
-    // Load songs and PDFs in parallel — much faster!
-    const [songs, pdfs, social] = await Promise.all([
-      loadSongsAsync(),
-      loadPDFsAsync(),
-      loadSocialAsync()
-    ]);
-    SONGS = songs;
-    PDFS = pdfs;
-    SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+    SONGS   = await loadSongsAsync();
+    PDFS    = await loadPDFsAsync();
     ARTISTS = await loadArtistsAsync();
-    localStorage.setItem('aa_social', JSON.stringify(social));
+    SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+    try { const social = await loadSocialAsync(); localStorage.setItem('aa_social', JSON.stringify(social)); } catch(e){}
   } catch(e) {
     console.warn('initData fallback:', e);
     SONGS   = loadData();
@@ -2035,6 +2029,7 @@ async function initData() {
   renderSocialLinks();
   populateFilters();
   setLang(currentLang);
+  updateFavBadge();
   await checkUrlSong();
 }
 
