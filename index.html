@@ -2229,19 +2229,20 @@ function updateMetaTags(song){
 function resetMetaTags(){
   document.title = 'Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF';
   const url = new URL(window.location.href);
-  url.searchParams.delete('song');
-  window.history.pushState({}, '', url.toString());
+  if(url.searchParams.has('song')){
+    url.searchParams.delete('song');
+    window.history.pushState({}, '', url.toString());
+  }
 }
 
-// Handle browser back/forward
+// Handle browser back/forward button
 window.addEventListener('popstate', async (e) => {
   const params = new URLSearchParams(window.location.search);
   const songId = params.get('song');
   if(songId && SONGS.length){
     await openSong(Number(songId));
-  } else {
-    showPage('home');
   }
+  // Don't force showPage('home') — let browser handle normally
 });
 
 // On load — check if URL has ?song=
