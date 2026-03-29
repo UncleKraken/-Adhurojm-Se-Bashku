@@ -50,7 +50,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -987,6 +987,12 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <span>Të gjitha Këngët &nbsp;<span id="songCount" style="font-size:14px;color:var(--text3);font-weight:400"></span></span>
         <button class="btn btn-primary btn-sm" onclick="switchAdminTab('addSong',document.getElementById('atab-addSong'));resetSongForm()">➕ Shto Këngë të Re</button>
       </div>
+      <!-- Admin search -->
+      <div style="margin-bottom:14px;position:relative">
+        <input type="text" id="adminSearchInput" placeholder="🔍 Kërko këngë në admin..." autocomplete="new-password"
+          oninput="filterAdminSongs(this.value)"
+          style="width:100%;padding:9px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;outline:none"/>
+      </div>
       <div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)">
         <table class="songs-table" id="adminSongsTable">
           <thead><tr>
@@ -1179,7 +1185,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
         <div class="form-actions">
           <button class="btn btn-ghost" onclick="switchAdminTab('songs',document.getElementById('atab-songs'));resetSongForm()">✕ Anulo</button>
-          <button class="btn btn-primary" onclick="saveSong()" style="padding:10px 28px">💾 Ruaj Këngën</button>
+          <button class="btn btn-primary" id="saveSongBtn" onclick="saveSong()" style="padding:10px 28px">💾 Ruaj Këngën</button>
         </div>
       </div>
     </div>
@@ -1317,6 +1323,14 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const FLAT_MAP  = {Db:'C#',Eb:'D#',Fb:'E',Gb:'F#',Ab:'G#',Bb:'A#',Cb:'B'};
 const SHARP_DISPLAY = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+// ── FORM STATE ──
+let formState = {
+  guitarPdfData: null,
+  pianoPdfData: null,
+  thumbData: null,
+  thumbCleared: false,
+};
 
 // ── YouTube URL → embed format ──
 function toggleCapoField() {
@@ -2555,6 +2569,9 @@ async function refreshAdminSongs(){
   const STATS = await loadStats();
   const count = document.getElementById('songCount');
   if(count) count.textContent = `(${SONGS.length} këngë)`;
+  // Clear search
+  const searchInput = document.getElementById('adminSearchInput');
+  if(searchInput) searchInput.value = '';
   const tbody=document.getElementById('adminSongsTbody');
   if(!tbody) return;
   tbody.innerHTML='';
@@ -2590,7 +2607,19 @@ async function refreshAdminSongs(){
   });
 }
 
-// editSong defined below (full version with PDF and bilingual support)
+function filterAdminSongs(q){
+  const qn = normalizeSearch(q.trim());
+  const rows = document.querySelectorAll('#adminSongsTbody tr');
+  let visible = 0;
+  rows.forEach(tr => {
+    const text = normalizeSearch(tr.textContent);
+    const show = !qn || text.includes(qn);
+    tr.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  const count = document.getElementById('songCount');
+  if(count) count.textContent = q ? `(${visible} / ${SONGS.length} këngë)` : `(${SONGS.length} këngë)`;
+}
 
 async function deleteSong(id){
   if(!confirm('Jeni i sigurt që doni të fshini këtë këngë?')) return;
@@ -3265,12 +3294,6 @@ setTimeout(updateFavBadge, 500);
 // ═══════════════════════════════════════════════════════
 //  FORM STATE — temp storage for current form PDFs/thumb
 // ═══════════════════════════════════════════════════════
-let formState = {
-  guitarPdfData: null,   // base64 data URL
-  pianoPdfData: null,
-  thumbData: null,       // base64 data URL for thumbnail
-  thumbCleared: false,   // user explicitly cleared thumbnail
-};
 
 // ── THUMBNAIL UPLOAD ──
 function handleThumbUpload(event) {
@@ -3738,7 +3761,7 @@ async function saveSong() {
   }
 
   showToast('Duke ruajtur…', '');
-  const saveBtn = document.querySelector('[onclick="saveSong()"]');
+  const saveBtn = document.getElementById('saveSongBtn');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='⏳ Duke ruajtur…'; }
 
   try {
