@@ -514,8 +514,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     </div>
     <div class="nav-right">
       <ul class="nav-links" id="navLinks">
-        <li><a class="active" onclick="showPage('home',this)" data-sq="Home" data-en="Home">Home</a></li>
-        <li><a onclick="showPage('songs',this)" data-sq="Songs" data-en="Songs">Songs</a></li>
+        <li><a class="active" onclick="showPage('home',this)" data-sq="Kryefaqja" data-en="Home">Kryefaqja</a></li>
+        <li><a onclick="showPage('songs',this)" data-sq="Këngët" data-en="Songs">Këngët</a></li>
         <li><a onclick="showPage('favorites',this)" data-sq="❤️ Preferuarat" data-en="❤️ Favorites" id="favNavLink">❤️ Preferuarat</a></li>
         <li><a onclick="showPage('about',this)">Rreth Nesh</a></li>
         <li><a onclick="showPage('guide',this)" data-sq="Udhëzues" data-en="Guide">Udhëzues</a></li>
@@ -562,6 +562,30 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="songs-grid" id="popularGrid"></div>
     </div>
   </section>
+
+  <!-- Most Downloaded -->
+  <section class="section" id="topDownloadedSection" style="display:none">
+    <div class="section-inner">
+      <div class="section-hdr"><h2 class="section-title" id="topDownloadedTitle">⬇ Më të Shkarkoarat</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
+      <div class="songs-grid" id="topDownloadedGrid"></div>
+    </div>
+  </section>
+
+  <!-- Category Shortcuts -->
+  <section class="section" style="background:var(--bg2)">
+    <div class="section-inner">
+      <div class="section-hdr"><h2 class="section-title">🗂 Kategoritë</h2></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px" id="categoryChips">
+        <button onclick="filterByTag('krishtlindje')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(201,151,58,0.4);background:rgba(201,151,58,0.08);color:var(--gold);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(201,151,58,0.18)'" onmouseout="this.style.background='rgba(201,151,58,0.08)'">🎄 Krishtlindje</button>
+        <button onclick="filterByTag('pashke')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(139,26,26,0.4);background:rgba(139,26,26,0.08);color:var(--red);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(139,26,26,0.18)'" onmouseout="this.style.background='rgba(139,26,26,0.08)'">✝️ Pashkë</button>
+        <button onclick="filterByTag('lavderim')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(44,64,116,0.18)'" onmouseout="this.style.background='rgba(44,64,116,0.08)'">🙌 Lavdërim</button>
+        <button onclick="filterByTag('ngushellim')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(90,74,138,0.4);background:rgba(90,74,138,0.08);color:#5a4a8a;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(90,74,138,0.18)'" onmouseout="this.style.background='rgba(90,74,138,0.08)'">🕊️ Ngushëllim</button>
+        <button onclick="filterByTag('shqip')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(42,106,58,0.4);background:rgba(42,106,58,0.08);color:#2a6a3a;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(42,106,58,0.18)'" onmouseout="this.style.background='rgba(42,106,58,0.08)'">🦅 Shqip Original</button>
+        <button onclick="showPage('songs')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--surface)'">📚 Të gjitha →</button>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="favSection" style="display:none">
     <div class="section-inner">
       <div class="section-hdr"><h2 class="section-title" id="favTitle">❤️ Të Preferuarat e Tua</h2><span class="see-all" onclick="clearFavorites()" style="color:var(--text3);font-size:12px">✕ Pastro</span></div>
@@ -931,8 +955,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="foot-note">"Të gjitha materialet janë falas për përdorim në kishë dhe shërbesa adhurimi."</div>
     </div>
     <nav class="foot-links">
-      <a onclick="showPage('home')" data-sq="Home" data-en="Home">Home</a>
-      <a onclick="showPage('songs')" data-sq="Songs" data-en="Songs">Songs</a>
+      <a onclick="showPage('home')" data-sq="Kryefaqja" data-en="Home">Kryefaqja</a>
+      <a onclick="showPage('songs')" data-sq="Këngët" data-en="Songs">Këngët</a>
       <a onclick="showPage('about')" data-sq="Rreth Nesh" data-en="About">Rreth Nesh</a>
       <a onclick="showPage('guide')" data-sq="Udhëzues Teknik" data-en="Technical Guide">Udhëzues Teknik</a>
       <a onclick="showPage('copyright')" data-sq="E drejta e Autorit" data-en="Copyright">E drejta e Autorit</a>
@@ -2249,13 +2273,29 @@ function acKey(e,listId){
 // ═══════════════════════════════════════════════════════
 //  HOME GRIDS
 // ═══════════════════════════════════════════════════════
-function renderHome(){
+async function renderHome(){
   const p=document.getElementById('popularGrid'),r=document.getElementById('recentGrid');
   const fav=document.getElementById('favGrid'), favSec=document.getElementById('favSection');
-  p.innerHTML='';r.innerHTML='';fav.innerHTML='';
+  const topGrid=document.getElementById('topDownloadedGrid'), topSec=document.getElementById('topDownloadedSection');
+  p.innerHTML='';r.innerHTML='';fav.innerHTML='';if(topGrid)topGrid.innerHTML='';
 
   // Popular songs
   SONGS.filter(s=>s.popular).forEach(s=>p.appendChild(buildCard(s)));
+
+  // Most Downloaded — from stats
+  try {
+    const STATS = await loadStats();
+    const withDownloads = SONGS
+      .filter(s => (STATS[s.id]?.downloads||0) > 0)
+      .sort((a,b) => (STATS[b.id]?.downloads||0) - (STATS[a.id]?.downloads||0))
+      .slice(0, 6);
+    if(withDownloads.length >= 3 && topGrid && topSec){
+      topSec.style.display = 'block';
+      withDownloads.forEach(s=>topGrid.appendChild(buildCard(s)));
+    } else if(topSec) {
+      topSec.style.display = 'none';
+    }
+  } catch(e){ if(topSec) topSec.style.display='none'; }
 
   // Favorites
   const favIds = getFavorites();
@@ -2269,6 +2309,16 @@ function renderHome(){
 
   // Recently added — newest 8
   SONGS.slice(0, 8).forEach(s=>r.appendChild(buildCard(s)));
+}
+
+function filterByTag(tag){
+  showPage('songs');
+  const searchInput = document.getElementById('libSearch');
+  if(searchInput){
+    searchInput.value = tag;
+    renderLibrary();
+    searchInput.scrollIntoView({behavior:'smooth', block:'center'});
+  }
 }
 
 function clearFavorites(){
