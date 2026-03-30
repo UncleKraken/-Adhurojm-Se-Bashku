@@ -1416,17 +1416,22 @@ function toEmbedUrl(url) {
 // ═══════════════════════════════════════════════════════
 //  ⭐ FAVORITES
 // ═══════════════════════════════════════════════════════
-function getFavorites() {
-  try { return JSON.parse(localStorage.getItem('aa_favorites') || '[]'); } catch(e) { return []; }
-}
 function saveFavorites(favs) { localStorage.setItem('aa_favorites', JSON.stringify(favs)); }
+
+function getFavorites() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('aa_favorites') || '[]');
+    // Deduplicate and ensure all are numbers
+    return [...new Set(raw.map(Number))].filter(n => !isNaN(n));
+  } catch(e) { return []; }
+}
 
 function toggleFavorite(songId) {
   const id = Number(songId);
   let favs = getFavorites();
-  const idx = favs.indexOf(id);
-  if (idx >= 0) {
-    favs.splice(idx, 1);
+  const isFav = favs.includes(id);
+  if (isFav) {
+    favs = favs.filter(x => x !== id);
     showToast('💔 Hoqe nga të preferuarat', '');
   } else {
     favs.push(id);
@@ -1435,7 +1440,7 @@ function toggleFavorite(songId) {
   saveFavorites(favs);
   updateFavBadge();
   renderHome();
-  renderSong(); // re-render heart button
+  renderSong();
 }
 
 // ═══════════════════════════════════════════════════════
