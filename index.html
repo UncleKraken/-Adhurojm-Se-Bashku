@@ -559,7 +559,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Recently Added — TOP of page after hero -->
   <section class="section">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="recentTitle">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')" id="recentSeeAll">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="recentTitle">Të Shtuara së Fundi</h2><span class="see-all" onclick="filterByCategory('recent')" id="recentSeeAll">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="recentGrid"></div>
     </div>
   </section>
@@ -567,7 +567,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Popular -->
   <section class="section" style="background:var(--bg2)">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="popularTitle">Këngët e Njohura</h2><span class="see-all" onclick="showPage('songs')" id="popularSeeAll">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="popularTitle">Këngët e Njohura</h2><span class="see-all" onclick="filterByCategory('popular')" id="popularSeeAll">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="popularGrid"></div>
     </div>
   </section>
@@ -2382,10 +2382,7 @@ async function filterByCategory(cat){
   window._categoryFilter = cat;
   window._statsForFilter = null;
   if(cat==='top-downloads' || cat==='top-views'){
-    try {
-      const STATS = await loadStats();
-      window._statsForFilter = STATS;
-    } catch(e){}
+    try { window._statsForFilter = await loadStats(); } catch(e){}
   }
   document.getElementById('libSearch').value = '';
   renderLibrary();
@@ -2437,6 +2434,8 @@ function renderLibrary(){
     let label = '';
     if(catFilter==='top-downloads') label = currentLang==='sq'?'⬇ Më të Shkarkuara':'⬇ Most Downloaded';
     else if(catFilter==='top-views') label = currentLang==='sq'?'👁 Më të Shikuara':'👁 Most Viewed';
+    else if(catFilter==='recent') label = currentLang==='sq'?'🆕 Të Shtuara së Fundi':'🆕 Recently Added';
+    else if(catFilter==='popular') label = currentLang==='sq'?'⭐ Këngët e Njohura':'⭐ Popular Songs';
     else { const c = HOME_CATEGORIES.find(x=>x.key===catFilter); label = c?c.label:catFilter; }
     heroPEl.innerHTML = `${label} &nbsp;<button onclick="window._categoryFilter=null;window._statsForFilter=null;document.getElementById('libSearch').value='';renderLibrary()" style="padding:3px 12px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">✕ ${currentLang==='sq'?'Hiq filtrin':'Clear filter'}</button>`;
   } else if(heroPEl){
@@ -2453,6 +2452,11 @@ function renderLibrary(){
     } else if(catFilter==='top-views'){
       filtered = filtered.filter(s=>(STATS[s.id]?.views||0)>0)
         .sort((a,b)=>(STATS[b.id]?.views||0)-(STATS[a.id]?.views||0));
+    } else if(catFilter==='recent'){
+      // SONGS already sorted newest first from Supabase
+      filtered = [...SONGS];
+    } else if(catFilter==='popular'){
+      filtered = filtered.filter(s=>s.popular);
     } else {
       filtered = filtered.filter(s=>(s.categories||[]).includes(catFilter));
     }
