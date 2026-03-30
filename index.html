@@ -566,25 +566,21 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Most Downloaded -->
   <section class="section" id="topDownloadedSection" style="display:none">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="topDownloadedTitle">⬇ Më të Shkarkoarat</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="topDownloadedTitle">⬇ Më të Shkarkoarat</h2><span class="see-all" onclick="filterByCategory('top-downloads')">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="topDownloadedGrid"></div>
     </div>
   </section>
 
-  <!-- Category Shortcuts -->
-  <section class="section" style="background:var(--bg2)">
+  <!-- Most Viewed -->
+  <section class="section" style="background:var(--bg2)" id="topViewedSection" style="display:none">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title">🗂 Kategoritë</h2></div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px" id="categoryChips">
-        <button onclick="filterByTag('krishtlindje')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(201,151,58,0.4);background:rgba(201,151,58,0.08);color:var(--gold);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(201,151,58,0.18)'" onmouseout="this.style.background='rgba(201,151,58,0.08)'">🎄 Krishtlindje</button>
-        <button onclick="filterByTag('pashke')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(139,26,26,0.4);background:rgba(139,26,26,0.08);color:var(--red);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(139,26,26,0.18)'" onmouseout="this.style.background='rgba(139,26,26,0.08)'">✝️ Pashkë</button>
-        <button onclick="filterByTag('lavderim')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(44,64,116,0.18)'" onmouseout="this.style.background='rgba(44,64,116,0.08)'">🙌 Lavdërim</button>
-        <button onclick="filterByTag('ngushellim')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(90,74,138,0.4);background:rgba(90,74,138,0.08);color:#5a4a8a;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(90,74,138,0.18)'" onmouseout="this.style.background='rgba(90,74,138,0.08)'">🕊️ Ngushëllim</button>
-        <button onclick="filterByTag('shqip')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid rgba(42,106,58,0.4);background:rgba(42,106,58,0.08);color:#2a6a3a;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(42,106,58,0.18)'" onmouseout="this.style.background='rgba(42,106,58,0.08)'">🦅 Shqip Original</button>
-        <button onclick="showPage('songs')" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--surface)'">📚 Të gjitha →</button>
-      </div>
+      <div class="section-hdr"><h2 class="section-title" id="topViewedTitle">👁 Më të Shikuarat</h2><span class="see-all" onclick="filterByCategory('top-views')">Shiko të gjitha →</span></div>
+      <div class="songs-grid" id="topViewedGrid"></div>
     </div>
   </section>
+
+  <!-- Manual categories — rendered dynamically -->
+  <div id="homeCategorySections"></div>
 
   <section class="section" id="favSection" style="display:none">
     <div class="section-inner">
@@ -1105,6 +1101,19 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
               <option value="true">Dygjuhëshe (Shqip + Anglisht)</option>
               <option value="false">Njëgjuhëshe (Vetëm Shqip)</option>
             </select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">🗂 Kategoritë (zgjidhni sa të doni)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px" id="categoriesCheckboxes">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="krishtlindje" class="cat-cb"/> 🎄 Krishtlindje</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="pashke" class="cat-cb"/> ✝️ Pashkë</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="femije" class="cat-cb"/> 👶 Fëmijë</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="shqip" class="cat-cb"/> 🦅 Shqip Original</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="himne" class="cat-cb"/> ⛪ Himne Tradicionale</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="oferte" class="cat-cb"/> 🎁 Këngë Oferte</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="lavderim" class="cat-cb"/> 🙌 Lavdërim</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:100px"><input type="checkbox" value="ngushellim" class="cat-cb"/> 🕊️ Ngushëllim</label>
+            </div>
           </div>
           <div class="form-group full">
             <label class="form-label">YouTube Embed URL (opsionale)</label>
@@ -1841,6 +1850,7 @@ function mapRow(row){
     youtube: row.youtube || null,
     thumb: row.thumb_url || null,
     thumbGrad: ['#1a2a4a','#2c4074','#5a80c0'],
+    categories: row.categories || [],
     lyricsRaw: { Guitar: row.lyrics_guitar || '', Piano: row.lyrics_piano || '' }
   };
 }
@@ -1875,6 +1885,7 @@ async function upsertSongAsync(song) {
     thumb_url: song.thumb || null,
     lyrics_guitar: song.lyricsRaw?.Guitar || null,
     lyrics_piano:  song.lyricsRaw?.Piano  || null,
+    categories: song.categories || [],
   };
 
   // Existing DB song → id comes from editIdNum (small sequential DB id)
@@ -2273,52 +2284,93 @@ function acKey(e,listId){
 // ═══════════════════════════════════════════════════════
 //  HOME GRIDS
 // ═══════════════════════════════════════════════════════
+const HOME_CATEGORIES = [
+  { key:'krishtlindje', label:'🎄 Krishtlindje',        bg:'var(--bg)'  },
+  { key:'pashke',       label:'✝️ Pashkë',               bg:'var(--bg2)' },
+  { key:'femije',       label:'👶 Fëmijë',               bg:'var(--bg)'  },
+  { key:'shqip',        label:'🦅 Shqip Original',       bg:'var(--bg2)' },
+  { key:'himne',        label:'⛪ Himne Tradicionale',    bg:'var(--bg)'  },
+  { key:'oferte',       label:'🎁 Këngë Oferte',         bg:'var(--bg2)' },
+  { key:'lavderim',     label:'🙌 Lavdërim',             bg:'var(--bg)'  },
+  { key:'ngushellim',   label:'🕊️ Ngushëllim',           bg:'var(--bg2)' },
+];
+
 async function renderHome(){
   const p=document.getElementById('popularGrid'),r=document.getElementById('recentGrid');
   const fav=document.getElementById('favGrid'), favSec=document.getElementById('favSection');
   const topGrid=document.getElementById('topDownloadedGrid'), topSec=document.getElementById('topDownloadedSection');
-  p.innerHTML='';r.innerHTML='';fav.innerHTML='';if(topGrid)topGrid.innerHTML='';
+  const topVGrid=document.getElementById('topViewedGrid'), topVSec=document.getElementById('topViewedSection');
+  p.innerHTML='';r.innerHTML='';fav.innerHTML='';
+  if(topGrid) topGrid.innerHTML='';
+  if(topVGrid) topVGrid.innerHTML='';
 
   // Popular songs
   SONGS.filter(s=>s.popular).forEach(s=>p.appendChild(buildCard(s)));
 
-  // Most Downloaded — from stats
+  // Stats-based sections
   try {
     const STATS = await loadStats();
-    const withDownloads = SONGS
-      .filter(s => (STATS[s.id]?.downloads||0) > 0)
-      .sort((a,b) => (STATS[b.id]?.downloads||0) - (STATS[a.id]?.downloads||0))
-      .slice(0, 6);
-    if(withDownloads.length >= 3 && topGrid && topSec){
-      topSec.style.display = 'block';
-      withDownloads.forEach(s=>topGrid.appendChild(buildCard(s)));
-    } else if(topSec) {
-      topSec.style.display = 'none';
-    }
-  } catch(e){ if(topSec) topSec.style.display='none'; }
+    const byDownloads = SONGS.filter(s=>(STATS[s.id]?.downloads||0)>0)
+      .sort((a,b)=>(STATS[b.id]?.downloads||0)-(STATS[a.id]?.downloads||0)).slice(0,10);
+    if(byDownloads.length>=3 && topGrid && topSec){
+      topSec.style.display='block';
+      byDownloads.forEach(s=>topGrid.appendChild(buildCard(s)));
+    } else if(topSec) topSec.style.display='none';
+
+    const byViews = SONGS.filter(s=>(STATS[s.id]?.views||0)>0)
+      .sort((a,b)=>(STATS[b.id]?.views||0)-(STATS[a.id]?.views||0)).slice(0,10);
+    if(byViews.length>=3 && topVGrid && topVSec){
+      topVSec.style.display='block';
+      byViews.forEach(s=>topVGrid.appendChild(buildCard(s)));
+    } else if(topVSec) topVSec.style.display='none';
+  } catch(e){
+    if(topSec) topSec.style.display='none';
+    if(topVSec) topVSec.style.display='none';
+  }
+
+  // Manual categories — only show if they have songs
+  const catContainer = document.getElementById('homeCategorySections');
+  if(catContainer){
+    catContainer.innerHTML='';
+    HOME_CATEGORIES.forEach(cat => {
+      const songs = SONGS.filter(s=>(s.categories||[]).includes(cat.key)).slice(0,10);
+      if(!songs.length) return;
+      const sec = document.createElement('section');
+      sec.className='section'; sec.style.background=cat.bg;
+      sec.innerHTML=`<div class="section-inner">
+        <div class="section-hdr"><h2 class="section-title">${cat.label}</h2><span class="see-all" onclick="filterByCategory('${cat.key}')">Shiko të gjitha →</span></div>
+        <div class="songs-grid" id="catGrid_${cat.key}"></div>
+      </div>`;
+      catContainer.appendChild(sec);
+      songs.forEach(s=>document.getElementById(`catGrid_${cat.key}`).appendChild(buildCard(s)));
+    });
+  }
 
   // Favorites
   const favIds = getFavorites();
   const favSongs = SONGS.filter(s => favIds.includes(Number(s.id)));
   if(favSongs.length > 0){
-    favSec.style.display = 'block';
+    favSec.style.display='block';
     favSongs.forEach(s=>fav.appendChild(buildCard(s)));
-  } else {
-    favSec.style.display = 'none';
-  }
+  } else favSec.style.display='none';
 
-  // Recently added — newest 8
-  SONGS.slice(0, 8).forEach(s=>r.appendChild(buildCard(s)));
+  // Recently added — newest 12
+  SONGS.slice(0,12).forEach(s=>r.appendChild(buildCard(s)));
+}
+
+function filterByCategory(cat){
+  showPage('songs');
+  window._categoryFilter = cat;
+  document.getElementById('libSearch').value = '';
+  renderLibrary();
 }
 
 function filterByTag(tag){
   showPage('songs');
+  window._categoryFilter = null;
   const searchInput = document.getElementById('libSearch');
-  if(searchInput){
-    searchInput.value = tag;
-    renderLibrary();
-    searchInput.scrollIntoView({behavior:'smooth', block:'center'});
-  }
+  if(searchInput){ searchInput.value = tag; }
+  renderLibrary();
 }
 
 function clearFavorites(){
@@ -2349,8 +2401,26 @@ function renderLibrary(){
   const artist=document.getElementById('filterArtist').value;
   const key=document.getElementById('filterKey').value;
   const inst=document.getElementById('filterInst').value;
+  const catFilter = window._categoryFilter || null;
   const grid=document.getElementById('libraryGrid');grid.innerHTML='';
+
+  // Show category banner if filtering by category
+  const heroPEl = document.querySelector('#page-songs .page-hero p');
+  if(catFilter && heroPEl){
+    const catInfo = HOME_CATEGORIES.find(c=>c.key===catFilter);
+    heroPEl.textContent = catInfo ? `Filtro: ${catInfo.label}` : 'Filtro sipas kategorisë';
+  } else if(heroPEl){
+    heroPEl.setAttribute('data-sq','Gjej, filtro dhe shfaq çdo këngë adhurimi');
+    heroPEl.textContent = currentLang==='sq' ? 'Gjej, filtro dhe shfaq çdo këngë adhurimi' : 'Find, filter and view every worship song';
+  }
+
   const f=SONGS.filter(s=>{
+    if(catFilter){
+      // Stats-based filters
+      if(catFilter==='top-downloads') return true; // handled differently
+      if(catFilter==='top-views') return true;
+      if(!(s.categories||[]).includes(catFilter)) return false;
+    }
     const qn=normalizeSearch(q);
     const lyricsText = normalizeSearch((s.lyricsRaw?.Guitar||'') + ' ' + (s.lyricsRaw?.Piano||''));
     if(qn&&!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.original||'').includes(qn)&&!normalizeSearch(s.artist||'').includes(qn)&&!(qn.length>=3&&lyricsText.includes(qn)))return false;
@@ -2359,7 +2429,16 @@ function renderLibrary(){
     if(inst&&!s.instruments.includes(inst))return false;
     return true;
   });
-  if(!f.length)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë me këto filtra.</div>';
+
+  // Add clear filter button if category filter active
+  if(catFilter){
+    const clearBtn = document.createElement('div');
+    clearBtn.style.cssText='grid-column:1/-1;margin-bottom:8px';
+    clearBtn.innerHTML=`<button onclick="window._categoryFilter=null;document.getElementById('libSearch').value='';renderLibrary()" style="padding:6px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer">✕ Hiq filtrin e kategorisë</button>`;
+    grid.appendChild(clearBtn);
+  }
+
+  if(!f.length) grid.innerHTML+='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë me këto filtra.</div>';
   else f.forEach(s=>grid.appendChild(buildCard(s)));
 }
 
@@ -2706,6 +2785,10 @@ function editSong(id) {
   document.getElementById('fYoutube').value = s.youtube || '';
   document.getElementById('fPopular').value = s.popular ? 'true' : 'false';
   document.getElementById('fBilingual').value = s.bilingual === false ? 'false' : 'true';
+  // Restore categories
+  document.querySelectorAll('.cat-cb').forEach(cb => {
+    cb.checked = (s.categories||[]).includes(cb.value);
+  });
   document.getElementById('fCapo').value = s.capo || 0;
   toggleCapoField();
   document.getElementById('fLyricsGuitar').value = s.lyricsRaw?.Guitar || '';
@@ -3795,6 +3878,7 @@ async function saveSong() {
     instruments: insts,
     popular: document.getElementById('fPopular').value === 'true',
     bilingual: document.getElementById('fBilingual').value !== 'false',
+    categories: Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb=>cb.value),
     capo: document.getElementById('fGuitar').checked ? parseInt(document.getElementById('fCapo').value) || 0 : 0,
     recent: !editIdNum,
     youtube: document.getElementById('fYoutube').value.trim() || null,
@@ -3887,6 +3971,7 @@ function resetSongForm() {
   document.getElementById('fBilingual').value = 'true';
   document.getElementById('fCapo').value = '0';
   toggleCapoField();
+  document.querySelectorAll('.cat-cb').forEach(cb => cb.checked = false);
   document.getElementById('lyricsPreviewBox').style.display = 'none';
   // Reset form state
   formState = { guitarPdfData: null, pianoPdfData: null, thumbData: null, thumbCleared: false };
