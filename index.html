@@ -556,9 +556,18 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
     </div>
   </section>
+  <!-- Recently Added — TOP of page after hero -->
+  <section class="section">
+    <div class="section-inner">
+      <div class="section-hdr"><h2 class="section-title" id="recentTitle">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')" id="recentSeeAll">Shiko të gjitha →</span></div>
+      <div class="songs-grid" id="recentGrid"></div>
+    </div>
+  </section>
+
+  <!-- Popular -->
   <section class="section" style="background:var(--bg2)">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="popularTitle">Këngët e Njohura</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="popularTitle">Këngët e Njohura</h2><span class="see-all" onclick="showPage('songs')" id="popularSeeAll">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="popularGrid"></div>
     </div>
   </section>
@@ -566,15 +575,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Most Downloaded -->
   <section class="section" id="topDownloadedSection" style="display:none">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="topDownloadedTitle">⬇ Më të Shkarkoarat</h2><span class="see-all" onclick="filterByCategory('top-downloads')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="topDownloadedTitle">⬇ Më të Shkarkuara</h2><span class="see-all" onclick="filterByCategory('top-downloads')" id="topDownloadedSeeAll">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="topDownloadedGrid"></div>
     </div>
   </section>
 
   <!-- Most Viewed -->
-  <section class="section" style="background:var(--bg2)" id="topViewedSection" style="display:none">
+  <section class="section" style="background:var(--bg2)" id="topViewedSection">
     <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="topViewedTitle">👁 Më të Shikuarat</h2><span class="see-all" onclick="filterByCategory('top-views')">Shiko të gjitha →</span></div>
+      <div class="section-hdr"><h2 class="section-title" id="topViewedTitle">👁 Më të Shikuara</h2><span class="see-all" onclick="filterByCategory('top-views')" id="topViewedSeeAll">Shiko të gjitha →</span></div>
       <div class="songs-grid" id="topViewedGrid"></div>
     </div>
   </section>
@@ -582,16 +591,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Manual categories — rendered dynamically -->
   <div id="homeCategorySections"></div>
 
+  <!-- Favorites -->
   <section class="section" id="favSection" style="display:none">
     <div class="section-inner">
       <div class="section-hdr"><h2 class="section-title" id="favTitle">❤️ Të Preferuarat e Tua</h2><span class="see-all" onclick="clearFavorites()" style="color:var(--text3);font-size:12px">✕ Pastro</span></div>
       <div class="songs-grid" id="favGrid"></div>
-    </div>
-  </section>
-  <section class="section">
-    <div class="section-inner">
-      <div class="section-hdr"><h2 class="section-title" id="recentTitle">Të Shtuara së Fundi</h2><span class="see-all" onclick="showPage('songs')">Shiko të gjitha →</span></div>
-      <div class="songs-grid" id="recentGrid"></div>
     </div>
   </section>
 </div>
@@ -1888,19 +1892,26 @@ async function upsertSongAsync(song) {
     categories: song.categories || [],
   };
 
-  // Existing DB song → id comes from editIdNum (small sequential DB id)
-  // New songs → id is Date.now() (very large timestamp ~1.7e12)
-  // DB ids from Supabase are sequential small integers (1, 2, 3...)
   const numId = song.id ? Number(song.id) : null;
-  const isDbId = numId && !isNaN(numId) && numId < 1e9; // DB ids are small (< 1 billion)
+  const isDbId = numId && !isNaN(numId) && numId < 1e9;
   if (isDbId) {
-    const { data, error } = await sb.from('songs').update(row).eq('id', numId).select().single();
+    let { data, error } = await sb.from('songs').update(row).eq('id', numId).select().single();
+    if (error && error.message && error.message.includes('categories')) {
+      // categories column doesn't exist yet — retry without it
+      const rowNoCat = {...row}; delete rowNoCat.categories;
+      const res = await sb.from('songs').update(rowNoCat).eq('id', numId).select().single();
+      data = res.data; error = res.error;
+    }
     if (error) { console.error('Supabase update song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
     return { ...song, id: data.id };
   }
 
-  // New song → INSERT (let DB generate id)
-  const { data, error } = await sb.from('songs').insert(row).select().single();
+  let { data, error } = await sb.from('songs').insert(row).select().single();
+  if (error && error.message && error.message.includes('categories')) {
+    const rowNoCat = {...row}; delete rowNoCat.categories;
+    const res = await sb.from('songs').insert(rowNoCat).select().single();
+    data = res.data; error = res.error;
+  }
   if (error) { console.error('Supabase insert song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
   return { ...song, id: data.id };
 }
@@ -2300,12 +2311,17 @@ async function renderHome(){
   const fav=document.getElementById('favGrid'), favSec=document.getElementById('favSection');
   const topGrid=document.getElementById('topDownloadedGrid'), topSec=document.getElementById('topDownloadedSection');
   const topVGrid=document.getElementById('topViewedGrid'), topVSec=document.getElementById('topViewedSection');
-  p.innerHTML='';r.innerHTML='';fav.innerHTML='';
+  if(p) p.innerHTML='';
+  if(r) r.innerHTML='';
+  if(fav) fav.innerHTML='';
   if(topGrid) topGrid.innerHTML='';
   if(topVGrid) topVGrid.innerHTML='';
 
-  // Popular songs
-  SONGS.filter(s=>s.popular).forEach(s=>p.appendChild(buildCard(s)));
+  // Recently added — TOP, newest 10
+  SONGS.slice(0,10).forEach(s=>r.appendChild(buildCard(s)));
+
+  // Popular songs — max 10
+  SONGS.filter(s=>s.popular).slice(0,10).forEach(s=>p.appendChild(buildCard(s)));
 
   // Stats-based sections
   try {
@@ -2328,17 +2344,18 @@ async function renderHome(){
     if(topVSec) topVSec.style.display='none';
   }
 
-  // Manual categories — only show if they have songs
+  // Manual categories — max 10 each, only show if songs exist
   const catContainer = document.getElementById('homeCategorySections');
   if(catContainer){
     catContainer.innerHTML='';
-    HOME_CATEGORIES.forEach(cat => {
+    HOME_CATEGORIES.forEach((cat,i) => {
       const songs = SONGS.filter(s=>(s.categories||[]).includes(cat.key)).slice(0,10);
       if(!songs.length) return;
+      const bg = i%2===0 ? 'var(--bg)' : 'var(--bg2)';
       const sec = document.createElement('section');
-      sec.className='section'; sec.style.background=cat.bg;
+      sec.className='section'; sec.style.background=bg;
       sec.innerHTML=`<div class="section-inner">
-        <div class="section-hdr"><h2 class="section-title">${cat.label}</h2><span class="see-all" onclick="filterByCategory('${cat.key}')">Shiko të gjitha →</span></div>
+        <div class="section-hdr"><h2 class="section-title">${cat.label}</h2><span class="see-all" onclick="filterByCategory('${cat.key}')">${currentLang==='sq'?'Shiko të gjitha →':'View all →'}</span></div>
         <div class="songs-grid" id="catGrid_${cat.key}"></div>
       </div>`;
       catContainer.appendChild(sec);
@@ -2353,14 +2370,18 @@ async function renderHome(){
     favSec.style.display='block';
     favSongs.forEach(s=>fav.appendChild(buildCard(s)));
   } else favSec.style.display='none';
-
-  // Recently added — newest 12
-  SONGS.slice(0,12).forEach(s=>r.appendChild(buildCard(s)));
 }
 
-function filterByCategory(cat){
+async function filterByCategory(cat){
   showPage('songs');
   window._categoryFilter = cat;
+  window._statsForFilter = null;
+  if(cat==='top-downloads' || cat==='top-views'){
+    try {
+      const STATS = await loadStats();
+      window._statsForFilter = STATS;
+    } catch(e){}
+  }
   document.getElementById('libSearch').value = '';
   renderLibrary();
 }
@@ -2402,25 +2423,38 @@ function renderLibrary(){
   const key=document.getElementById('filterKey').value;
   const inst=document.getElementById('filterInst').value;
   const catFilter = window._categoryFilter || null;
+  const STATS = window._statsForFilter || {};
   const grid=document.getElementById('libraryGrid');grid.innerHTML='';
 
-  // Show category banner if filtering by category
+  // Category banner
   const heroPEl = document.querySelector('#page-songs .page-hero p');
   if(catFilter && heroPEl){
-    const catInfo = HOME_CATEGORIES.find(c=>c.key===catFilter);
-    heroPEl.textContent = catInfo ? `Filtro: ${catInfo.label}` : 'Filtro sipas kategorisë';
+    let label = '';
+    if(catFilter==='top-downloads') label = currentLang==='sq'?'⬇ Më të Shkarkuara':'⬇ Most Downloaded';
+    else if(catFilter==='top-views') label = currentLang==='sq'?'👁 Më të Shikuara':'👁 Most Viewed';
+    else { const c = HOME_CATEGORIES.find(x=>x.key===catFilter); label = c?c.label:catFilter; }
+    heroPEl.innerHTML = `${label} &nbsp;<button onclick="window._categoryFilter=null;window._statsForFilter=null;document.getElementById('libSearch').value='';renderLibrary()" style="padding:3px 12px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">✕ ${currentLang==='sq'?'Hiq filtrin':'Clear filter'}</button>`;
   } else if(heroPEl){
-    heroPEl.setAttribute('data-sq','Gjej, filtro dhe shfaq çdo këngë adhurimi');
     heroPEl.textContent = currentLang==='sq' ? 'Gjej, filtro dhe shfaq çdo këngë adhurimi' : 'Find, filter and view every worship song';
   }
 
-  const f=SONGS.filter(s=>{
-    if(catFilter){
-      // Stats-based filters
-      if(catFilter==='top-downloads') return true; // handled differently
-      if(catFilter==='top-views') return true;
-      if(!(s.categories||[]).includes(catFilter)) return false;
+  let filtered = [...SONGS];
+
+  // Apply category filter first
+  if(catFilter){
+    if(catFilter==='top-downloads'){
+      filtered = filtered.filter(s=>(STATS[s.id]?.downloads||0)>0)
+        .sort((a,b)=>(STATS[b.id]?.downloads||0)-(STATS[a.id]?.downloads||0));
+    } else if(catFilter==='top-views'){
+      filtered = filtered.filter(s=>(STATS[s.id]?.views||0)>0)
+        .sort((a,b)=>(STATS[b.id]?.views||0)-(STATS[a.id]?.views||0));
+    } else {
+      filtered = filtered.filter(s=>(s.categories||[]).includes(catFilter));
     }
+  }
+
+  // Apply search + other filters
+  const f = filtered.filter(s=>{
     const qn=normalizeSearch(q);
     const lyricsText = normalizeSearch((s.lyricsRaw?.Guitar||'') + ' ' + (s.lyricsRaw?.Piano||''));
     if(qn&&!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.original||'').includes(qn)&&!normalizeSearch(s.artist||'').includes(qn)&&!(qn.length>=3&&lyricsText.includes(qn)))return false;
@@ -2430,15 +2464,7 @@ function renderLibrary(){
     return true;
   });
 
-  // Add clear filter button if category filter active
-  if(catFilter){
-    const clearBtn = document.createElement('div');
-    clearBtn.style.cssText='grid-column:1/-1;margin-bottom:8px';
-    clearBtn.innerHTML=`<button onclick="window._categoryFilter=null;document.getElementById('libSearch').value='';renderLibrary()" style="padding:6px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer">✕ Hiq filtrin e kategorisë</button>`;
-    grid.appendChild(clearBtn);
-  }
-
-  if(!f.length) grid.innerHTML+='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë me këto filtra.</div>';
+  if(!f.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë.</div>';
   else f.forEach(s=>grid.appendChild(buildCard(s)));
 }
 
@@ -3082,7 +3108,7 @@ const TRANSLATIONS = {
     'hero-sub':'Një bibliotekë falas për muzikantët dhe ekipet e adhurimit në territoret shqipfolëse.',
     'hero-placeholder':'Kërko këngë...',
     // SECTIONS
-    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','fav-title':'❤️ Të Preferuarat e Tua','see-all':'Shiko të gjitha →',
+    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','fav-title':'❤️ Të Preferuarat e Tua','top-downloaded-title':'⬇ Më të Shkarkuara','top-viewed-title':'👁 Më të Shikuara','see-all':'Shiko të gjitha →',
     // LIBRARY
     'library-title':'Biblioteka e Këngëve','library-sub':'Gjej, filtro dhe shfaq çdo këngë adhurimi',
     'search-placeholder':'Kërko këngë...','all-artists':'Të gjithë artistët','any-key':'Çdo tonalitet','any-inst':'Çdo instrument',
@@ -3114,7 +3140,7 @@ const TRANSLATIONS = {
     'hero-tagline':'The Albanian worship song archive',
     'hero-sub':'A free library for musicians and worship teams in Albanian-speaking territories.',
     'hero-placeholder':'Search songs...',
-    'popular-title':'Popular Songs','recent-title':'Recently Added','fav-title':'❤️ Your Favorites','see-all':'View all →',
+    'popular-title':'Popular Songs','recent-title':'Recently Added','fav-title':'❤️ Your Favorites','top-downloaded-title':'⬇ Most Downloaded','top-viewed-title':'👁 Most Viewed','see-all':'View all →',
     'library-title':'Song Library','library-sub':'Find, filter and view every worship song',
     'search-placeholder':'Search songs...','all-artists':'All artists','any-key':'Any key','any-inst':'Any instrument',
     'back-btn':'← Back to Library',
@@ -3171,6 +3197,10 @@ function applyLang(){
   if(popularTitle) popularTitle.textContent = t('popular-title');
   if(recentTitle) recentTitle.textContent = t('recent-title');
   if(favTitle) favTitle.textContent = t('fav-title');
+  const topDownTitle = document.getElementById('topDownloadedTitle');
+  const topViewTitle = document.getElementById('topViewedTitle');
+  if(topDownTitle) topDownTitle.textContent = t('top-downloaded-title');
+  if(topViewTitle) topViewTitle.textContent = t('top-viewed-title');
   document.querySelectorAll('.see-all').forEach(el=>el.textContent = t('see-all'));
   // Library
   const libHero = document.querySelector('#page-songs .page-hero');
