@@ -1230,9 +1230,12 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     <!-- ── TAB: PDF MANAGEMENT ── -->
     <div class="admin-panel" id="tab-pdfs">
       <div class="admin-section-title">📄 Menaxho PDF Files</div>
-      <div style="background:var(--blue-light);border-radius:var(--rs);padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--text)">
+      <div style="background:var(--blue-light);border-radius:var(--rs);padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--text)">
         💡 Ngarko PDF-in e këngës (Guitar dhe/ose Piano). Sapo të ngarkohet, butoni <strong>Shkarko PDF</strong> aktivizohet automatikisht për vizitorët.
       </div>
+      <input type="text" id="pdfSearchInput" placeholder="🔍 Kërko këngë në PDF panel..." autocomplete="new-password"
+        oninput="filterPDFPanel(this.value)"
+        style="width:100%;padding:9px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-bottom:16px"/>
       <div id="pdfManageList"></div>
     </div>
 
@@ -2311,7 +2314,11 @@ const HOME_CATEGORIES = [
   { key:'ngushellim',   label:'🕊️ Ngushëllim',           bg:'var(--bg2)' },
 ];
 
+let _renderingHome = false;
 async function renderHome(){
+  if(_renderingHome) return; // prevent concurrent renders
+  _renderingHome = true;
+  try {
   const p=document.getElementById('popularGrid'),r=document.getElementById('recentGrid');
   const fav=document.getElementById('favGrid'), favSec=document.getElementById('favSection');
   const topGrid=document.getElementById('topDownloadedGrid'), topSec=document.getElementById('topDownloadedSection');
@@ -2331,6 +2338,9 @@ async function renderHome(){
   // Stats-based sections
   try {
     const STATS = await loadStats();
+    // Clear again after async to prevent duplicates
+    if(topGrid) topGrid.innerHTML='';
+    if(topVGrid) topVGrid.innerHTML='';
     const byDownloads = SONGS.filter(s=>(STATS[s.id]?.downloads||0)>0)
       .sort((a,b)=>(STATS[b.id]?.downloads||0)-(STATS[a.id]?.downloads||0)).slice(0,10);
     if(byDownloads.length>=3 && topGrid && topSec){
@@ -2375,6 +2385,7 @@ async function renderHome(){
     favSec.style.display='block';
     favSongs.forEach(s=>fav.appendChild(buildCard(s)));
   } else favSec.style.display='none';
+  } finally { _renderingHome = false; }
 }
 
 async function filterByCategory(cat){
@@ -2868,9 +2879,20 @@ function editSong(id) {
 // ═══════════════════════════════════════════════════════
 //  ADMIN — PDF MANAGEMENT
 // ═══════════════════════════════════════════════════════
+function filterPDFPanel(q){
+  const qn = normalizeSearch(q.trim());
+  const blocks = document.querySelectorAll('#pdfManageList > div');
+  blocks.forEach(block => {
+    const text = normalizeSearch(block.textContent);
+    block.style.display = !qn || text.includes(qn) ? '' : 'none';
+  });
+}
+
 async function refreshPDFPanel(){
   if(isOnline()){ SONGS = await loadSongsAsync(); PDFS = await loadPDFsAsync(); }
   else { SONGS=loadData(); PDFS=loadPDFs(); }
+  const searchEl = document.getElementById('pdfSearchInput');
+  if(searchEl) searchEl.value = '';
   const container=document.getElementById('pdfManageList');
   if(!container) return;
   container.innerHTML='';
