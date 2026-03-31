@@ -543,6 +543,21 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <h1>Adhurojmë <span>Së Bashku</span></h1>
       <p class="hero-tagline">Arkiva e këngëve të adhurimit në shqip</p>
       <p class="hero-sub">Një bibliotekë falas për muzikantët dhe ekipet e adhurimit në territoret shqipfolëse.</p>
+      <!-- Stats row -->
+      <div style="display:flex;gap:20px;justify-content:center;margin:14px 0;flex-wrap:wrap" id="heroStats">
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:6px 16px">
+          <span style="font-size:14px">🎵</span>
+          <span style="font-size:13px;font-weight:600;color:#fff" id="heroSongCount">— këngë</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:6px 16px">
+          <span style="font-size:14px">👁</span>
+          <span style="font-size:13px;font-weight:600;color:#fff" id="heroViewCount">— shikime</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:6px 16px">
+          <span style="font-size:14px">⬇</span>
+          <span style="font-size:13px;font-weight:600;color:#fff" id="heroDownloadCount">— shkarkime</span>
+        </div>
+      </div>
       <div class="search-outer">
         <div class="search-wrap">
           <input type="text" id="heroSearch" placeholder="Kërko këngë..." autocomplete="new-password"
@@ -764,9 +779,38 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
     </div>
 
-    <!-- 6. PDF Guide -->
+    <!-- 6. Capo Calculator -->
+    <div class="g-block" style="border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
+      <div class="g-block-title" data-sq="6. 🎸 Kalkulatori i Kapos" data-en="6. 🎸 Capo Calculator">6. 🎸 Kalkulatori i Kapos</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px" data-sq="Fut tonalitetin e këngës dhe kapon — kalkulatori tregon çfarë akordesh duhet të luash." data-en="Enter the song key and capo — the calculator shows what chords you need to play.">Fut tonalitetin e këngës dhe kapon — kalkulatori tregon çfarë akordesh duhet të luash.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Tonaliteti i Këngës</div>
+          <select id="capoCalcKey" onchange="calcCapo()" class="form-select" style="min-width:100px">
+            <option>Am</option><option>Bbm</option><option>Bm</option><option>Cm</option><option>C#m</option><option>Dm</option><option>Ebm</option><option>Em</option><option>Fm</option><option>F#m</option><option>Gm</option><option>G#m</option>
+            <option>A</option><option>Bb</option><option>B</option><option>C</option><option>C#</option><option>Db</option><option>D</option><option>Eb</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>Ab</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Capo Fret</div>
+          <select id="capoCalcFret" onchange="calcCapo()" class="form-select" style="min-width:100px">
+            <option value="1">Capo 1</option><option value="2">Capo 2</option><option value="3">Capo 3</option>
+            <option value="4">Capo 4</option><option value="5">Capo 5</option><option value="6">Capo 6</option>
+            <option value="7">Capo 7</option><option value="8">Capo 8</option><option value="9">Capo 9</option>
+            <option value="10">Capo 10</option><option value="11">Capo 11</option><option value="12">Capo 12</option>
+          </select>
+        </div>
+      </div>
+      <div id="capoCalcResult" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:none">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Rezultati:</div>
+        <div id="capoCalcText" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+      </div>
+      <button onclick="calcCapo()" class="btn btn-primary btn-sm" style="margin-top:12px">🎸 Llogarit</button>
+    </div>
+
+    <!-- 7. PDF Guide -->
     <div class="g-block" style="border-color:rgba(201,151,58,0.4);background:linear-gradient(135deg,var(--gold-muted),transparent)">
-      <div class="g-block-title" data-sq="6. 📄 Si Funksionojnë PDF-ët" data-en="6. 📄 How the PDFs Work">6. 📄 Si Funksionojnë PDF-ët</div>
+      <div class="g-block-title" data-sq="7. 📄 Si Funksionojnë PDF-ët" data-en="7. 📄 How the PDFs Work">7. 📄 Si Funksionojnë PDF-ët</div>
       <p style="font-size:13.5px;color:var(--text2);margin-bottom:18px"
         data-sq="Çdo këngë mund të ketë deri në dy versione PDF — një për Piano dhe një për Kitarë. Ja si të zgjidhni atë që ju nevojitet:"
         data-en="Each song can have up to two PDF versions — one for Piano and one for Guitar. Here's how to choose the right one for you:">
@@ -1063,11 +1107,22 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <div class="form-group">
             <label class="form-label">Tonaliteti Origjinal *</label>
             <select class="form-select" id="fKey">
-              <option>Am</option><option>Bm</option><option>Cm</option><option>Dm</option>
-              <option>Em</option><option>Fm</option><option>Gm</option>
-              <option>A</option><option>Bb</option><option>B</option><option>C</option>
-              <option>C#</option><option>D</option><option>Eb</option><option>E</option>
-              <option>F</option><option>F#</option><option>G</option><option>G#</option><option>Ab</option>
+              <optgroup label="— Minor —">
+              <option>Am</option><option>A#m</option><option>Bbm</option>
+              <option>Bm</option><option>Cm</option><option>C#m</option>
+              <option>Dbm</option><option>Dm</option><option>D#m</option>
+              <option>Ebm</option><option>Em</option><option>Fm</option>
+              <option>F#m</option><option>Gm</option><option>G#m</option>
+              <option>Abm</option>
+              </optgroup>
+              <optgroup label="— Major —">
+              <option>A</option><option>A#</option><option>Bb</option>
+              <option>B</option><option>C</option><option>C#</option>
+              <option>Db</option><option>D</option><option>D#</option>
+              <option>Eb</option><option>E</option><option>F</option>
+              <option>F#</option><option>Gb</option><option>G</option>
+              <option>G#</option><option>Ab</option>
+              </optgroup>
             </select>
           </div>
           <div class="form-group">
@@ -1599,6 +1654,40 @@ function downloadTransposedPDF() {
 
 function noteToIdx(n){const r=FLAT_MAP[n]||n;return CHROMATIC.indexOf(r);}
 
+function calcCapo(){
+  const keyEl = document.getElementById('capoCalcKey');
+  const fretEl = document.getElementById('capoCalcFret');
+  const resultEl = document.getElementById('capoCalcResult');
+  const textEl = document.getElementById('capoCalcText');
+  if(!keyEl||!fretEl||!resultEl) return;
+  const key = keyEl.value;
+  const capo = parseInt(fretEl.value);
+  const isMinor = key.endsWith('m');
+  const root = key.replace('m','');
+  const idx = noteToIdx(root);
+  if(idx < 0){ textEl.textContent = 'Tonalitet i panjohur!'; resultEl.style.display='block'; return; }
+  // The chord shapes you play are capo semitones below the actual key
+  const shapeIdx = ((idx - capo) % 12 + 12) % 12;
+  const shapeKey = SHARP_DISPLAY[shapeIdx] + (isMinor ? 'm' : '');
+  resultEl.style.display = 'block';
+  textEl.innerHTML = `Kënga në <strong style="color:var(--gold)">${key}</strong> me <strong style="color:var(--blue-mid)">Capo ${capo}</strong> → luaj pozicionet e <strong style="color:var(--red)">${shapeKey}</strong>`;
+}
+
+async function updateHeroStats(){
+  const songCountEl = document.getElementById('heroSongCount');
+  const viewEl = document.getElementById('heroViewCount');
+  const dlEl = document.getElementById('heroDownloadCount');
+  if(!songCountEl) return;
+  if(songCountEl) songCountEl.textContent = `${SONGS.length} këngë`;
+  try {
+    const STATS = await loadStats();
+    const totalViews = Object.values(STATS).reduce((s,r)=>s+(r.views||0),0);
+    const totalDl = Object.values(STATS).reduce((s,r)=>s+(r.downloads||0),0);
+    if(viewEl) viewEl.textContent = `${totalViews} shikime`;
+    if(dlEl) dlEl.textContent = `${totalDl} shkarkime`;
+  } catch(e){}
+}
+
 function openShareModal(){
   const s = currentSong;
   if(!s) return;
@@ -2098,6 +2187,7 @@ async function initData() {
   populateFilters();
   setLang(currentLang);
   updateFavBadge();
+  updateHeroStats();
   await checkUrlSong();
 }
 
@@ -2151,15 +2241,23 @@ function debounce(fn, ms){
 }
 const debouncedRenderLibrary = debounce(renderLibrary, 200);
 
+function isNewSong(song){
+  // Check if song is in first 5 of SONGS array (newest) and added within 7 days
+  const idx = SONGS.findIndex(s=>Number(s.id)===Number(song.id));
+  return idx >= 0 && idx < 5; // top 5 newest get badge
+}
+
 function buildCard(song){
   const d=document.createElement('div');
   d.className='song-card';
   const thumbSrc=song.thumb||makeThumbnail(song.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],song.title);
+  const newBadge = isNewSong(song) ? `<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;font-family:'Poppins',sans-serif;z-index:3;box-shadow:0 2px 8px rgba(34,197,94,0.4)">NEW</span>` : '';
   d.innerHTML=`
     <div class="card-thumb">
       <img src="${thumbSrc}" alt="${song.title}" loading="lazy"/>
       <div class="card-overlay"></div>
       <span class="card-key-badge">${song.key}</span>
+      ${newBadge}
       <div class="card-play"><div class="play-circle">▶</div></div>
     </div>
     <div class="card-body">
