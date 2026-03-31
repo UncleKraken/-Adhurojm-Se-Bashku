@@ -907,8 +907,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 </div>
 
 <!-- ═══════ SHARE MODAL ═══════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <div id="shareModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeShareModal()">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:700;color:var(--text)">📤 Ndaj Këngën</div>
       <button onclick="closeShareModal()" style="background:var(--bg3);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center">✕</button>
@@ -938,6 +940,18 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button onclick="shareSong('viber')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;border:1.5px solid rgba(124,60,182,0.3);background:rgba(124,60,182,0.08);cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:#7c3cb6;transition:all .18s" onmouseover="this.style.background='rgba(124,60,182,0.18)'" onmouseout="this.style.background='rgba(124,60,182,0.08)'">
         <span style="font-size:20px">📳</span> Viber
       </button>
+      <!-- QR Code button -->
+      <button onclick="toggleQR()" id="qrToggleBtn" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;border:1.5px solid rgba(201,151,58,0.3);background:rgba(201,151,58,0.08);cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:var(--gold);transition:all .18s" onmouseover="this.style.background='rgba(201,151,58,0.18)'" onmouseout="this.style.background='rgba(201,151,58,0.08)'">
+        <span style="font-size:20px">📱</span> QR Code
+      </button>
+    </div>
+    <!-- QR Code section (hidden by default) -->
+    <div id="qrSection" style="display:none;margin-bottom:16px;text-align:center">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Skan me telefon → hapet direkt kënga</div>
+      <div id="qrCodeContainer" style="display:inline-block;padding:16px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15)"></div>
+      <div style="margin-top:12px">
+        <button onclick="downloadQR()" style="padding:7px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">⬇ Shkarko QR</button>
+      </div>
     </div>
     <!-- Copy link -->
     <div style="display:flex;gap:8px;align-items:center;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px">
@@ -1694,10 +1708,48 @@ function openShareModal(){
   const modal = document.getElementById('shareModal');
   const info = document.getElementById('shareModalSongInfo');
   const linkEl = document.getElementById('shareLinkText');
+  const qrSection = document.getElementById('qrSection');
   if(info) info.innerHTML = `<strong style="color:var(--text)">${s.title}</strong> — ${s.artist} &nbsp;·&nbsp; 🎵 ${s.key}`;
   if(linkEl) linkEl.textContent = window.location.href;
+  if(qrSection) qrSection.style.display = 'none'; // reset QR
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+function toggleQR(){
+  const sec = document.getElementById('qrSection');
+  const container = document.getElementById('qrCodeContainer');
+  if(!sec) return;
+  if(sec.style.display === 'none'){
+    sec.style.display = 'block';
+    // Generate QR
+    container.innerHTML = '';
+    try {
+      new QRCode(container, {
+        text: window.location.href,
+        width: 180,
+        height: 180,
+        colorDark: '#1A2A4A',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e){ container.innerHTML = '<p style="color:red;font-size:12px">QR nuk u gjenerua.</p>'; }
+    document.getElementById('qrToggleBtn').style.background = 'rgba(201,151,58,0.2)';
+  } else {
+    sec.style.display = 'none';
+    document.getElementById('qrToggleBtn').style.background = 'rgba(201,151,58,0.08)';
+  }
+}
+
+function downloadQR(){
+  const canvas = document.querySelector('#qrCodeContainer canvas');
+  if(!canvas){ showToast('Gjenero QR-in fillimisht!','error'); return; }
+  const s = currentSong;
+  const a = document.createElement('a');
+  a.download = `QR_${s?.title||'song'}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('✅ QR Code u shkarkua!','success');
 }
 function closeShareModal(){
   document.getElementById('shareModal').style.display = 'none';
