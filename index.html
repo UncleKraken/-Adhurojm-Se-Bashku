@@ -2795,10 +2795,9 @@ function resetTranspose(){transposeSteps=0;renderSong();}
 
 function buildPDFFileName(song, instrument, isTransposed){
   const title = song?.title || 'Këngë';
-  const original = song?.original ? ` (${song.original})` : '';
+  const original = song?.original ? ` ${song.original}` : '';
   const artist = song?.artist ? ` by ${song.artist}` : '';
   const type = isTransposed ? 'Transposed Version' : instrument === 'Guitar' ? 'Guitar Version' : 'Piano Version';
-  // Clean filename — remove characters that aren't allowed in filenames
   const raw = `${title}${original}${artist} — ${type}.pdf`;
   return raw.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
 }
