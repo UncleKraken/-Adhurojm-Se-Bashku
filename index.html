@@ -2794,9 +2794,11 @@ function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
 
 function buildPDFFileName(song, instrument, isTransposed){
-  const title = song?.title || 'Këngë';
-  const original = song?.original ? ` ${song.original}` : '';
-  const artist = song?.artist ? ` by ${song.artist}` : '';
+  const title = (song?.title || 'Këngë').trim();
+  // Strip any existing parentheses from original title since user adds them manually
+  const originalRaw = (song?.original || '').trim();
+  const original = originalRaw ? ' ' + originalRaw.replace(/^\(+\s*|\s*\)+$/g, '').trim() : '';
+  const artist = song?.artist ? ' by ' + song.artist : '';
   const type = isTransposed ? 'Transposed Version' : instrument === 'Guitar' ? 'Guitar Version' : 'Piano Version';
   const raw = `${title}${original}${artist} — ${type}.pdf`;
   return raw.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
