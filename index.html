@@ -1631,8 +1631,9 @@ function downloadTransposedPDF() {
   // Create and download as .txt (universal, no library needed)
   // But let's make it a proper PDF-like format using HTML print
   const printWindow = window.open('', '_blank');
+  const pdfTitle = buildPDFFileName(s, currentInst, true);
   printWindow.document.write(`<!DOCTYPE html><html><head>
-    <title>${s.title} — Transposed</title>
+    <title>${pdfTitle}</title>
     <style>
       body { font-family: 'Courier New', monospace; font-size: 14px; padding: 30px; max-width: 700px; margin: 0 auto; }
       h1 { font-size: 20px; margin-bottom: 4px; }
@@ -2792,17 +2793,42 @@ function selectInst(i){currentInst=i;renderSong();}
 function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
 
-function downloadPDF(songId,instrument){
-  const pdfs=PDFS[songId]||{};
-  const data=pdfs[instrument];
-  if(!data){showToast(t('no-pdf'),'error');return;}
-  const a=document.createElement('a');
-  if(data.startsWith('http')){ a.href=data; a.target='_blank'; }
-  else { a.href=data.startsWith('data:')?data:'data:application/pdf;base64,'+data; }
-  const song=SONGS.find(s=>s.id===songId);
-  a.download=`${song?.title||'song'}_${instrument}.pdf`;
-  a.click();
-  // Track download
+function buildPDFFileName(song, instrument, isTransposed){
+  const title = song?.title || 'Këngë';
+  const original = song?.original ? ` (${song.original})` : '';
+  const artist = song?.artist ? ` by ${song.artist}` : '';
+  const type = isTransposed ? 'Transposed Version' : instrument === 'Guitar' ? 'Guitar Version' : 'Piano Version';
+  // Clean filename — remove characters that aren't allowed in filenames
+  const raw = `${title}${original}${artist} — ${type}.pdf`;
+  return raw.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function downloadPDF(songId, instrument){
+  const pdfs = PDFS[songId] || {};
+  const data = pdfs[instrument];
+  if(!data){ showToast(t('no-pdf'), 'error'); return; }
+  const song = SONGS.find(s => Number(s.id) === Number(songId));
+  const filename = buildPDFFileName(song, instrument, false);
+  if(data.startsWith('http')){
+    // Fetch and force download with correct name
+    fetch(data)
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      })
+      .catch(() => {
+        // Fallback — open in new tab
+        const a = document.createElement('a');
+        a.href = data; a.target = '_blank'; a.download = filename; a.click();
+      });
+  } else {
+    const a = document.createElement('a');
+    a.href = data.startsWith('data:') ? data : 'data:application/pdf;base64,' + data;
+    a.download = filename; a.click();
+  }
   trackStat(songId, 'download');
 }
 
@@ -3097,12 +3123,20 @@ function downloadPDFPanel(songId, instrument){
   const pdfs = PDFS[songId] || {};
   const data = pdfs[instrument];
   if(!data){ showToast('PDF nuk gjendet!','error'); return; }
-  const a = document.createElement('a');
-  if(data.startsWith('http')){ a.href = data; a.target = '_blank'; }
-  else { a.href = data.startsWith('data:') ? data : 'data:application/pdf;base64,'+data; }
   const song = SONGS.find(s => Number(s.id) === Number(songId));
-  a.download = `${song?.title||'song'}_${instrument}.pdf`;
-  a.click();
+  const filename = buildPDFFileName(song, instrument, false);
+  if(data.startsWith('http')){
+    fetch(data).then(r=>r.blob()).then(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download=filename; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }).catch(()=>{ const a=document.createElement('a'); a.href=data; a.target='_blank'; a.download=filename; a.click(); });
+  } else {
+    const a = document.createElement('a');
+    a.href = data.startsWith('data:') ? data : 'data:application/pdf;base64,'+data;
+    a.download = filename; a.click();
+  }
 }
 
 async function handlePDFUpload(event, songId, instrument){
@@ -3271,6 +3305,15 @@ DEFAULT_SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thu
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 initData();
+
+// ── SERVICE WORKER (Offline Mode) ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('✅ Service Worker registered'))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
 
 
 // ═══════════════════════════════════════════════════════
