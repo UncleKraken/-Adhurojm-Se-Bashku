@@ -2795,12 +2795,12 @@ function resetTranspose(){transposeSteps=0;renderSong();}
 
 function buildPDFFileName(song, instrument, isTransposed){
   const title = (song?.title || 'Këngë').trim();
-  // Strip any existing parentheses from original title since user adds them manually
-  const originalRaw = (song?.original || '').trim();
-  const original = originalRaw ? ' ' + originalRaw.replace(/^\(+\s*|\s*\)+$/g, '').trim() : '';
-  const artist = song?.artist ? ' by ' + song.artist : '';
+  const originalRaw = (song?.original || '').trim().replace(/^\(+\s*|\s*\)+$/g, '').trim();
+  const artist = (song?.artist || '').trim();
   const type = isTransposed ? 'Transposed Version' : instrument === 'Guitar' ? 'Guitar Version' : 'Piano Version';
-  const raw = `${title}${original}${artist} — ${type}.pdf`;
+  // Format: Albanian Title ( English Title by Author ) — Instrument Version
+  const middle = [originalRaw, artist ? 'by ' + artist : ''].filter(Boolean).join(' ');
+  const raw = middle ? `${title} ( ${middle} ) — ${type}.pdf` : `${title} — ${type}.pdf`;
   return raw.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
 }
 
