@@ -2881,9 +2881,16 @@ function buildPDFFileName(song, instrument, isTransposed){
   const originalRaw = (song?.original || '').trim().replace(/^\(+\s*|\s*\)+$/g, '').trim();
   const artist = (song?.artist || '').trim();
   const type = isTransposed ? 'Transposed Version' : instrument === 'Guitar' ? 'Guitar Version' : 'Piano Version';
-  // Format: Albanian Title ( English Title by Author ) — Instrument Version
-  const middle = [originalRaw, artist ? 'by ' + artist : ''].filter(Boolean).join(' ');
-  const raw = middle ? `${title} ( ${middle} ) — ${type}.pdf` : `${title} — ${type}.pdf`;
+  let raw;
+  if(originalRaw && artist){
+    // Has English title: Albanian Title ( English Title by Author ) — Version
+    raw = `${title} ( ${originalRaw} by ${artist} ) — ${type}.pdf`;
+  } else if(artist){
+    // No English title: Albanian Title by Author — Version
+    raw = `${title} by ${artist} — ${type}.pdf`;
+  } else {
+    raw = `${title} — ${type}.pdf`;
+  }
   return raw.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
 }
 
