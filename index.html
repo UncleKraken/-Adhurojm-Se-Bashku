@@ -521,7 +521,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <li><a onclick="showPage('songs',this)" data-sq="Këngët" data-en="Songs">Këngët</a></li>
         <li><a onclick="showPage('favorites',this)" data-sq="❤️ Preferuarat" data-en="❤️ Favorites" id="favNavLink">❤️ Preferuarat</a></li>
         <li><a onclick="showPage('setlist',this)" data-sq="📋 Setlista" data-en="📋 Setlist" id="setlistNavLink">📋 Setlista</a></li>
-        <li><a onclick="showPage('about',this)">Rreth Nesh</a></li>
+        <li><a onclick="showPage('about',this)" data-sq="Rreth Nesh" data-en="About">Rreth Nesh</a></li>
         <li><a onclick="showPage('guide',this)" data-sq="Udhëzues" data-en="Guide">Udhëzues</a></li>
         <li><a onclick="showPage('contact',this)" data-sq="Kontakt" data-en="Contact">Kontakt</a></li>
         <li><a onclick="showPage('copyright',this)" data-sq="Autorit" data-en="Copyright">Autorit</a></li>
@@ -1768,13 +1768,14 @@ async function updateHeroStats(){
   const viewEl = document.getElementById('heroViewCount');
   const dlEl = document.getElementById('heroDownloadCount');
   if(!songCountEl) return;
-  if(songCountEl) songCountEl.textContent = `${SONGS.length} këngë`;
+  const sq = currentLang === 'sq';
+  songCountEl.textContent = `${SONGS.length} ${sq?'këngë':'songs'}`;
   try {
     const STATS = await loadStats();
     const totalViews = Object.values(STATS).reduce((s,r)=>s+(r.views||0),0);
     const totalDl = Object.values(STATS).reduce((s,r)=>s+(r.downloads||0),0);
-    if(viewEl) viewEl.textContent = `${totalViews} shikime`;
-    if(dlEl) dlEl.textContent = `${totalDl} shkarkime`;
+    if(viewEl) viewEl.textContent = `${totalViews} ${sq?'shikime':'views'}`;
+    if(dlEl) dlEl.textContent = `${totalDl} ${sq?'shkarkime':'downloads'}`;
   } catch(e){}
 }
 
@@ -3540,6 +3541,8 @@ function applyLang(){
   if(currentSong) renderSong();
   // Rebuild home cards (for btn text)
   renderHome();
+  // Update hero stats text
+  updateHeroStats();
   // About quotes
   const q1=document.getElementById('about-quote-1');
   if(q1) q1.textContent = currentLang==='sq'
