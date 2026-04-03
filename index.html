@@ -6,10 +6,10 @@
 
 <!-- ── PRIMARY SEO ── -->
 <title>Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF</title>
-<meta name="description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF për shkarkimit. Ideal për muzikantët dhe ekipet e adhurimit shqipfolëse."/>
-<meta name="keywords" content="këngë adhurimi shqip, akorde kitarë shqip, worship songs albanian, chord sheets albanian, Kisha Kanaan, adhurim shqip, këngë kishë, akorde piano shqip, Albanian worship, Hillsong shqip, Bethel shqip"/>
+<meta name="description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF. Albanian worship songs with chords — Hillsong, Bethel, Elevation shqip, këngë krishterë shqip me akorde kitarë dhe piano."/>
+<meta name="keywords" content="këngë adhurimi shqip, akorde kitarë shqip, worship songs albanian, chord sheets albanian, Kisha Kanaan, adhurim shqip, këngë kishë, akorde piano shqip, Albanian worship, Hillsong shqip, Bethel shqip, Elevation shqip, këngë krishterë shqip, tekste këngësh shqip, worship chords albania, albanian christian songs, këngë lavdërimi shqip, himne shqip, këngë fëmijësh krishterë, këngë krishtlindjesh shqip, këngë pashkësh shqip"/>
 <meta name="author" content="Kisha Kanaan Media Team"/>
-<meta name="robots" content="index, follow"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large"/>
 <link rel="canonical" href="https://unclekraken.github.io/-Adhurojm-Se-Bashku/"/>
 
 <!-- ── OPEN GRAPH (Facebook, WhatsApp, LinkedIn) ── -->
@@ -48,6 +48,9 @@
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -517,6 +520,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <li><a class="active" onclick="showPage('home',this)" data-sq="Kryefaqja" data-en="Home">Kryefaqja</a></li>
         <li><a onclick="showPage('songs',this)" data-sq="Këngët" data-en="Songs">Këngët</a></li>
         <li><a onclick="showPage('favorites',this)" data-sq="❤️ Preferuarat" data-en="❤️ Favorites" id="favNavLink">❤️ Preferuarat</a></li>
+        <li><a onclick="showPage('setlist',this)" data-sq="📋 Setlista" data-en="📋 Setlist" id="setlistNavLink">📋 Setlista</a></li>
         <li><a onclick="showPage('about',this)">Rreth Nesh</a></li>
         <li><a onclick="showPage('guide',this)" data-sq="Udhëzues" data-en="Guide">Udhëzues</a></li>
         <li><a onclick="showPage('contact',this)" data-sq="Kontakt" data-en="Contact">Kontakt</a></li>
@@ -662,7 +666,66 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   </section>
 </div>
 
-<!-- ═══════ ABOUT ═══════ -->
+<!-- ═══════ SETLIST ═══════ -->
+<div class="page" id="page-setlist">
+  <div class="page-hero" style="background:linear-gradient(135deg,#1a2a4a,#2c4074)">
+    <h1 data-sq="📋 Setlista ime" data-en="📋 My Setlist">📋 Setlista ime</h1>
+    <p data-sq="Krijo listën e këngëve për shërbimin e ardhshëm" data-en="Create your song list for the upcoming service">Krijo listën e këngëve për shërbimin e ardhshëm</p>
+  </div>
+  <section class="section">
+    <div class="section-inner" style="max-width:860px">
+      <!-- Controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="setlistNameInput" class="form-input" placeholder="Emri i setlistës (p.sh. E Diel 1 Qershor)" style="min-width:240px;border-radius:100px"/>
+          <button class="btn btn-primary btn-sm" onclick="saveSetlistName()">💾 Ruaj Emrin</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Ndaj</button>
+          <button class="btn btn-danger btn-sm" onclick="clearSetlist()">🗑 Pastro</button>
+        </div>
+      </div>
+      <!-- Add song search -->
+      <div style="position:relative;margin-bottom:20px">
+        <input type="text" id="setlistSearch" placeholder="🔍 Kërko këngë për të shtuar..." autocomplete="new-password"
+          oninput="updateAC('setlistSearch','setlistAC')" onkeydown="acKey(event,'setlistAC')"
+          onfocus="updateAC('setlistSearch','setlistAC')" onblur="setTimeout(()=>closeAC('setlistAC'),200)"
+          class="form-input" style="border-radius:100px;padding-right:40px"/>
+        <div class="ac-drop" id="setlistAC"></div>
+      </div>
+      <!-- Empty state -->
+      <div id="setlistEmpty" style="text-align:center;padding:60px 20px;color:var(--text3)">
+        <div style="font-size:48px;margin-bottom:12px">📋</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px">Setlista është bosh</div>
+        <div style="font-size:13px">Kërko këngë dhe shtyp ➕ për t'i shtuar</div>
+      </div>
+      <!-- Setlist items -->
+      <div id="setlistItems"></div>
+      <!-- Performance mode button -->
+      <div id="setlistPerformBtn" style="display:none;margin-top:20px;text-align:center">
+        <button class="btn btn-primary" onclick="startPerformanceMode()" style="padding:12px 32px;font-size:15px">
+          🎤 Fillo Shërbimin →
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Performance Mode Overlay -->
+<div id="performanceMode" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);overflow-y:auto">
+  <div style="max-width:860px;margin:0 auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:sticky;top:0;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--border);z-index:10">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:18px;color:var(--text)">◀</button>
+        <span id="perfCounter" style="font-size:13px;color:var(--text3);font-weight:600"></span>
+        <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:18px;color:var(--text)">▶</button>
+      </div>
+      <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);text-align:center;flex:1;padding:0 16px"></div>
+      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600">✕ Dil</button>
+    </div>
+    <div id="perfContent"></div>
+  </div>
+</div>
 <div class="page" id="page-about">
   <div class="page-hero"><h1 data-sq="Rreth Nesh" data-en="About Us">Rreth Nesh</h1><p data-sq="Misioni dhe projekti ynë" data-en="Our mission and project">Misioni dhe projekti ynë</p></div>
   <div class="about-inner">
@@ -888,6 +951,18 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="g-block" style="margin-bottom:24px" id="referencesBlock">
         <div class="g-block-title" data-sq="🌐 Referenca & Burime" data-en="🌐 References & Resources">🌐 Referenca & Burime</div>
         <div class="social-grid" id="referencesDisplay"></div>
+      </div>
+      <!-- Song Request -->
+      <div class="g-block" style="margin-bottom:24px;border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
+        <div class="g-block-title" data-sq="🎵 Kërko një Këngë" data-en="🎵 Request a Song">🎵 Kërko një Këngë</div>
+        <p style="margin-bottom:14px;font-size:13px;color:var(--text2)" data-sq="Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin." data-en="If you'd like us to add a specific song, let us know the title and artist.">Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin.</p>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <input type="text" class="form-input" id="reqName" placeholder="Emri juaj"/>
+          <input type="text" class="form-input" id="reqSongTitle" placeholder="Titulli i këngës (shqip ose anglisht)"/>
+          <input type="text" class="form-input" id="reqArtist" placeholder="Artisti / Banda"/>
+          <input type="text" class="form-input" id="reqYoutube" placeholder="Linku YouTube (opsionale)"/>
+          <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="sendSongRequest()">🎵 Dërgo Kërkesën →</button>
+        </div>
       </div>
       <!-- Contact Form -->
       <div class="g-block">
@@ -2240,6 +2315,7 @@ async function initData() {
   populateFilters();
   setLang(currentLang);
   updateFavBadge();
+  updateSetlistBadge();
   updateHeroStats();
   await checkUrlSong();
 }
@@ -2344,6 +2420,7 @@ function showPage(page,el){
   window.scrollTo(0,0);
   if(page==='songs') renderLibrary();
   if(page==='favorites') renderFavoritesPage();
+  if(page==='setlist'){ renderSetlist(); updateSetlistBadge(); }
   if(page !== 'song') resetMetaTags();
 }
 
@@ -2438,7 +2515,12 @@ function updateAC(inputId,listId){
       <div style="min-width:0"><div class="ac-name">${hilite(s.title,q)}</div><div class="ac-sub">${s.original?s.original+' · ':''}<em>${s.artist}</em></div>${snippet}</div>
     </div>`;
   }).join('');
-  list.querySelectorAll('.ac-item').forEach(item=>item.onclick=()=>{openSong(parseInt(item.dataset.id));closeAC(listId);});
+  list.querySelectorAll('.ac-item').forEach(item=>{
+    item.onclick=()=>{
+      if(listId==='setlistAC') addToSetlist(parseInt(item.dataset.id));
+      else { openSong(parseInt(item.dataset.id)); closeAC(listId); }
+    };
+  });
   list.classList.add('open');
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
@@ -2784,6 +2866,7 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
       <div><div class="dl-text">${t('dl-text')}</div><div class="dl-sub">${t('dl-sub')}</div></div>
       <div class="dl-btns" style="display:flex;align-items:center;gap:8px">
         ${dlBtns}${transposedPdfBtn}
+        <button onclick="addToSetlist(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">📋 +Setlist</button>
         <button onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
       </div>
     </div>`;
@@ -3546,6 +3629,162 @@ function loadSocialAdminForm(){
 
 // ── EMAILJS CONTACT FORM ──
 emailjs.init('_nY20miCLwZSC-jow');
+
+// ═══════════════════════════════════════════════════════
+//  SONG REQUEST
+// ═══════════════════════════════════════════════════════
+async function sendSongRequest(){
+  const name = document.getElementById('reqName')?.value.trim();
+  const title = document.getElementById('reqSongTitle')?.value.trim();
+  const artist = document.getElementById('reqArtist')?.value.trim();
+  const youtube = document.getElementById('reqYoutube')?.value.trim();
+  if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
+  const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
+  try {
+    await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
+    showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
+    ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SETLIST
+// ═══════════════════════════════════════════════════════
+function getSetlist(){ try{ return JSON.parse(localStorage.getItem('aa_setlist')||'{"name":"","songs":[]}'); }catch(e){ return {name:'',songs:[]}; } }
+function saveSetlist(sl){ localStorage.setItem('aa_setlist',JSON.stringify(sl)); }
+
+function addToSetlist(songId){
+  const id = Number(songId);
+  const song = SONGS.find(s=>Number(s.id)===id);
+  if(!song) return;
+  const sl = getSetlist();
+  if(sl.songs.find(s=>Number(s.id)===id)){ showToast('Kënga është tashmë në setlistë!',''); return; }
+  sl.songs.push({id, title:song.title, artist:song.artist, key:song.key});
+  saveSetlist(sl);
+  updateSetlistBadge();
+  renderSetlist();
+  showToast(`✅ "${song.title}" u shtua në setlistë!`,'success');
+  closeAC('setlistAC');
+  document.getElementById('setlistSearch').value='';
+}
+
+function removeFromSetlist(songId){
+  const sl = getSetlist();
+  sl.songs = sl.songs.filter(s=>Number(s.id)!==Number(songId));
+  saveSetlist(sl);
+  updateSetlistBadge();
+  renderSetlist();
+}
+
+function moveSetlistItem(songId, dir){
+  const sl = getSetlist();
+  const idx = sl.songs.findIndex(s=>Number(s.id)===Number(songId));
+  if(idx<0) return;
+  const newIdx = idx+dir;
+  if(newIdx<0||newIdx>=sl.songs.length) return;
+  [sl.songs[idx],sl.songs[newIdx]]=[sl.songs[newIdx],sl.songs[idx]];
+  saveSetlist(sl); renderSetlist();
+}
+
+function saveSetlistName(){
+  const sl = getSetlist();
+  sl.name = document.getElementById('setlistNameInput')?.value.trim() || sl.name;
+  saveSetlist(sl);
+  showToast('✅ Emri u ruajt!','success');
+}
+
+function clearSetlist(){
+  if(!confirm('Pastro tërë setlistën?')) return;
+  saveSetlist({name:'',songs:[]});
+  updateSetlistBadge();
+  renderSetlist();
+}
+
+function shareSetlist(){
+  const sl = getSetlist();
+  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
+  const text = `📋 ${sl.name||'Setlista ime'}\n\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})`).join('\n')}\n\n🎵 Adhurojmë Së Bashku\n${window.location.href}`;
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success'));
+}
+
+function renderSetlist(){
+  const sl = getSetlist();
+  const empty = document.getElementById('setlistEmpty');
+  const items = document.getElementById('setlistItems');
+  const perfBtn = document.getElementById('setlistPerformBtn');
+  const nameInput = document.getElementById('setlistNameInput');
+  if(nameInput && sl.name) nameInput.value = sl.name;
+  if(!sl.songs.length){
+    if(empty) empty.style.display='block';
+    if(items) items.innerHTML='';
+    if(perfBtn) perfBtn.style.display='none';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  if(perfBtn) perfBtn.style.display='block';
+  if(items) items.innerHTML = sl.songs.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <span style="font-size:20px;font-weight:800;color:var(--text3);min-width:28px;text-align:center">${i+1}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">♪ ${s.artist} · <span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="moveSetlistItem(${s.id},-1)" ${i===0?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:13px;color:var(--text2)">▲</button>
+        <button onclick="moveSetlistItem(${s.id},1)" ${i===sl.songs.length-1?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:13px;color:var(--text2)">▼</button>
+        <button onclick="openSong(${s.id})" style="background:var(--blue-light);border:none;border-radius:7px;padding:0 10px;height:30px;cursor:pointer;font-size:11px;font-weight:600;color:var(--blue-mid);font-family:'Poppins',sans-serif">Hap</button>
+        <button onclick="removeFromSetlist(${s.id})" style="background:rgba(220,38,38,0.1);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:14px;color:#dc2626">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateSetlistBadge(){
+  const count = getSetlist().songs.length;
+  const link = document.getElementById('setlistNavLink');
+  if(link) link.innerHTML = count>0
+    ? `📋 ${currentLang==='sq'?'Setlista':'Setlist'} <span style="background:var(--blue-mid);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${count}</span>`
+    : `📋 ${currentLang==='sq'?'Setlista':'Setlist'}`;
+}
+
+// Performance Mode
+let perfIdx = 0;
+function startPerformanceMode(){
+  const sl = getSetlist();
+  if(!sl.songs.length) return;
+  perfIdx = 0;
+  document.getElementById('performanceMode').style.display='block';
+  document.body.style.overflow='hidden';
+  showPerfSong();
+}
+function exitPerformanceMode(){
+  document.getElementById('performanceMode').style.display='none';
+  document.body.style.overflow='';
+}
+function showPerfSong(){
+  const sl = getSetlist();
+  const s = SONGS.find(x=>Number(x.id)===Number(sl.songs[perfIdx]?.id));
+  if(!s) return;
+  const counter = document.getElementById('perfCounter');
+  const title = document.getElementById('perfSongTitle');
+  const content = document.getElementById('perfContent');
+  if(counter) counter.textContent = `${perfIdx+1} / ${sl.songs.length}`;
+  if(title) title.textContent = `${s.title} — ${s.key}`;
+  // Render lyrics
+  const rawText = s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
+  const sections = parseLyricsText(rawText);
+  if(content) content.innerHTML = sections.map(sec=>{
+    const lines = sec.lines.map(l=>`<div style="margin-bottom:12px">
+      ${l.chords?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:15px">${l.chords}</div>`:''}
+      <div style="font-weight:600;font-size:16px;line-height:1.7">${l.sq}</div>
+      ${l.en&&s.bilingual!==false?`<div style="color:var(--text3);font-style:italic;font-size:13px">${l.en}</div>`:''}
+    </div>`).join('');
+    return `<div style="margin-bottom:24px"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:8px;font-family:'Roboto Mono',monospace">${lines}</div></div>`;
+  }).join('') || `<p style="color:var(--text3);padding:20px">Nuk ka tekst për këtë këngë.</p>`;
+  document.getElementById('perfPrevBtn').disabled = perfIdx===0;
+  document.getElementById('perfNextBtn').disabled = perfIdx===sl.songs.length-1;
+}
+function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
+function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.length-1){perfIdx++;showPerfSong();} }
 
 async function sendContactEmail() {
   const name    = document.getElementById('contactName').value.trim();
