@@ -669,40 +669,52 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 <!-- ═══════ SETLIST ═══════ -->
 <div class="page" id="page-setlist">
   <div class="page-hero" style="background:linear-gradient(135deg,#1a2a4a,#2c4074)">
-    <h1 data-sq="📋 Setlista ime" data-en="📋 My Setlist">📋 Setlista ime</h1>
-    <p data-sq="Krijo listën e këngëve për shërbimin e ardhshëm" data-en="Create your song list for the upcoming service">Krijo listën e këngëve për shërbimin e ardhshëm</p>
+    <h1 data-sq="📋 Setlista" data-en="📋 Setlist">📋 Setlista</h1>
+    <p data-sq="Krijo dhe menaxho listën e këngëve për shërbimin" data-en="Create and manage your worship song list">Krijo dhe menaxho listën e këngëve për shërbimin</p>
   </div>
   <section class="section">
-    <div class="section-inner" style="max-width:860px">
-      <!-- Controls -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input id="setlistNameInput" class="form-input" placeholder="Emri i setlistës (p.sh. E Diel 1 Qershor)" style="min-width:240px;border-radius:100px"/>
-          <button class="btn btn-primary btn-sm" onclick="saveSetlistName()">💾 Ruaj Emrin</button>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Ndaj</button>
-          <button class="btn btn-danger btn-sm" onclick="clearSetlist()">🗑 Pastro</button>
-        </div>
+    <div class="section-inner" style="max-width:900px">
+
+      <!-- Multiple Setlists Tabs -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <div id="setlistTabs" style="display:flex;gap:6px;flex-wrap:wrap;flex:1"></div>
+        <button onclick="createNewSetlist()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;border:1.5px dashed var(--border);background:transparent;color:var(--text2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">＋ Setlistë e Re</button>
       </div>
-      <!-- Add song search -->
-      <div style="position:relative;margin-bottom:20px">
-        <input type="text" id="setlistSearch" placeholder="🔍 Kërko këngë për të shtuar..." autocomplete="new-password"
+
+      <!-- Active Setlist Controls -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <input id="setlistNameInput" class="form-input" placeholder="Emri i setlistës..." style="flex:1;min-width:180px;border-radius:100px"/>
+          <button class="btn btn-primary btn-sm" onclick="saveSetlistName()">💾 Ruaj</button>
+          <button class="btn btn-outline btn-sm" onclick="printSetlist()">🖨️ Printo</button>
+          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Ndaj</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCurrentSetlist()">🗑</button>
+        </div>
+        <!-- Stats bar -->
+        <div id="setlistStats" style="display:flex;gap:16px;font-size:12px;color:var(--text3)"></div>
+      </div>
+
+      <!-- Search to add -->
+      <div style="position:relative;margin-bottom:16px">
+        <input type="text" id="setlistSearch" placeholder="🔍 Kërko këngë për të shtuar në setlistë..." autocomplete="new-password"
           oninput="updateAC('setlistSearch','setlistAC')" onkeydown="acKey(event,'setlistAC')"
           onfocus="updateAC('setlistSearch','setlistAC')" onblur="setTimeout(()=>closeAC('setlistAC'),200)"
-          class="form-input" style="border-radius:100px;padding-right:40px"/>
+          class="form-input" style="border-radius:100px"/>
         <div class="ac-drop" id="setlistAC"></div>
       </div>
+
       <!-- Empty state -->
-      <div id="setlistEmpty" style="text-align:center;padding:60px 20px;color:var(--text3)">
-        <div style="font-size:48px;margin-bottom:12px">📋</div>
+      <div id="setlistEmpty" style="text-align:center;padding:60px 20px;color:var(--text3);display:none">
+        <div style="font-size:48px;margin-bottom:12px">🎵</div>
         <div style="font-size:16px;font-weight:600;margin-bottom:8px">Setlista është bosh</div>
-        <div style="font-size:13px">Kërko këngë dhe shtyp ➕ për t'i shtuar</div>
+        <div style="font-size:13px">Kërko këngë sipër dhe shto ato këtu</div>
       </div>
+
       <!-- Setlist items -->
       <div id="setlistItems"></div>
-      <!-- Performance mode button -->
-      <div id="setlistPerformBtn" style="display:none;margin-top:20px;text-align:center">
+
+      <!-- Performance button -->
+      <div id="setlistPerformBtn" style="display:none;margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="startPerformanceMode()" style="padding:12px 32px;font-size:15px">
           🎤 Fillo Shërbimin →
         </button>
@@ -712,19 +724,27 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 </div>
 
 <!-- Performance Mode Overlay -->
-<div id="performanceMode" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);overflow-y:auto">
-  <div style="max-width:860px;margin:0 auto;padding:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:sticky;top:0;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--border);z-index:10">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:18px;color:var(--text)">◀</button>
-        <span id="perfCounter" style="font-size:13px;color:var(--text3);font-weight:600"></span>
-        <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:18px;color:var(--text)">▶</button>
-      </div>
-      <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);text-align:center;flex:1;padding:0 16px"></div>
+<div id="performanceMode" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;flex-direction:column">
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:12px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:16px;color:var(--text);font-weight:700">◀</button>
+      <span id="perfCounter" style="font-size:13px;color:var(--text3);font-weight:700;min-width:50px;text-align:center"></span>
+      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:16px;color:var(--text);font-weight:700">▶</button>
+    </div>
+    <div style="flex:1;text-align:center;min-width:0">
+      <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:2px"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif">▶ Auto</button>
       <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600">✕ Dil</button>
     </div>
-    <div id="perfContent"></div>
   </div>
+  <!-- Song mini-list -->
+  <div id="perfSongList" style="display:flex;gap:6px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0"></div>
+  <!-- Content -->
+  <div id="perfContent" style="flex:1;overflow-y:auto;padding:28px 20px;max-width:800px;margin:0 auto;width:100%"></div>
 </div>
 <div class="page" id="page-about">
   <div class="page-hero"><h1 data-sq="Rreth Nesh" data-en="About Us">Rreth Nesh</h1><p data-sq="Misioni dhe projekti ynë" data-en="Our mission and project">Misioni dhe projekti ynë</p></div>
@@ -3658,72 +3678,121 @@ async function sendSongRequest(){
 }
 
 // ═══════════════════════════════════════════════════════
-//  SETLIST
+//  SETLIST — Multi-setlist with notes, print, performance
 // ═══════════════════════════════════════════════════════
-function getSetlist(){ try{ return JSON.parse(localStorage.getItem('aa_setlist')||'{"name":"","songs":[]}'); }catch(e){ return {name:'',songs:[]}; } }
-function saveSetlist(sl){ localStorage.setItem('aa_setlist',JSON.stringify(sl)); }
+const SETLIST_KEY = 'aa_setlists';
+const SETLIST_ACTIVE_KEY = 'aa_setlist_active';
+
+function getAllSetlists(){ try{ return JSON.parse(localStorage.getItem(SETLIST_KEY)||'[]'); }catch(e){ return []; } }
+function saveAllSetlists(lists){ localStorage.setItem(SETLIST_KEY, JSON.stringify(lists)); }
+function getActiveIdx(){ return parseInt(localStorage.getItem(SETLIST_ACTIVE_KEY)||'0'); }
+function setActiveIdx(i){ localStorage.setItem(SETLIST_ACTIVE_KEY, String(i)); }
+
+function getSetlist(){
+  const lists = getAllSetlists();
+  if(!lists.length){ const sl={id:Date.now(),name:'Setlista 1',songs:[]}; lists.push(sl); saveAllSetlists(lists); }
+  const idx = Math.min(getActiveIdx(), lists.length-1);
+  return lists[idx];
+}
+function saveSetlist(sl){
+  const lists = getAllSetlists();
+  const idx = Math.min(getActiveIdx(), lists.length-1);
+  lists[idx] = sl; saveAllSetlists(lists);
+}
+
+function createNewSetlist(){
+  const lists = getAllSetlists();
+  const sl = {id:Date.now(), name:`Setlista ${lists.length+1}`, songs:[]};
+  lists.push(sl); saveAllSetlists(lists); setActiveIdx(lists.length-1);
+  renderSetlist(); updateSetlistBadge();
+  setTimeout(()=>document.getElementById('setlistNameInput')?.focus(),100);
+}
+
+function deleteCurrentSetlist(){
+  const lists = getAllSetlists();
+  if(lists.length<=1){ clearSetlist(); return; }
+  if(!confirm('Fshi këtë setlistë?')) return;
+  const idx = getActiveIdx(); lists.splice(idx,1); saveAllSetlists(lists);
+  setActiveIdx(Math.max(0,idx-1)); renderSetlist(); updateSetlistBadge();
+}
+
+function switchSetlist(idx){ setActiveIdx(idx); renderSetlist(); }
 
 function addToSetlist(songId){
-  const id = Number(songId);
-  const song = SONGS.find(s=>Number(s.id)===id);
+  const id=Number(songId); const song=SONGS.find(s=>Number(s.id)===id);
   if(!song) return;
-  const sl = getSetlist();
+  const sl=getSetlist();
   if(sl.songs.find(s=>Number(s.id)===id)){ showToast('Kënga është tashmë në setlistë!',''); return; }
-  sl.songs.push({id, title:song.title, artist:song.artist, key:song.key});
-  saveSetlist(sl);
-  updateSetlistBadge();
-  renderSetlist();
-  showToast(`✅ "${song.title}" u shtua në setlistë!`,'success');
-  closeAC('setlistAC');
-  document.getElementById('setlistSearch').value='';
+  sl.songs.push({id,title:song.title,artist:song.artist,key:song.key,note:''});
+  saveSetlist(sl); updateSetlistBadge(); renderSetlist();
+  showToast(`✅ "${song.title}" u shtua!`,'success');
+  closeAC('setlistAC'); document.getElementById('setlistSearch').value='';
 }
 
 function removeFromSetlist(songId){
-  const sl = getSetlist();
-  sl.songs = sl.songs.filter(s=>Number(s.id)!==Number(songId));
-  saveSetlist(sl);
-  updateSetlistBadge();
-  renderSetlist();
+  const sl=getSetlist(); sl.songs=sl.songs.filter(s=>Number(s.id)!==Number(songId));
+  saveSetlist(sl); updateSetlistBadge(); renderSetlist();
 }
 
-function moveSetlistItem(songId, dir){
-  const sl = getSetlist();
-  const idx = sl.songs.findIndex(s=>Number(s.id)===Number(songId));
-  if(idx<0) return;
-  const newIdx = idx+dir;
-  if(newIdx<0||newIdx>=sl.songs.length) return;
-  [sl.songs[idx],sl.songs[newIdx]]=[sl.songs[newIdx],sl.songs[idx]];
+function moveSetlistItem(songId,dir){
+  const sl=getSetlist(); const idx=sl.songs.findIndex(s=>Number(s.id)===Number(songId));
+  if(idx<0) return; const ni=idx+dir;
+  if(ni<0||ni>=sl.songs.length) return;
+  [sl.songs[idx],sl.songs[ni]]=[sl.songs[ni],sl.songs[idx]];
   saveSetlist(sl); renderSetlist();
 }
 
+function updateSetlistNote(songId,note){
+  const sl=getSetlist(); const item=sl.songs.find(s=>Number(s.id)===Number(songId));
+  if(item) item.note=note; saveSetlist(sl);
+}
+
 function saveSetlistName(){
-  const sl = getSetlist();
-  sl.name = document.getElementById('setlistNameInput')?.value.trim() || sl.name;
-  saveSetlist(sl);
-  showToast('✅ Emri u ruajt!','success');
+  const sl=getSetlist(); const val=document.getElementById('setlistNameInput')?.value.trim();
+  if(val) sl.name=val; saveSetlist(sl); renderSetlistTabs(); showToast('✅ Emri u ruajt!','success');
 }
 
 function clearSetlist(){
   if(!confirm('Pastro tërë setlistën?')) return;
-  saveSetlist({name:'',songs:[]});
-  updateSetlistBadge();
-  renderSetlist();
+  const sl=getSetlist(); sl.songs=[]; saveSetlist(sl); updateSetlistBadge(); renderSetlist();
 }
 
 function shareSetlist(){
-  const sl = getSetlist();
+  const sl=getSetlist();
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
-  const text = `📋 ${sl.name||'Setlista ime'}\n\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})`).join('\n')}\n\n🎵 Adhurojmë Së Bashku\n${window.location.href}`;
+  const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})${s.note?'\n   📝 '+s.note:''}`).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
   if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success'));
 }
 
+function printSetlist(){
+  const sl=getSetlist();
+  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${sl.name}</title>
+  <style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}h1{font-size:22px;margin-bottom:4px}.meta{color:#888;font-size:13px;margin-bottom:24px}.item{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #eee}.num{font-size:20px;font-weight:800;color:#ccc;min-width:32px}.title{font-weight:700;font-size:15px}.sub{font-size:12px;color:#888;margin-top:2px}.note{font-size:12px;color:#555;margin-top:4px;font-style:italic}.key{display:inline-block;background:#1a2a4a;color:#fff;font-size:11px;padding:2px 8px;border-radius:100px;margin-left:6px}.footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}@media print{button{display:none}}</style></head><body>
+  <button onclick="window.print()" style="margin-bottom:20px;padding:8px 18px;background:#1a2a4a;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨️ Printo</button>
+  <h1>📋 ${sl.name}</h1><div class="meta">${sl.songs.length} këngë · ${new Date().toLocaleDateString('sq-AL')}</div>
+  ${sl.songs.map((s,i)=>`<div class="item"><div class="num">${i+1}</div><div><div class="title">${s.title}<span class="key">${s.key}</span></div><div class="sub">♪ ${s.artist}</div>${s.note?`<div class="note">📝 ${s.note}</div>`:''}</div></div>`).join('')}
+  <div class="footer">Adhurojmë Së Bashku</div></body></html>`);
+  w.document.close();
+}
+
+function renderSetlistTabs(){
+  const lists=getAllSetlists(); const activeIdx=getActiveIdx();
+  const container=document.getElementById('setlistTabs'); if(!container) return;
+  container.innerHTML=lists.map((sl,i)=>`<button onclick="switchSetlist(${i})" style="padding:7px 16px;border-radius:100px;border:1.5px solid ${i===activeIdx?'var(--blue-mid)':'var(--border)'};background:${i===activeIdx?'var(--blue-light)':'var(--surface)'};color:${i===activeIdx?'var(--blue-mid)':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${sl.name}${sl.songs.length?` <span style="background:${i===activeIdx?'var(--blue-mid)':'var(--bg3)'};color:${i===activeIdx?'#fff':'var(--text3)'};border-radius:100px;padding:1px 6px;font-size:10px;margin-left:4px">${sl.songs.length}</span>`:''}</button>`).join('');
+}
+
 function renderSetlist(){
-  const sl = getSetlist();
-  const empty = document.getElementById('setlistEmpty');
-  const items = document.getElementById('setlistItems');
-  const perfBtn = document.getElementById('setlistPerformBtn');
-  const nameInput = document.getElementById('setlistNameInput');
-  if(nameInput && sl.name) nameInput.value = sl.name;
+  const sl=getSetlist();
+  const empty=document.getElementById('setlistEmpty');
+  const items=document.getElementById('setlistItems');
+  const perfBtn=document.getElementById('setlistPerformBtn');
+  const nameInput=document.getElementById('setlistNameInput');
+  const statsEl=document.getElementById('setlistStats');
+  renderSetlistTabs();
+  if(nameInput) nameInput.value=sl.name;
+  if(statsEl) statsEl.innerHTML=sl.songs.length?`<span>🎵 ${sl.songs.length} këngë</span><span>·</span><span>⏱ ~${Math.round(sl.songs.length*3.5)} min</span>`:'';
   if(!sl.songs.length){
     if(empty) empty.style.display='block';
     if(items) items.innerHTML='';
@@ -3731,70 +3800,96 @@ function renderSetlist(){
     return;
   }
   if(empty) empty.style.display='none';
-  if(perfBtn) perfBtn.style.display='block';
-  if(items) items.innerHTML = sl.songs.map((s,i)=>`
-    <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px">
-      <span style="font-size:20px;font-weight:800;color:var(--text3);min-width:28px;text-align:center">${i+1}</span>
+  if(perfBtn) perfBtn.style.display='flex';
+  if(items) items.innerHTML=sl.songs.map((s,i)=>{
+    const song=SONGS.find(x=>Number(x.id)===Number(s.id));
+    const thumb=song?.thumb||'';
+    return `<div style="display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:18px;font-weight:800;color:var(--text3);min-width:28px;text-align:center;padding-top:10px">${i+1}</div>
+      ${thumb?`<img src="${thumb}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>`:''}
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">♪ ${s.artist} · <span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">♪ ${s.artist} &nbsp;<span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span></div>
+        <input type="text" placeholder="📝 Shto shënim (p.sh. Kapo 2, Fillo ngadalë...)" value="${s.note||''}" oninput="updateSetlistNote(${s.id},this.value)" style="margin-top:8px;width:100%;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:11px;outline:none"/>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button onclick="moveSetlistItem(${s.id},-1)" ${i===0?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:13px;color:var(--text2)">▲</button>
-        <button onclick="moveSetlistItem(${s.id},1)" ${i===sl.songs.length-1?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:13px;color:var(--text2)">▼</button>
-        <button onclick="openSong(${s.id})" style="background:var(--blue-light);border:none;border-radius:7px;padding:0 10px;height:30px;cursor:pointer;font-size:11px;font-weight:600;color:var(--blue-mid);font-family:'Poppins',sans-serif">Hap</button>
-        <button onclick="removeFromSetlist(${s.id})" style="background:rgba(220,38,38,0.1);border:none;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:14px;color:#dc2626">✕</button>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <div style="display:flex;gap:4px">
+          <button onclick="moveSetlistItem(${s.id},-1)" ${i===0?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:12px;color:var(--text2);opacity:${i===0?'0.3':'1'}">▲</button>
+          <button onclick="moveSetlistItem(${s.id},1)" ${i===sl.songs.length-1?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:12px;color:var(--text2);opacity:${i===sl.songs.length-1?'0.3':'1'}">▼</button>
+        </div>
+        <button onclick="openSong(${s.id})" style="background:var(--blue-light);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;color:var(--blue-mid);font-family:'Poppins',sans-serif;white-space:nowrap">🎵 Hap</button>
+        <button onclick="removeFromSetlist(${s.id})" style="background:rgba(220,38,38,0.1);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:11px;color:#dc2626">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function updateSetlistBadge(){
-  const count = getSetlist().songs.length;
-  const link = document.getElementById('setlistNavLink');
-  if(link) link.innerHTML = count>0
-    ? `📋 ${currentLang==='sq'?'Setlista':'Setlist'} <span style="background:var(--blue-mid);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${count}</span>`
-    : `📋 ${currentLang==='sq'?'Setlista':'Setlist'}`;
+  const lists=getAllSetlists(); const total=lists.reduce((s,l)=>s+l.songs.length,0);
+  const link=document.getElementById('setlistNavLink');
+  if(link) link.innerHTML=total>0?`📋 ${currentLang==='sq'?'Setlista':'Setlist'} <span style="background:var(--blue-mid);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${total}</span>`:`📋 ${currentLang==='sq'?'Setlista':'Setlist'}`;
 }
 
-// Performance Mode
-let perfIdx = 0;
+let perfIdx=0,_autoScrollInterval=null,_wakeLock=null;
+
 function startPerformanceMode(){
-  const sl = getSetlist();
-  if(!sl.songs.length) return;
-  perfIdx = 0;
-  document.getElementById('performanceMode').style.display='block';
-  document.body.style.overflow='hidden';
+  const sl=getSetlist(); if(!sl.songs.length) return;
+  perfIdx=0;
+  const pm=document.getElementById('performanceMode');
+  pm.style.display='flex'; document.body.style.overflow='hidden';
+  if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(wl=>_wakeLock=wl).catch(()=>{});
   showPerfSong();
+  document.addEventListener('keydown',perfKeyHandler);
 }
+
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
-  document.body.style.overflow='';
+  document.body.style.overflow=''; stopAutoScroll();
+  if(_wakeLock){_wakeLock.release();_wakeLock=null;}
+  document.removeEventListener('keydown',perfKeyHandler);
 }
+
+function perfKeyHandler(e){
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') nextPerformanceSong();
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') prevPerformanceSong();
+  else if(e.key===' '){e.preventDefault();toggleAutoScroll();}
+  else if(e.key==='Escape') exitPerformanceMode();
+}
+
 function showPerfSong(){
-  const sl = getSetlist();
-  const s = SONGS.find(x=>Number(x.id)===Number(sl.songs[perfIdx]?.id));
-  if(!s) return;
-  const counter = document.getElementById('perfCounter');
-  const title = document.getElementById('perfSongTitle');
-  const content = document.getElementById('perfContent');
-  if(counter) counter.textContent = `${perfIdx+1} / ${sl.songs.length}`;
-  if(title) title.textContent = `${s.title} — ${s.key}`;
-  // Render lyrics
-  const rawText = s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
-  const sections = parseLyricsText(rawText);
-  if(content) content.innerHTML = sections.map(sec=>{
-    const lines = sec.lines.map(l=>`<div style="margin-bottom:12px">
-      ${l.chords?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:15px">${l.chords}</div>`:''}
-      <div style="font-weight:600;font-size:16px;line-height:1.7">${l.sq}</div>
-      ${l.en&&s.bilingual!==false?`<div style="color:var(--text3);font-style:italic;font-size:13px">${l.en}</div>`:''}
-    </div>`).join('');
-    return `<div style="margin-bottom:24px"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:8px;font-family:'Roboto Mono',monospace">${lines}</div></div>`;
-  }).join('') || `<p style="color:var(--text3);padding:20px">Nuk ka tekst për këtë këngë.</p>`;
-  document.getElementById('perfPrevBtn').disabled = perfIdx===0;
-  document.getElementById('perfNextBtn').disabled = perfIdx===sl.songs.length-1;
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  stopAutoScroll();
+  document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
+  document.getElementById('perfSongTitle').textContent=s.title;
+  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · 🎵 ${s.key}${item.note?' · 📝 '+item.note:''}`;
+  document.getElementById('perfPrevBtn').disabled=perfIdx===0;
+  document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
+  const list=document.getElementById('perfSongList');
+  if(list) list.innerHTML=sl.songs.map((x,i)=>`<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 12px;border-radius:100px;border:none;background:${i===perfIdx?'var(--blue-mid)':'var(--bg3)'};color:${i===perfIdx?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`).join('');
+  const rawText=s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
+  const sections=parseLyricsText(rawText);
+  const content=document.getElementById('perfContent');
+  content.scrollTop=0;
+  content.innerHTML=sections.length?sections.map(sec=>{
+    const lines=sec.lines.map(l=>`<div style="margin-bottom:14px">${l.chords?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:16px;margin-bottom:2px">${l.chords}</div>`:''}<div style="font-weight:600;font-size:18px;line-height:1.8;font-family:'Roboto Mono',monospace">${l.sq}</div>${l.en&&s.bilingual!==false?`<div style="color:var(--text3);font-style:italic;font-size:14px;font-family:'Roboto Mono',monospace">${l.en}</div>`:''}</div>`).join('');
+    return `<div style="margin-bottom:28px"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:10px">${lines}</div></div>`;
+  }).join(''):`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst.</p>`;
 }
+
 function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
 function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.length-1){perfIdx++;showPerfSong();} }
+
+function toggleAutoScroll(){
+  const btn=document.getElementById('autoScrollBtn');
+  if(_autoScrollInterval){
+    stopAutoScroll(); btn.textContent='▶ Auto'; btn.style.background='var(--bg3)'; btn.style.color='var(--text2)';
+  } else {
+    _autoScrollInterval=setInterval(()=>{const c=document.getElementById('perfContent');if(c)c.scrollBy({top:1,behavior:'smooth'});},40);
+    btn.textContent='⏸ Stop'; btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
+  }
+}
+function stopAutoScroll(){ if(_autoScrollInterval){clearInterval(_autoScrollInterval);_autoScrollInterval=null;} }
 
 async function sendContactEmail() {
   const name    = document.getElementById('contactName').value.trim();
