@@ -48,9 +48,12 @@
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID -->
-<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
+<!-- Google Analytics — REPLACE G-XXXXXXXXXX with your real Measurement ID from analytics.google.com -->
+<!-- To activate: remove the outer comment tags below -->
+<!--
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});</script>
+-->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -71,17 +74,40 @@
   --r:16px;--rs:10px;
 }
 [data-theme=dark]{
-  --chord-color:#f08080;
-  --bg:#0C0D14;--bg2:#111320;--bg3:#191B2A;
-  --surface:#191B2A;--border:#252740;
-  --text:#EEEEF8;--text2:#8888AA;--text3:#50507A;
-  --nav-bg:rgba(12,13,20,0.97);
-  --shadow:0 2px 12px rgba(0,0,0,0.4);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.6);
-  --red-muted:rgba(139,26,26,0.2);
-  --gold-muted:rgba(201,151,58,0.15);
-  --blue-light:rgba(44,64,116,0.2);
+  --chord-color:#ff9999;
+  --bg:#0A0B12;--bg2:#0F1020;--bg3:#161828;
+  --surface:#161828;--border:#1E2035;
+  --text:#F0F0FF;--text2:#9090BB;--text3:#484870;
+  --nav-bg:rgba(10,11,18,0.98);
+  --shadow:0 2px 12px rgba(0,0,0,0.5);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.7);
+  --red:#e05555;--red-l:#ff6666;--red-muted:rgba(224,85,85,0.15);
+  --gold:#E8B84B;--gold-l:#F5CF7A;--gold-muted:rgba(232,184,75,0.12);
+  --blue-light:rgba(44,64,116,0.25);
+  --blue-mid:#6080CC;
 }
+
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--border) 50%,var(--bg3) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite;border-radius:8px}
+.skeleton-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.skeleton-thumb{width:100%;aspect-ratio:16/10}
+.skeleton-body{padding:13px 15px 15px;display:flex;flex-direction:column;gap:8px}
+
+/* ── CARD FADE-IN ANIMATION ── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.song-card{animation:fadeInUp .35s ease both}
+.song-card:nth-child(1){animation-delay:.03s}
+.song-card:nth-child(2){animation-delay:.06s}
+.song-card:nth-child(3){animation-delay:.09s}
+.song-card:nth-child(4){animation-delay:.12s}
+.song-card:nth-child(5){animation-delay:.15s}
+.song-card:nth-child(n+6){animation-delay:.18s}
+
+/* ── FONT SIZE SLIDER ── */
+.font-size-ctrl{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg3);border-radius:100px;border:1px solid var(--border)}
+.font-size-ctrl input[type=range]{width:80px;accent-color:var(--blue-mid);cursor:pointer}
+.font-size-ctrl span{font-size:11px;font-weight:700;color:var(--text3);min-width:26px;text-align:center}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px;transition:background .3s,color .3s}
@@ -1153,6 +1179,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
+      <button class="admin-tab" id="atab-bulk" onclick="switchAdminTab('bulk',this)">🏷️ Kategori</button>
+      <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
   </div>
@@ -1514,6 +1542,57 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div style="padding:18px">
         <div id="statsContent">
           <div style="text-align:center;padding:40px;color:var(--text3)">⏳ Duke ngarkuar statistikat...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: BULK CATEGORIES ── -->
+    <div class="admin-panel" id="tab-bulk">
+      <div class="admin-section-title">🏷️ Vendos Kategori për Shumë Këngë</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Zgjidhni kategorinë dhe këngët — do të shtohen të gjitha njëherësh.</p>
+      <div class="admin-form">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Kategoria</label>
+          <select class="form-select" id="bulkCatSelect" style="max-width:300px">
+            <option value="krishtlindje">🎄 Krishtlindje</option>
+            <option value="pashke">✝️ Pashkë</option>
+            <option value="femije">👶 Fëmijë</option>
+            <option value="shqip">🦅 Shqip Original</option>
+            <option value="himne">⛪ Himne Tradicionale</option>
+            <option value="oferte">🎁 Këngë Oferte</option>
+            <option value="lavderim">🙌 Lavdërim</option>
+            <option value="ngushellim">🕊️ Ngushëllim</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Kërko dhe zgjidhni këngët</label>
+          <input class="form-input" id="bulkSearchInput" placeholder="🔍 Kërko..." oninput="renderBulkSongList()" style="margin-bottom:10px;border-radius:100px"/>
+          <div id="bulkSongList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:8px"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="applyBulkCategory()">✅ Apliko Kategorinë</button>
+          <button class="btn btn-outline" onclick="removeBulkCategory()">✕ Hiq Kategorinë</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: BACKUP / EXPORT ── -->
+    <div class="admin-panel" id="tab-export">
+      <div class="admin-section-title">💾 Backup & Export</div>
+      <div style="padding:0 0 20px">
+        <div class="admin-form" style="margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">📦 Shkarko të gjitha të dhënat</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Shkarkon një skedar JSON me të gjitha këngët, lyrics dhe linqet e PDF-ve. Ruaje si backup!</p>
+          <button class="btn btn-primary" onclick="exportAllData()">⬇ Shkarko Backup JSON</button>
+        </div>
+        <div class="admin-form" style="background:var(--gold-muted);border-color:rgba(201,151,58,0.3)">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">🛡️ Si të rikthesh faqen</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.8">
+            1. Backup JSON ruan të gjitha <strong>titujt, lyrics, URL-t e PDF-ve</strong><br>
+            2. PDF-ët fizikisht janë te <strong>Supabase Storage</strong> — shkarko ato veçmas nga Supabase Dashboard<br>
+            3. Nëse ke një domain të ri, ngarko sërish <code>index.html</code> dhe lidhe me Supabase<br>
+            4. Të dhënat rikthehen automatikisht nga Supabase
+          </p>
         </div>
       </div>
     </div>
@@ -2342,6 +2421,7 @@ async function initData() {
 }
 
 function showLoadingState(on) {
+  // Progress bar
   let loader = document.getElementById('globalLoader');
   if (!loader) {
     loader = document.createElement('div');
@@ -2353,6 +2433,24 @@ function showLoadingState(on) {
     document.head.appendChild(style);
   }
   loader.style.display = on ? 'block' : 'none';
+
+  // Skeleton cards on home grids
+  ['popularGrid','recentGrid'].forEach(id=>{
+    const grid = document.getElementById(id);
+    if(!grid) return;
+    if(on){
+      grid.innerHTML = Array(5).fill(0).map(()=>`
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-thumb"></div>
+          <div class="skeleton-body">
+            <div class="skeleton" style="height:14px;width:80%"></div>
+            <div class="skeleton" style="height:11px;width:55%"></div>
+            <div class="skeleton" style="height:11px;width:65%"></div>
+            <div class="skeleton" style="height:30px;border-radius:100px;margin-top:4px"></div>
+          </div>
+        </div>`).join('');
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2881,8 +2979,14 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
         <button class="t-btn" onclick="doTranspose(1)">+</button>
         ${transposeSteps!==0?`<button class="t-btn" onclick="resetTranspose()" title="Reset" style="font-size:12px;padding:0 6px">↺</button>`:''}
       </div>
+      <div class="font-size-ctrl" title="Madhësia e fontit">
+        <span style="font-size:11px">A</span>
+        <input type="range" min="12" max="22" value="${window._lyricsFontSize||14}" oninput="setLyricsFont(this.value)" style="width:70px"/>
+        <span style="font-size:15px">A</span>
+        <span id="fontSizeLabel">${window._lyricsFontSize||14}px</span>
+      </div>
     </div>
-    <div class="lyrics-box">${lyricsHtml}</div>
+    <div class="lyrics-box" id="lyricsBoxMain" style="font-size:${window._lyricsFontSize||14}px">${lyricsHtml}</div>
     <div class="dl-bar">
       <div><div class="dl-text">${t('dl-text')}</div><div class="dl-sub">${t('dl-sub')}</div></div>
       <div class="dl-btns" style="display:flex;align-items:center;gap:8px">
@@ -2896,6 +3000,92 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
 function selectInst(i){currentInst=i;renderSong();}
 function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
+
+function setLyricsFont(size){
+  window._lyricsFontSize = Number(size);
+  localStorage.setItem('aa_font_size', size);
+  const box = document.getElementById('lyricsBoxMain');
+  if(box) box.style.fontSize = size + 'px';
+  const label = document.getElementById('fontSizeLabel');
+  if(label) label.textContent = size + 'px';
+}
+
+function renderBulkSongList(){
+  const q = normalizeSearch(document.getElementById('bulkSearchInput')?.value||'');
+  const cat = document.getElementById('bulkCatSelect')?.value||'';
+  const container = document.getElementById('bulkSongList');
+  if(!container) return;
+  const filtered = SONGS.filter(s => !q || normalizeSearch(s.title).includes(q) || normalizeSearch(s.artist).includes(q));
+  container.innerHTML = filtered.map(s => {
+    const hasCat = (s.categories||[]).includes(cat);
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <input type="checkbox" class="bulk-cb" value="${s.id}" ${hasCat?'checked':''} style="width:16px;height:16px;accent-color:var(--blue-mid)"/>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+        <div style="font-size:11px;color:var(--text3)">♪ ${s.artist} · ${s.key}${hasCat?` · <span style="color:var(--gold)">✓ ${cat}</span>`:''}</div>
+      </div>
+    </label>`;
+  }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Nuk ka këngë</div>';
+}
+
+async function applyBulkCategory(){
+  const cat = document.getElementById('bulkCatSelect')?.value;
+  const checked = Array.from(document.querySelectorAll('.bulk-cb:checked')).map(cb=>Number(cb.value));
+  if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
+  showToast(`⏳ Duke aplikuar "${cat}" për ${checked.length} këngë...`,'');
+  const sb = getSB();
+  let done = 0;
+  for(const id of checked){
+    const song = SONGS.find(s=>Number(s.id)===id);
+    if(!song) continue;
+    const cats = [...new Set([...(song.categories||[]), cat])];
+    if(sb){ await sb.from('songs').update({categories:cats}).eq('id',id); }
+    song.categories = cats; done++;
+  }
+  localStorage.removeItem('aa_songs_cache');
+  showToast(`✅ Kategoria u aplikua për ${done} këngë!`,'success');
+  renderBulkSongList();
+}
+
+async function removeBulkCategory(){
+  const cat = document.getElementById('bulkCatSelect')?.value;
+  const checked = Array.from(document.querySelectorAll('.bulk-cb:checked')).map(cb=>Number(cb.value));
+  if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
+  showToast(`⏳ Duke hequr "${cat}"...`,'');
+  const sb = getSB();
+  let done = 0;
+  for(const id of checked){
+    const song = SONGS.find(s=>Number(s.id)===id);
+    if(!song) continue;
+    const cats = (song.categories||[]).filter(c=>c!==cat);
+    if(sb){ await sb.from('songs').update({categories:cats}).eq('id',id); }
+    song.categories = cats; done++;
+  }
+  localStorage.removeItem('aa_songs_cache');
+  showToast(`✅ Kategoria u hoq nga ${done} këngë!`,'success');
+  renderBulkSongList();
+}
+async function exportAllData(){
+  showToast('⏳ Duke eksportuar të dhënat...','');
+  const sb = getSB();
+  const exportData = { exported_at: new Date().toISOString(), songs: [], pdfs: [] };
+  if(sb){
+    const {data:songs} = await sb.from('songs').select('*').order('created_at',{ascending:true});
+    const {data:pdfs} = await sb.from('song_pdfs').select('*');
+    exportData.songs = songs||[];
+    exportData.pdfs = pdfs||[];
+  } else {
+    exportData.songs = loadData();
+  }
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `adhurojme-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast('✅ Backup u shkarkua!','success');
+}
 
 function buildPDFFileName(song, instrument, isTransposed){
   const title = (song?.title || 'Këngë').trim();
@@ -3015,6 +3205,8 @@ function switchAdminTab(tab,el){
   if(tab==='songs') refreshAdminSongs();
   if(tab==='social'){ loadSocialAdminForm(); setTimeout(loadAnthropicKeyIntoForm, 50); }
   if(tab==='stats') renderStatsDashboard();
+  if(tab==='bulk') renderBulkSongList();
+  if(tab==='export'){}
   if(tab==='addSong'){ 
     const dl=document.getElementById('artistDatalist');
     if(dl){ dl.innerHTML=''; ARTISTS.forEach(a=>{const o=document.createElement('option');o.value=a;dl.appendChild(o);}); }
@@ -3416,6 +3608,9 @@ function renderArtistsList(){
 DEFAULT_SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// Load preferences
+window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
+
 initData();
 
 // ── SERVICE WORKER (Offline Mode) ──
