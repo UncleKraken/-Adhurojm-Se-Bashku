@@ -230,7 +230,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .transpose-ctrl span{font-size:13px;font-weight:700;color:var(--text);min-width:44px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 8px}
 .t-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;font-weight:700;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all .18s}
 .t-btn:hover{background:var(--gold-muted);border-color:var(--gold);color:var(--gold)}
-.lyrics-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;font-size:14px;line-height:1.9;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lyrics-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;line-height:1.9;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sec-lbl{display:inline-block;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:2px 9px;border-radius:6px;margin-bottom:8px}
 .lyric-block{margin-bottom:26px}
 .lyric-line{margin-bottom:5px}
@@ -378,7 +378,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   .song-htitle{font-size:1.5rem !important}
   .ctrl-row{gap:8px;padding:12px 0}
   .transpose-ctrl{margin-left:0;width:100%;justify-content:flex-start;margin-top:4px}
-  .lyrics-box{padding:18px 16px;font-size:13px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .lyrics-box{padding:18px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .dl-bar{padding:16px}
   .dl-btns{flex-direction:column;width:100%}
   .dl-btns .btn{width:100%;justify-content:center;text-align:center}
@@ -418,7 +418,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   .songs-grid{grid-template-columns:1fr 1fr;gap:10px}
   .hero-title{font-size:2rem !important}
   .song-htitle{font-size:1.3rem !important}
-  .lyrics-box{font-size:12.5px;padding:14px 12px}
+  .lyrics-box{padding:14px 12px}
   .nav-bar{padding:0 12px}
   .section-inner{padding:0 12px}
   .song-wrap{padding:16px 12px 40px}
@@ -2926,7 +2926,7 @@ function renderSong(){
       const englishLine = (l.en && s.bilingual !== false) ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
       return `<div class="lyric-line" style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
     }).join('');
-    return `<div class="lyric-block"><span class="sec-lbl" style="background:${color}">${sec.label}</span><div style="margin-top:7px;font-family:'Roboto Mono','Courier New',monospace;font-size:14px;line-height:1.6;">${lines}</div></div>`;
+    return `<div class="lyric-block"><span class="sec-lbl" style="background:${color}">${sec.label}</span><div style="margin-top:7px;font-family:'Roboto Mono','Courier New',monospace;font-size:inherit;line-height:1.8;">${lines}</div></div>`;
   }).join('')||'<p style="color:var(--text3);padding:8px 0">Tekstet nuk janë ngarkuar ende. Admini mund t\'i shtojë nëpërmjet panelit të administrimit.</p>';
 
   const videoHtml=s.youtube
@@ -3011,10 +3011,17 @@ function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
 
 function setLyricsFont(size){
-  window._lyricsFontSize = Number(size);
+  size = Number(size);
+  window._lyricsFontSize = size;
   localStorage.setItem('aa_font_size', size);
   const box = document.getElementById('lyricsBoxMain');
-  if(box) box.style.fontSize = size + 'px';
+  if(box){
+    box.style.fontSize = size + 'px';
+    // Override all inline font-sizes inside lyrics box
+    box.querySelectorAll('[style*="font-size"]').forEach(el => {
+      el.style.fontSize = size + 'px';
+    });
+  }
   const label = document.getElementById('fontSizeLabel');
   if(label) label.textContent = size + 'px';
 }
