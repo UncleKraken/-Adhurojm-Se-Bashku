@@ -300,7 +300,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .admin-nav-logo{color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .admin-nav-logo img{width:28px;height:28px;border-radius:7px;object-fit:cover}
 .admin-nav-logo span{color:var(--gold-l)}
-.admin-tabs{display:flex;gap:4px;margin-left:20px}
+.admin-tabs{display:flex;gap:4px;margin-left:20px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.admin-tabs::-webkit-scrollbar{display:none}
 .admin-tab{padding:6px 15px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s}
 .admin-tab.active,.admin-tab:hover{background:rgba(255,255,255,0.2);color:#fff}
 .admin-close{margin-left:auto;background:rgba(255,255,255,0.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .18s}
@@ -368,61 +369,92 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   .hamburger{display:flex}
   .foot-inner{grid-template-columns:1fr}
   .songs-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:13px}
-  .dl-bar{flex-direction:column;align-items:flex-start}
   .form-grid{grid-template-columns:1fr}
   .pdf-grid{grid-template-columns:1fr}
-  .admin-tabs{gap:2px}.admin-tab{font-size:12px;padding:5px 10px}
+  .admin-tabs{gap:2px;overflow-x:auto;padding-bottom:4px;flex-wrap:nowrap}
+  .admin-tab{font-size:11px;padding:5px 10px;white-space:nowrap;flex-shrink:0}
 
-  /* Song detail page */
+  /* Song detail */
   .song-wrap{padding:20px 16px 48px}
-  .song-htitle{font-size:1.5rem !important}
-  .ctrl-row{gap:8px;padding:12px 0}
-  .transpose-ctrl{margin-left:0;width:100%;justify-content:flex-start;margin-top:4px}
+  .song-htitle{font-size:1.45rem !important}
+  .ctrl-row{gap:6px;padding:10px 0;flex-wrap:wrap}
+  .transpose-ctrl{margin-left:0;width:100%;justify-content:flex-start;margin-top:2px}
+  .font-size-ctrl{margin-top:2px}
   .lyrics-box{padding:18px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .dl-bar{padding:16px}
-  .dl-btns{flex-direction:column;width:100%}
-  .dl-btns .btn{width:100%;justify-content:center;text-align:center}
-  .tag-row{gap:6px}
-  .tag{font-size:11px;padding:3px 9px}
-  .inst-btn{padding:6px 14px;font-size:12px}
+  .lyric-line{margin-bottom:8px !important}
 
-  /* Hero section */
+  /* Download bar */
+  .dl-bar{flex-direction:column;align-items:flex-start;padding:16px;gap:12px}
+  .dl-btns{flex-direction:column;width:100%;gap:8px}
+  .dl-btns>button,.dl-btns>.btn{width:100% !important;justify-content:center;text-align:center;box-sizing:border-box}
+
+  /* Tags */
+  .tag-row{gap:5px;flex-wrap:wrap}
+  .tag{font-size:10px;padding:2px 8px}
+  .inst-btn{padding:6px 12px;font-size:12px}
+
+  /* Hero */
   .hero-title{font-size:2.4rem !important}
   .hero-search-wrap{padding:0 8px}
+  #heroStats{gap:10px}
+  #heroStats>div{padding:5px 12px;font-size:12px}
 
-  /* Song cards */
+  /* Cards */
   .card-body{padding:10px 12px 12px}
   .card-body .card-title{font-size:13px}
   .card-body .card-artist{font-size:11px}
 
-  /* Section spacing */
+  /* Sections */
   .section{padding:28px 0}
   .section-inner{padding:0 16px}
   .section-hdr{margin-bottom:14px}
+  .section-title{font-size:1.1rem}
+  .see-all{font-size:12px}
 
-  /* Social grid on mobile */
+  /* Social */
   .social-grid{grid-template-columns:1fr;gap:10px;margin-top:14px}
   .social-card{padding:13px 16px;gap:12px}
 
   /* Page hero */
-  .page-hero{padding:36px 20px 28px}
-  .page-hero h1{font-size:1.6rem}
+  .page-hero{padding:32px 16px 24px}
+  .page-hero h1{font-size:1.5rem}
+  .page-hero p{font-size:13px}
 
   /* Admin */
-  .admin-body{padding:16px}
+  .admin-body{padding:14px 16px}
   .songs-table th:nth-child(3),.songs-table td:nth-child(3){display:none}
+  .songs-table{font-size:12px}
+  .songs-table td,.songs-table th{padding:8px 10px}
+
+  /* Setlist */
+  #setlistTabs{gap:6px}
+  #setlistTabs button{font-size:11px;padding:6px 12px}
+  .font-size-ctrl input[type=range]{width:60px}
+
+  /* Share modal */
+  #shareModal>div>div{grid-template-columns:1fr 1fr}
+  #shareModal>div{padding:20px 16px}
+
+  /* Guide */
+  .g-block{padding:18px 16px}
+  .capo-grid{grid-template-columns:1fr 1fr}
 }
 
 /* Extra small screens */
 @media(max-width:420px){
   .songs-grid{grid-template-columns:1fr 1fr;gap:10px}
-  .hero-title{font-size:2rem !important}
-  .song-htitle{font-size:1.3rem !important}
+  .hero-title{font-size:1.9rem !important}
+  .song-htitle{font-size:1.25rem !important}
   .lyrics-box{padding:14px 12px}
   .nav-bar{padding:0 12px}
   .section-inner{padding:0 12px}
-  .song-wrap{padding:16px 12px 40px}
+  .song-wrap{padding:14px 12px 40px}
   .dl-btns .btn{font-size:12px;padding:8px 12px}
+  .page-hero h1{font-size:1.3rem}
+  #heroStats{gap:6px}
+  #heroStats>div{padding:4px 10px;font-size:11px}
+  .admin-tab{font-size:10px;padding:4px 8px}
+  .section-title{font-size:1rem}
 }
 
 /* ── HERO ANIMATED BG ────────────────────────── */
@@ -519,8 +551,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .table-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 @media(max-width:768px){
   .form-grid{grid-template-columns:1fr}
-  .admin-tabs{gap:1px}.admin-tab{font-size:11px;padding:5px 8px}
-  .songs-table th:nth-child(3),.songs-table td:nth-child(3){display:none}
+  .songs-table th:nth-child(4),.songs-table td:nth-child(4){display:none}
 }
 
 /* ── FORM THUMBNAIL/PDF UPLOAD ───────── */
