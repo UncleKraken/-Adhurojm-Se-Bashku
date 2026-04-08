@@ -48,6 +48,12 @@
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="manifest" href="./manifest.json"/>
+<meta name="theme-color" content="#1A2A4A"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Adhurojmë Së Bashku"/>
 <!-- Google Analytics — REPLACE G-XXXXXXXXXX with your real Measurement ID from analytics.google.com -->
 <!-- To activate: remove the outer comment tags below -->
 <!--
@@ -559,11 +565,27 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .pdf-upload-area.has-file{border-color:#16a34a!important;background:rgba(34,197,94,0.06)!important;border-style:solid!important}
 #guitarPdfUploadArea.has-file,#pianoPdfUploadArea.has-file{border-color:#16a34a;background:rgba(34,197,94,0.06);border-style:solid}
 .admin-form .form-grid{margin-bottom:0}
+
+/* ── SCROLL TO TOP ── */
+#scrollTopBtn{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--blue-mid);color:#fff;border:none;box-shadow:0 4px 16px rgba(44,64,116,0.4);cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;z-index:800;transition:opacity .25s,transform .25s}
+#scrollTopBtn.show{display:flex}
+#scrollTopBtn:hover{background:var(--blue);transform:translateY(-3px)}
+@media(max-width:768px){#scrollTopBtn{bottom:16px;right:16px;width:40px;height:40px;font-size:15px}}
+
+/* ── ADMIN NOTE FIELD ── */
+.song-admin-note{background:var(--gold-muted);border:1px solid rgba(201,151,58,0.35);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--text2);margin-top:14px;font-style:italic;line-height:1.7}
+.song-admin-note::before{content:'📌 ';font-style:normal}
+
+/* ── POPULARITY SCORE ── */
+.pop-score{display:inline-flex;align-items:center;gap:4px;background:var(--gold-muted);border:1px solid rgba(201,151,58,0.3);border-radius:100px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--gold)}
 </style>
+
 </head>
 <body>
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+<!-- SCROLL TO TOP -->
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Kthehu lart">↑</button>
 
 <!-- NAV -->
 <nav>
@@ -666,6 +688,17 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
   <!-- Manual categories — rendered dynamically -->
   <div id="homeCategorySections"></div>
+
+  <!-- Recently Viewed -->
+  <section class="section" id="recentlyViewedSection" style="display:none;background:var(--bg2)">
+    <div class="section-inner">
+      <div class="section-hdr">
+        <h2 class="section-title" id="recentlyViewedTitle">🕐 Kohët e Fundit</h2>
+        <span class="see-all" onclick="clearRecentlyViewed()" style="color:var(--text3);font-size:12px;cursor:pointer">✕ Pastro</span>
+      </div>
+      <div class="songs-grid" id="recentlyViewedGrid"></div>
+    </div>
+  </section>
 
   <!-- Favorites -->
   <section class="section" id="favSection" style="display:none">
@@ -1333,6 +1366,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
               <option value="false">Njëgjuhëshe (Vetëm Shqip)</option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="form-label">📌 Shënim Admin (privat, nuk shihet nga vizitorët)</label>
+            <textarea class="form-textarea" id="fAdminNote" placeholder="p.sh. Versioni i ndryshuar nga origjinali, akordet e verifikuara nga X..." style="min-height:60px;font-size:13px"></textarea>
+          </div>
           <div class="form-group full">
             <label class="form-label">🗂 Kategoritë (zgjidhni sa të doni)</label>
             <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px" id="categoriesCheckboxes">
@@ -1797,8 +1834,61 @@ async function renderStatsDashboard() {
           <span style="font-size:12px;font-weight:700;color:var(--gold);min-width:36px;text-align:right">⬇ ${stat.downloads}</span>
         </div>`;
       }).join('')}
+    </div>
+
+    <!-- Popularity Score Top 10 -->
+    <div style="margin-top:24px">
+      <div class="admin-section-title" style="margin-bottom:12px">⭐ Top 10 — Popularity Score</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Score = shikime×1 + shkarkime×3 + preferuara×10</div>
+      ${[...allSongs].map(s=>({s,score:getPopularityScore(s.id,STATS)}))
+        .sort((a,b)=>b.score-a.score).slice(0,10)
+        .map(({s,score},i)=>{
+          const max = getPopularityScore(allSongs[0].id,STATS)||1;
+          const pct = Math.min(100,Math.round((score/(max||1))*100));
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--text3);min-width:18px">${i+1}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+              <div style="height:6px;background:var(--bg3);border-radius:4px;margin-top:4px">
+                <div style="height:6px;background:linear-gradient(90deg,var(--blue-mid),var(--gold));border-radius:4px;width:${pct}%"></div>
+              </div>
+            </div>
+            <span class="pop-score">⭐ ${score}</span>
+          </div>`;
+        }).join('')}
+    </div>
+
+    <!-- Songs added per month -->
+    <div style="margin-top:28px">
+      <div class="admin-section-title" style="margin-bottom:12px">📅 Këngë të Shtuara Sipas Muajit</div>
+      ${(()=>{
+        const months = {};
+        allSongs.forEach(s=>{
+          if(!s.created_at) return;
+          const d = new Date(s.created_at);
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          months[key] = (months[key]||0)+1;
+        });
+        const sorted = Object.entries(months).sort(([a],[b])=>a.localeCompare(b)).slice(-12);
+        if(!sorted.length) return '<p style="color:var(--text3);font-size:13px">Nuk ka të dhëna.</p>';
+        const maxCount = Math.max(...sorted.map(([,v])=>v));
+        return sorted.map(([month,count])=>{
+          const pct = Math.round((count/maxCount)*100);
+          const [y,m] = month.split('-');
+          const label = new Date(Number(y),Number(m)-1).toLocaleDateString('sq-AL',{month:'short',year:'2-digit'});
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:11px;color:var(--text3);min-width:48px;text-align:right">${label}</span>
+            <div style="flex:1;background:var(--bg3);border-radius:4px;height:22px;position:relative">
+              <div style="height:22px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:4px;width:${pct}%;display:flex;align-items:center;justify-content:flex-end;padding-right:6px">
+                <span style="font-size:11px;font-weight:700;color:var(--blue-mid)">${count}</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      })()}
     </div>`;
 }
+
 
 // ═══════════════════════════════════════════════════════
 //  📄 TRANSPOSED PDF DOWNLOAD
@@ -2216,6 +2306,7 @@ function mapRow(row){
     thumbGrad: ['#1a2a4a','#2c4074','#5a80c0'],
     categories: row.categories || [],
     bpm: row.bpm || null,
+    adminNote: row.admin_note || '',
     lyricsRaw: { Guitar: row.lyrics_guitar || '', Piano: row.lyrics_piano || '' }
   };
 }
@@ -2252,6 +2343,7 @@ async function upsertSongAsync(song) {
     lyrics_piano:  song.lyricsRaw?.Piano  || null,
     categories: song.categories || [],
     bpm: song.bpm || null,
+    admin_note: song.adminNote || null,
   };
 
   const numId = song.id ? Number(song.id) : null;
@@ -2773,6 +2865,9 @@ async function renderHome(){
     favSec.style.display='block';
     favSongs.forEach(s=>fav.appendChild(buildCard(s)));
   } else favSec.style.display='none';
+
+  // Recently Viewed
+  renderRecentlyViewed();
   } finally { _renderingHome = false; }
 }
 
@@ -2884,6 +2979,7 @@ let currentSong=null,currentInst='Guitar',transposeSteps=0;
 async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
+  addRecentlyViewed(id);
   currentInst = currentSong.instruments?.[0] || 'Guitar';
   transposeSteps=0;
   // Only load PDFs if not already cached
@@ -3027,6 +3123,7 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
       </div>
     </div>
     <div class="lyrics-box" id="lyricsBoxMain" style="font-size:${window._lyricsFontSize||14}px">${lyricsHtml}</div>
+    ${s.adminNote && window._adminLoggedIn ? `<div class="song-admin-note">${s.adminNote}</div>` : ''}
     <div class="dl-bar">
       <div><div class="dl-text">${t('dl-text')}</div><div class="dl-sub">${t('dl-sub')}</div></div>
       <div class="dl-btns" style="display:flex;align-items:center;gap:8px">
@@ -3359,6 +3456,7 @@ function editSong(id) {
   document.getElementById('fPopular').value = s.popular ? 'true' : 'false';
   document.getElementById('fBilingual').value = s.bilingual === false ? 'false' : 'true';
   if(document.getElementById('fBpm')) document.getElementById('fBpm').value = s.bpm || '';
+  if(document.getElementById('fAdminNote')) document.getElementById('fAdminNote').value = s.adminNote || '';
   // Restore categories
   document.querySelectorAll('.cat-cb').forEach(cb => {
     cb.checked = (s.categories||[]).includes(cb.value);
@@ -3560,15 +3658,14 @@ async function deleteArtist(name){
   renderArtistsList();
 }
 
-// ═══════════════════════════════════════════════════════
-//  REFRESH SITE AFTER ADMIN CHANGES
-// ═══════════════════════════════════════════════════════
-async function refreshSiteData(){
-  // Clear cache so fresh data loads
+function invalidateCache(){
   localStorage.removeItem('aa_songs_cache');
   localStorage.removeItem('aa_songs_cache_time');
   localStorage.removeItem('aa_pdfs_cache');
   localStorage.removeItem('aa_pdfs_cache_time');
+}
+async function refreshSiteData(){
+  invalidateCache();
   if(isOnline()){
     SONGS = await loadSongsAsync();
     PDFS  = await loadPDFsAsync();
@@ -3576,7 +3673,7 @@ async function refreshSiteData(){
     SONGS = loadData();
   }
   SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title);});
-  renderHome(); populateFilters();
+  renderHome(); populateFilters(); updateHeroStats();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3893,8 +3990,55 @@ function loadSocialAdminForm(){
 emailjs.init('_nY20miCLwZSC-jow');
 
 // ═══════════════════════════════════════════════════════
-//  SONG REQUEST
+//  RECENTLY VIEWED
 // ═══════════════════════════════════════════════════════
+const RV_KEY = 'aa_recently_viewed';
+const RV_MAX = 10;
+
+function addRecentlyViewed(songId){
+  const id = Number(songId);
+  let rv = getRecentlyViewed().filter(x => x !== id);
+  rv.unshift(id);
+  rv = rv.slice(0, RV_MAX);
+  localStorage.setItem(RV_KEY, JSON.stringify(rv));
+}
+function getRecentlyViewed(){ try{ return JSON.parse(localStorage.getItem(RV_KEY)||'[]'); }catch(e){ return []; } }
+function clearRecentlyViewed(){ localStorage.removeItem(RV_KEY); renderRecentlyViewed(); }
+
+function renderRecentlyViewed(){
+  const ids = getRecentlyViewed();
+  const sec = document.getElementById('recentlyViewedSection');
+  const grid = document.getElementById('recentlyViewedGrid');
+  if(!sec || !grid) return;
+  const songs = ids.map(id => SONGS.find(s => Number(s.id)===id)).filter(Boolean);
+  if(!songs.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  grid.innerHTML='';
+  songs.forEach(s => grid.appendChild(buildCard(s)));
+}
+
+// ═══════════════════════════════════════════════════════
+//  POPULARITY SCORE
+// ═══════════════════════════════════════════════════════
+function getPopularityScore(songId, STATS){
+  const stat = STATS?.[songId] || {};
+  const views = stat.views || 0;
+  const downloads = stat.downloads || 0;
+  const favs = getFavorites().includes(Number(songId)) ? 10 : 0;
+  return Math.round(views * 1 + downloads * 3 + favs);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCROLL TO TOP
+// ═══════════════════════════════════════════════════════
+(function initScrollTop(){
+  const btn = document.getElementById('scrollTopBtn');
+  if(!btn) return;
+  window.addEventListener('scroll', ()=>{
+    if(window.scrollY > 400) btn.classList.add('show');
+    else btn.classList.remove('show');
+  }, {passive:true});
+})();
 async function sendSongRequest(){
   const name = document.getElementById('reqName')?.value.trim();
   const title = document.getElementById('reqSongTitle')?.value.trim();
@@ -4795,6 +4939,7 @@ async function saveSong() {
     bilingual: document.getElementById('fBilingual').value !== 'false',
     categories: Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb=>cb.value),
     bpm: parseInt(document.getElementById('fBpm')?.value)||null,
+    adminNote: document.getElementById('fAdminNote')?.value.trim()||'',
     capo: document.getElementById('fGuitar').checked ? parseInt(document.getElementById('fCapo').value) || 0 : 0,
     recent: !editIdNum,
     youtube: document.getElementById('fYoutube').value.trim() || null,
