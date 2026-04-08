@@ -4236,105 +4236,88 @@ function showPerfSong(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
   stopAutoScroll();
+  if(!window._perfTranspose) window._perfTranspose={};
+  if(window._perfTranspose[s.id]===undefined) window._perfTranspose[s.id]=0;
   document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · 🎵 ${s.key}${s.bpm?' · 🥁 '+s.bpm+' BPM':''}${item.note?' · 📝 '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · ${s.key}${s.bpm?' · '+s.bpm+' BPM':''}${item.note?' · '+item.note:''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
-
   const list=document.getElementById('perfSongList');
   if(list) list.innerHTML=sl.songs.map((x,i)=>`<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 12px;border-radius:100px;border:none;background:${i===perfIdx?'var(--blue-mid)':'var(--bg3)'};color:${i===perfIdx?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`).join('');
-
-  // Build section arrangement if not set for this song
-  const key = `perf_arr_${s.id}`;
-  if(!window._perfArrangements) window._perfArrangements = {};
+  const arrKey=`perf_arr_${s.id}`;
+  if(!window._perfArrangements) window._perfArrangements={};
   const rawText=s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
   const allSections=parseLyricsText(rawText);
-  if(!window._perfArrangements[key]){
-    window._perfArrangements[key] = allSections.map(sec=>sec.label);
-  }
-  const arrangement = window._perfArrangements[key];
-
-  // Section arrangement UI
-  const content=document.getElementById('perfContent');
-  content.scrollTop=0;
-
-  const sectionMap = {};
+  if(!window._perfArrangements[arrKey]) window._perfArrangements[arrKey]=allSections.map(sec=>sec.label);
+  const sectionMap={};
   allSections.forEach(sec=>sectionMap[sec.label]=sec);
-
-  // Build arrangement editor + lyrics
-  content.innerHTML = `
-    <!-- Arrangement bar -->
+  const steps=window._perfTranspose[s.id]||0;
+  const origKeyIdx=noteToIdx((s.key||'').replace('m',''))||0;
+  const tIdx=((origKeyIdx+steps)%12+12)%12;
+  const isMinor=s.key?.includes('m')&&!s.key?.includes('maj');
+  const dispKey=SHARP_DISPLAY[tIdx]+(isMinor?'m':'');
+  const keyLabel=steps===0?s.key:`${s.key} -> ${dispKey} (${steps>0?'+':''}${steps})`;
+  const pContent=document.getElementById('perfContent');
+  pContent.scrollTop=0;
+  pContent.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text3)">🎵 Transpose</span>
+      <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;font-weight:700;color:var(--text)">-</button>
+      <span style="font-size:13px;font-weight:700;color:var(--blue-mid);min-width:110px;text-align:center">${keyLabel}</span>
+      <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;font-weight:700;color:var(--text)">+</button>
+      ${steps!==0?`<button onclick="window._perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 10px;height:32px;cursor:pointer;font-size:12px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
+    </div>
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">📋 Rendi i Seksioneve</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:10px">📋 Rendi i Seksioneve</div>
       <div id="perfArrChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">➕ Shto seksion:</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">+ Shto:</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:4px 12px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+${sec.label}</button>`).join('')}
-        <button onclick="perfResetArr('${s.id}')" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">↺ Reset</button>
+        <button onclick="perfResetArr('${s.id}')" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">Reset</button>
       </div>
     </div>
-    <!-- Lyrics by arrangement -->
     <div id="perfLyricsContent"></div>`;
-
-  renderPerfArrangement(s.id, sectionMap);
+  renderPerfArrangement(s.id, sectionMap, steps);
 }
 
-function renderPerfArrangement(songId, sectionMap){
-  const key = `perf_arr_${songId}`;
-  const arrangement = window._perfArrangements?.[key]||[];
-  const chipsEl = document.getElementById('perfArrChips');
-  const lyricsEl = document.getElementById('perfLyricsContent');
-
-  if(chipsEl) chipsEl.innerHTML = arrangement.map((label,i)=>{
-    const sec = sectionMap[label];
-    const color = sec?.color||'var(--blue)';
-    return `<div style="display:flex;align-items:center;gap:4px;background:${color};color:#fff;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">
-      ${label}
-      <button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>`;
-  }).join('');
-
-  if(lyricsEl) lyricsEl.innerHTML = arrangement.map(label=>{
-    const sec = sectionMap[label];
-    if(!sec) return '';
-    const lines = sec.lines.map(l=>`<div style="margin-bottom:14px">
-      ${l.chords?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${window._lyricsFontSize||14}px;margin-bottom:2px">${l.chords}</div>`:''}
-      <div style="font-weight:600;font-size:${Math.max((window._lyricsFontSize||14)+4,18)}px;line-height:1.8;font-family:'Roboto Mono',monospace">${l.sq}</div>
-      ${l.en?`<div style="color:var(--text3);font-style:italic;font-size:${window._lyricsFontSize||14}px;font-family:'Roboto Mono',monospace">${l.en}</div>`:''}
-    </div>`).join('');
-    return `<div style="margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:12px">${lines}</div></div>`;
-  }).join('') || `<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst.</p>`;
-}
-
-function perfAddSection(songId, label){
-  const key = `perf_arr_${songId}`;
-  if(!window._perfArrangements) window._perfArrangements={};
-  window._perfArrangements[key].push(label);
-  // Re-render
-  const sl=getSetlist(); const item=sl.songs[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const rawText=s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
-  const allSections=parseLyricsText(rawText);
-  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(songId,sectionMap);
-}
-
-function perfRemoveSection(songId, idx){
-  const key=`perf_arr_${songId}`;
-  window._perfArrangements[key].splice(idx,1);
-  const sl=getSetlist(); const item=sl.songs[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const rawText=s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
-  const allSections=parseLyricsText(rawText);
-  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(songId,sectionMap);
-}
-
-function perfResetArr(songId){
-  const key=`perf_arr_${songId}`;
-  delete window._perfArrangements[key];
+function perfTranspose(songId,dir){
+  if(!window._perfTranspose) window._perfTranspose={};
+  window._perfTranspose[songId]=(window._perfTranspose[songId]||0)+dir;
   showPerfSong();
+}
+
+function renderPerfArrangement(songId,sectionMap,steps){
+  steps=steps||window._perfTranspose?.[songId]||0;
+  const key=`perf_arr_${songId}`;
+  const arrangement=window._perfArrangements?.[key]||[];
+  const chipsEl=document.getElementById('perfArrChips');
+  const lyricsEl=document.getElementById('perfLyricsContent');
+  if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
+    const sec=sectionMap[label];const color=sec?.color||'var(--blue)';
+    return `<div style="display:flex;align-items:center;gap:4px;background:${color};color:#fff;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:10px">x</button></div>`;
+  }).join('');
+  if(lyricsEl) lyricsEl.innerHTML=arrangement.map(label=>{
+    const sec=sectionMap[label]; if(!sec) return '';
+    const fs=window._lyricsFontSize||14;
+    const lines=sec.lines.map(l=>{
+      const tc=l.chords?transposeChordLine(l.chords,steps):'';
+      return `<div style="margin-bottom:14px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs}px;margin-bottom:2px">${tc}</div>`:''}<div style="font-weight:600;font-size:${Math.max(fs+4,18)}px;line-height:1.8;font-family:'Roboto Mono',monospace">${l.sq}</div>${l.en?`<div style="color:var(--text3);font-style:italic;font-size:${fs}px;font-family:'Roboto Mono',monospace">${l.en}</div>`:''}</div>`;
+    }).join('');
+    return `<div style="margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:12px">${lines}</div></div>`;
+  }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst.</p>`;
+}
+
+function perfAddSection(songId,label){
+  const key=`perf_arr_${songId}`;
+  if(!window._perfArrangements) window._perfArrangements={};
+  window._perfArrangements[key].push(label); showPerfSong();
+}
+function perfRemoveSection(songId,idx){
+  window._perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
+}
+function perfResetArr(songId){
+  delete window._perfArrangements[`perf_arr_${songId}`]; showPerfSong();
 }
 
 function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
