@@ -818,24 +818,37 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- Top bar -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;min-height:54px">
     <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">◀</button>
+      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">&#9664;</button>
       <span id="perfCounter" style="font-size:12px;color:var(--text3);font-weight:700;min-width:44px;text-align:center"></span>
-      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">▶</button>
+      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">&#9654;</button>
     </div>
     <div style="flex:1;text-align:center;min-width:0;overflow:hidden">
       <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">Auto</button>
-      <button onclick="togglePerfFullscreen()" id="perfFsBtn" title="Fullscreen" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:15px;color:var(--text2)">⛶</button>
-      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:7px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600">✕ Dil</button>
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">Auto</button>
+      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#127769;</button>
+      <button onclick="togglePerfFullscreen()" id="perfFsBtn" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#11036;</button>
+      <button onclick="showPerfShortcuts()" title="Shortcuts" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#9000;&#65039;</button>
+      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:7px 11px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600">X Dil</button>
     </div>
   </div>
   <!-- Mini song list -->
   <div id="perfSongList" style="display:flex;gap:6px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
   <!-- Content -->
   <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
+  <!-- Shortcuts overlay -->
+  <div id="perfShortcutsOverlay" onclick="this.style.display='none'" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:10;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px 28px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div style="font-size:15px;font-weight:700;color:var(--text)">Shkurtesat e Tastierës</div>
+        <button onclick="document.getElementById('perfShortcutsOverlay').style.display='none'" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">X</button>
+      </div>
+      <div id="perfShortcutsList" style="display:flex;flex-direction:column;gap:0"></div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Kliko kudo jashtë per ta mbyllur</div>
+    </div>
+  </div>
 </div>
 <div class="page" id="page-about">
   <div class="page-hero"><h1 data-sq="Rreth Nesh" data-en="About Us">Rreth Nesh</h1><p data-sq="Misioni dhe projekti ynë" data-en="Our mission and project">Misioni dhe projekti ynë</p></div>
@@ -4241,14 +4254,45 @@ function exitPerformanceMode(){
   document.removeEventListener('keydown',perfKeyHandler);
 }
 
-function togglePerfFullscreen(){
-  const el = document.getElementById('performanceMode');
-  if(!document.fullscreenElement){
-    el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
-    document.getElementById('perfFsBtn').textContent='⛶';
+function togglePerfDark(){
+  const pm=document.getElementById('performanceMode');
+  const isDark=pm.dataset.dark==='1';
+  if(isDark){
+    pm.dataset.dark='0'; pm.style.background='var(--bg)'; pm.style.color='';
+    const btn=document.getElementById('perfDarkBtn'); if(btn) btn.textContent='🌙';
   } else {
-    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+    pm.dataset.dark='1'; pm.style.background='#06070F'; pm.style.color='#F0F0FF';
+    const btn=document.getElementById('perfDarkBtn'); if(btn) btn.textContent='☀️';
   }
+  const sl=getSetlist();const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));if(!s) return;
+  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+  const allSections=parseLyricsText(rawText);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  renderPerfArrangement(s.id,sectionMap,window._perfTranspose?.[s.id]||0,perfInst);
+}
+
+function showPerfShortcuts(){
+  const overlay=document.getElementById('perfShortcutsOverlay');
+  const list=document.getElementById('perfShortcutsList');
+  if(!overlay||!list) return;
+  const sc=[
+    ['&#8592; / PageUp','Kenga e meparshme'],
+    ['&#8594; / PageDown','Kenga tjeter'],
+    ['Space','Auto-scroll start / stop'],
+    ['F','Fullscreen on/off'],
+    ['D','Dark / Light mode'],
+    ['Escape','Dil nga Performance Mode'],
+  ];
+  list.innerHTML=sc.map(([k,d])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">${d}</span><kbd style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px 11px;font-size:12px;font-weight:700;color:var(--text);font-family:'Roboto Mono',monospace">${k}</kbd></div>`).join('');
+  overlay.style.display='flex';
+}
+
+function togglePerfFullscreen(){
+  const el=document.getElementById('performanceMode');
+  if(!document.fullscreenElement){ el.requestFullscreen?.()??el.webkitRequestFullscreen?.(); }
+  else { document.exitFullscreen?.()??document.webkitExitFullscreen?.(); }
 }
 
 function perfKeyHandler(e){
@@ -4256,9 +4300,15 @@ function perfKeyHandler(e){
   if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown') nextPerformanceSong();
   else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp') prevPerformanceSong();
   else if(e.key===' '){e.preventDefault();toggleAutoScroll();}
-  else if(e.key==='Escape') exitPerformanceMode();
   else if(e.key==='f'||e.key==='F') togglePerfFullscreen();
+  else if(e.key==='d'||e.key==='D') togglePerfDark();
+  else if(e.key==='Escape'){
+    const so=document.getElementById('perfShortcutsOverlay');
+    if(so&&so.style.display!=='none') so.style.display='none';
+    else exitPerformanceMode();
+  }
 }
+
 
 function showPerfSong(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
