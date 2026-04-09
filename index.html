@@ -816,25 +816,26 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 <!-- Performance Mode Overlay -->
 <div id="performanceMode" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;flex-direction:column">
   <!-- Top bar -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;min-height:54px">
     <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:16px;color:var(--text);font-weight:700">◀</button>
-      <span id="perfCounter" style="font-size:13px;color:var(--text3);font-weight:700;min-width:50px;text-align:center"></span>
-      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:16px;color:var(--text);font-weight:700">▶</button>
+      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">◀</button>
+      <span id="perfCounter" style="font-size:12px;color:var(--text3);font-weight:700;min-width:44px;text-align:center"></span>
+      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">▶</button>
     </div>
-    <div style="flex:1;text-align:center;min-width:0">
+    <div style="flex:1;text-align:center;min-width:0;overflow:hidden">
       <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-      <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:2px"></div>
+      <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif">▶ Auto</button>
-      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600">✕ Dil</button>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">Auto</button>
+      <button onclick="togglePerfFullscreen()" id="perfFsBtn" title="Fullscreen" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:15px;color:var(--text2)">⛶</button>
+      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:7px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600">✕ Dil</button>
     </div>
   </div>
-  <!-- Song mini-list -->
-  <div id="perfSongList" style="display:flex;gap:6px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0"></div>
+  <!-- Mini song list -->
+  <div id="perfSongList" style="display:flex;gap:6px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
   <!-- Content -->
-  <div id="perfContent" style="flex:1;overflow-y:auto;padding:28px 20px;max-width:800px;margin:0 auto;width:100%"></div>
+  <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
 </div>
 <div class="page" id="page-about">
   <div class="page-hero"><h1 data-sq="Rreth Nesh" data-en="About Us">Rreth Nesh</h1><p data-sq="Misioni dhe projekti ynë" data-en="Our mission and project">Misioni dhe projekti ynë</p></div>
@@ -4240,30 +4241,57 @@ function exitPerformanceMode(){
   document.removeEventListener('keydown',perfKeyHandler);
 }
 
+function togglePerfFullscreen(){
+  const el = document.getElementById('performanceMode');
+  if(!document.fullscreenElement){
+    el.requestFullscreen?.() || el.webkitRequestFullscreen?.();
+    document.getElementById('perfFsBtn').textContent='⛶';
+  } else {
+    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+  }
+}
+
 function perfKeyHandler(e){
-  if(e.key==='ArrowRight'||e.key==='ArrowDown') nextPerformanceSong();
-  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') prevPerformanceSong();
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown') nextPerformanceSong();
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp') prevPerformanceSong();
   else if(e.key===' '){e.preventDefault();toggleAutoScroll();}
   else if(e.key==='Escape') exitPerformanceMode();
+  else if(e.key==='f'||e.key==='F') togglePerfFullscreen();
 }
 
 function showPerfSong(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
   stopAutoScroll();
+
   if(!window._perfTranspose) window._perfTranspose={};
   if(window._perfTranspose[s.id]===undefined) window._perfTranspose[s.id]=0;
+
+  // Declare perfInst FIRST before any use
+  const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
+
   document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · ${s.key}${s.bpm?' · '+s.bpm+' BPM':''}${perfInst==='Piano'?' · 🎹 Piano':' · 🎸 Guitar'}${item.note?' · '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`${s.artist} \u00b7 ${s.key}${s.bpm?' \u00b7 '+s.bpm+' BPM':''}${perfInst==='Piano'?' \u00b7 Piano':' \u00b7 Guitar'}${item.note?' \u00b7 '+item.note:''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
+
   const list=document.getElementById('perfSongList');
-  if(list) list.innerHTML=sl.songs.map((x,i)=>`<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 12px;border-radius:100px;border:none;background:${i===perfIdx?'var(--blue-mid)':'var(--bg3)'};color:${i===perfIdx?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`).join('');
+  if(list) list.innerHTML=sl.songs.map((x,i)=>{
+    const isCurrent=i===perfIdx;
+    return `<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 14px;border-radius:100px;border:none;background:${isCurrent?'var(--blue-mid)':'var(--bg3)'};color:${isCurrent?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`;
+  }).join('');
+
+  // Scroll active mini-song into view
+  setTimeout(()=>{
+    const listEl=document.getElementById('perfSongList');
+    const activeBtn=listEl?.children[perfIdx];
+    if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  },50);
+
   const arrKey=`perf_arr_${s.id}`;
   if(!window._perfArrangements) window._perfArrangements={};
-  // Use instrument saved in setlist item, fallback to first available
-  const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
   const allSections=parseLyricsText(rawText);
   if(!window._perfArrangements[arrKey]) window._perfArrangements[arrKey]=allSections.map(sec=>sec.label);
@@ -4275,27 +4303,71 @@ function showPerfSong(){
   const isMinor=s.key?.includes('m')&&!s.key?.includes('maj');
   const dispKey=SHARP_DISPLAY[tIdx]+(isMinor?'m':'');
   const keyLabel=steps===0?s.key:`${s.key} -> ${dispKey} (${steps>0?'+':''}${steps})`;
+
   const pContent=document.getElementById('perfContent');
   pContent.scrollTop=0;
+
+  // BPM indicator for autoscroll speed hint
+  const bpmHint = s.bpm ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">(Auto: ${s.bpm} BPM)</span>` : '';
+
   pContent.innerHTML=`
-    <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:14px;flex-wrap:wrap">
-      <span style="font-size:12px;font-weight:700;color:var(--text3)">🎵 Transpose</span>
-      <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;font-weight:700;color:var(--text)">-</button>
-      <span style="font-size:13px;font-weight:700;color:var(--blue-mid);min-width:110px;text-align:center">${keyLabel}</span>
-      <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;font-weight:700;color:var(--text)">+</button>
-      ${steps!==0?`<button onclick="window._perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 10px;height:32px;cursor:pointer;font-size:12px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
-    </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:10px">📋 Rendi i Seksioneve</div>
-      <div id="perfArrChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">+ Shto:</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:4px 12px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+${sec.label}</button>`).join('')}
-        <button onclick="perfResetArr('${s.id}')" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">Reset</button>
+    <!-- Controls bar -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:16px">
+      <!-- Instrument selector -->
+      <div style="display:flex;align-items:center;gap:6px">
+        ${s.instruments?.length>1 ? `
+        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">Guitar</button>
+        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">Piano</button>` :
+        `<span style="font-size:11px;font-weight:700;color:var(--text3)">${perfInst}</span>`}
+      </div>
+      <div style="width:1px;height:20px;background:var(--border)"></div>
+      <!-- Transpose -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">-</button>
+        <span style="font-size:12px;font-weight:700;color:${steps!==0?'var(--blue-mid)':'var(--text3)'};min-width:80px;text-align:center">${keyLabel}</span>
+        <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">+</button>
+        ${steps!==0?`<button onclick="window._perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
+      </div>
+      <div style="width:1px;height:20px;background:var(--border)"></div>
+      <!-- Font size -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--text3)">A</span>
+        <input type="range" min="14" max="28" value="${window._perfFontSize||18}" oninput="setPerfFont(this.value)" style="width:60px;accent-color:var(--blue-mid)"/>
+        <span style="font-size:16px;color:var(--text3)">A</span>
       </div>
     </div>
+    <!-- Section arrangement -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Seksionet</span>
+        <button onclick="perfResetArr('${s.id}')" style="padding:2px 10px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer">Reset</button>
+      </div>
+      <div id="perfArrChips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:3px 10px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+${sec.label}</button>`).join('')}
+      </div>
+    </div>
+    <!-- Lyrics -->
     <div id="perfLyricsContent"></div>`;
-  renderPerfArrangement(s.id, sectionMap, steps);
+
+  renderPerfArrangement(s.id, sectionMap, steps, perfInst);
+}
+
+function perfSwitchInst(songId, inst){
+  updateSetlistInstrument(songId, inst);
+  showPerfSong();
+}
+
+function setPerfFont(size){
+  window._perfFontSize = Number(size);
+  // Re-render lyrics with new size without full reload
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+  const allSections=parseLyricsText(rawText);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  renderPerfArrangement(s.id, sectionMap, window._perfTranspose?.[s.id]||0, perfInst);
 }
 
 function perfTranspose(songId,dir){
@@ -4304,25 +4376,25 @@ function perfTranspose(songId,dir){
   showPerfSong();
 }
 
-function renderPerfArrangement(songId,sectionMap,steps){
+function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   steps=steps||window._perfTranspose?.[songId]||0;
+  const fs=window._perfFontSize||18;
   const key=`perf_arr_${songId}`;
   const arrangement=window._perfArrangements?.[key]||[];
   const chipsEl=document.getElementById('perfArrChips');
   const lyricsEl=document.getElementById('perfLyricsContent');
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
     const sec=sectionMap[label];const color=sec?.color||'var(--blue)';
-    return `<div style="display:flex;align-items:center;gap:4px;background:${color};color:#fff;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;color:#fff;font-size:10px">x</button></div>`;
+    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px">x</button></div>`;
   }).join('');
-  if(lyricsEl) lyricsEl.innerHTML=arrangement.map(label=>{
+  if(lyricsEl) lyricsEl.innerHTML=(arrangement.length?arrangement:Object.keys(sectionMap)).map(label=>{
     const sec=sectionMap[label]; if(!sec) return '';
-    const fs=window._lyricsFontSize||14;
     const lines=sec.lines.map(l=>{
       const tc=l.chords?transposeChordLine(l.chords,steps):'';
-      return `<div style="margin-bottom:14px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs}px;margin-bottom:2px">${tc}</div>`:''}<div style="font-weight:600;font-size:${Math.max(fs+4,18)}px;line-height:1.8;font-family:'Roboto Mono',monospace">${l.sq}</div>${l.en?`<div style="color:var(--text3);font-style:italic;font-size:${fs}px;font-family:'Roboto Mono',monospace">${l.en}</div>`:''}</div>`;
+      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${l.sq}</div>${l.en?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${l.en}</div>`:''}</div>`;
     }).join('');
-    return `<div style="margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'}">${sec.label}</span><div style="margin-top:12px">${lines}</div></div>`;
-  }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst.</p>`;
+    return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
+  }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
 }
 
 function perfAddSection(songId,label){
@@ -4343,13 +4415,26 @@ function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.lengt
 function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
-    stopAutoScroll(); btn.textContent='▶ Auto'; btn.style.background='var(--bg3)'; btn.style.color='var(--text2)';
+    stopAutoScroll();
+    if(btn){btn.textContent='Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
   } else {
-    _autoScrollInterval=setInterval(()=>{const c=document.getElementById('perfContent');if(c)c.scrollBy({top:1,behavior:'smooth'});},40);
-    btn.textContent='⏸ Stop'; btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
+    // BPM-based speed: higher BPM = faster scroll
+    const sl=getSetlist(); const item=sl.songs[perfIdx];
+    const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+    const bpm=s?.bpm||0;
+    // Base: 1px per 40ms (slow). BPM 60=40ms, BPM 120=20ms, BPM 180=13ms
+    const interval = bpm>0 ? Math.max(10, Math.round(2400/bpm)) : 35;
+    _autoScrollInterval=setInterval(()=>{
+      const c=document.getElementById('perfContent');
+      if(c) c.scrollBy({top:1,behavior:'auto'});
+    }, interval);
+    if(btn){
+      const label = bpm>0 ? `Ndalo (${bpm} BPM)` : 'Ndalo';
+      btn.textContent=label;btn.style.background='var(--blue-mid)';btn.style.color='#fff';
+    }
   }
 }
-function stopAutoScroll(){ if(_autoScrollInterval){clearInterval(_autoScrollInterval);_autoScrollInterval=null;} }
+function stopAutoScroll(){if(_autoScrollInterval){clearInterval(_autoScrollInterval);_autoScrollInterval=null;}}
 
 async function sendContactEmail() {
   const name    = document.getElementById('contactName').value.trim();
