@@ -4099,10 +4099,19 @@ function addToSetlist(songId){
   if(!song) return;
   const sl=getSetlist();
   if(sl.songs.find(s=>Number(s.id)===id)){ showToast('Kënga është tashmë në setlistë!',''); return; }
-  sl.songs.push({id,title:song.title,artist:song.artist,key:song.key,note:''});
+  // Capture current instrument if viewing this song, otherwise first available
+  const inst = (typeof currentSong!=='undefined' && Number(currentSong?.id)===id && currentInst)
+    ? currentInst : (song.instruments?.[0]||'Guitar');
+  sl.songs.push({id,title:song.title,artist:song.artist,key:song.key,note:'',instrument:inst});
   saveSetlist(sl); updateSetlistBadge(); renderSetlist();
-  showToast(`✅ "${song.title}" u shtua!`,'success');
+  showToast(`✅ "${song.title}" u shtua! (${inst})`,'success');
   closeAC('setlistAC'); document.getElementById('setlistSearch').value='';
+}
+
+function updateSetlistInstrument(songId, inst){
+  const sl=getSetlist();
+  const item=sl.songs.find(s=>Number(s.id)===Number(songId));
+  if(item){ item.instrument=inst; saveSetlist(sl); }
 }
 
 function removeFromSetlist(songId){
@@ -4185,7 +4194,13 @@ function renderSetlist(){
       ${thumb?`<img src="${thumb}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>`:''}
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">♪ ${s.artist} &nbsp;<span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ♪ ${s.artist} &nbsp;<span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span>
+          ${song && song.instruments?.length > 1 ? `
+          <select onchange="updateSetlistInstrument(${s.id},this.value)" style="font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;cursor:pointer">
+            ${song.instruments.map(i=>`<option value="${i}" ${(s.instrument||song.instruments[0])===i?'selected':''}>${i==='Guitar'?'🎸 Guitar':'🎹 Piano'}</option>`).join('')}
+          </select>` : `<span style="font-size:11px;color:var(--text3)">${s.instrument==='Piano'?'🎹 Piano':'🎸 Guitar'}</span>`}
+        </div>
         <input type="text" placeholder="📝 Shto shënim (p.sh. Kapo 2, Fillo ngadalë...)" value="${s.note||''}" oninput="updateSetlistNote(${s.id},this.value)" style="margin-top:8px;width:100%;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:11px;outline:none"/>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
@@ -4240,14 +4255,16 @@ function showPerfSong(){
   if(window._perfTranspose[s.id]===undefined) window._perfTranspose[s.id]=0;
   document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · ${s.key}${s.bpm?' · '+s.bpm+' BPM':''}${item.note?' · '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`♪ ${s.artist} · ${s.key}${s.bpm?' · '+s.bpm+' BPM':''}${perfInst==='Piano'?' · 🎹 Piano':' · 🎸 Guitar'}${item.note?' · '+item.note:''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
   const list=document.getElementById('perfSongList');
   if(list) list.innerHTML=sl.songs.map((x,i)=>`<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 12px;border-radius:100px;border:none;background:${i===perfIdx?'var(--blue-mid)':'var(--bg3)'};color:${i===perfIdx?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`).join('');
   const arrKey=`perf_arr_${s.id}`;
   if(!window._perfArrangements) window._perfArrangements={};
-  const rawText=s.lyricsRaw?.[s.instruments?.[0]||'Guitar']||'';
+  // Use instrument saved in setlist item, fallback to first available
+  const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
   const allSections=parseLyricsText(rawText);
   if(!window._perfArrangements[arrKey]) window._perfArrangements[arrKey]=allSections.map(sec=>sec.label);
   const sectionMap={};
