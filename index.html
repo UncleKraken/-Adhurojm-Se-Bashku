@@ -2362,23 +2362,34 @@ async function upsertSongAsync(song) {
 
   const numId = song.id ? Number(song.id) : null;
   const isDbId = numId && !isNaN(numId) && numId < 1e9;
-  if (isDbId) {
+
+  // Helper: strip columns that don't exist yet and retry
+  async function tryUpdate(row){
     let { data, error } = await sb.from('songs').update(row).eq('id', numId).select().single();
-    if (error && error.message && (error.message.includes('categories') || error.message.includes('bpm'))) {
-      const rowFix = {...row}; delete rowFix.categories; delete rowFix.bpm;
-      const res = await sb.from('songs').update(rowFix).eq('id', numId).select().single();
-      data = res.data; error = res.error;
+    if(error && (error.code==='42703' || error.message?.includes('column') || error.message?.includes('bpm') || error.message?.includes('admin_note') || error.message?.includes('categories'))){
+      const safe={...row}; delete safe.bpm; delete safe.admin_note; delete safe.categories;
+      const res = await sb.from('songs').update(safe).eq('id', numId).select().single();
+      data=res.data; error=res.error;
     }
+    return {data,error};
+  }
+  async function tryInsert(row){
+    let { data, error } = await sb.from('songs').insert(row).select().single();
+    if(error && (error.code==='42703' || error.message?.includes('column') || error.message?.includes('bpm') || error.message?.includes('admin_note') || error.message?.includes('categories'))){
+      const safe={...row}; delete safe.bpm; delete safe.admin_note; delete safe.categories;
+      const res = await sb.from('songs').insert(safe).select().single();
+      data=res.data; error=res.error;
+    }
+    return {data,error};
+  }
+
+  if (isDbId) {
+    const {data, error} = await tryUpdate(row);
     if (error) { console.error('Supabase update song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
     return { ...song, id: data.id };
   }
 
-  let { data, error } = await sb.from('songs').insert(row).select().single();
-  if (error && error.message && (error.message.includes('categories') || error.message.includes('bpm'))) {
-    const rowFix = {...row}; delete rowFix.categories; delete rowFix.bpm;
-    const res = await sb.from('songs').insert(rowFix).select().single();
-    data = res.data; error = res.error;
-  }
+  const {data, error} = await tryInsert(row);
   if (error) { console.error('Supabase insert song:', error); showToast('Gabim: ' + error.message, 'error'); return null; }
   return { ...song, id: data.id };
 }
