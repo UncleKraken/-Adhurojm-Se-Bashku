@@ -579,7 +579,36 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 /* ── POPULARITY SCORE ── */
 .pop-score{display:inline-flex;align-items:center;gap:4px;background:var(--gold-muted);border:1px solid rgba(201,151,58,0.3);border-radius:100px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--gold)}
 
-/* ── CHORD DIAGRAM POPUP ── */
+/* ── PERFORMANCE MODE DARK THEME ── */
+#performanceMode[data-dark="1"]{
+  background:#090C14 !important;
+  color:#F0F0FF !important;
+  --chord-color:#ff9999;
+  --text:#F0F0FF;
+  --text2:#9090BB;
+  --text3:#484870;
+  --bg2:#10131C;
+  --bg3:#181C28;
+  --border:#1C2030;
+  --surface:#12151F;
+  --blue-mid:#7090DD;
+  --gold:#F5CF7A;
+  --red:#E06060;
+}
+#performanceMode[data-dark="1"] .sec-lbl{opacity:.9}
+#performanceMode[data-dark="1"] input,
+#performanceMode[data-dark="1"] button{
+  border-color:#1C2030 !important;
+}
+
+/* ── PERF MODE MOBILE ── */
+@media(max-width:768px){
+  #performanceMode .perf-top-bar{flex-wrap:wrap;gap:6px;padding:8px 10px;min-height:auto}
+  #performanceMode .perf-btn-group{gap:4px}
+  #performanceMode .perf-btn-group button{padding:6px 8px;font-size:12px}
+  #perfSongList{padding:6px 10px}
+  #perfContent{padding:14px 12px}
+}
 .chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
 .chord-popup svg{display:block;margin:0 auto}
 .chord-popup-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px}
@@ -4221,7 +4250,64 @@ const CHORD_SHAPES={
   'F#':  {frets:[2,2,4,4,4,2],fingers:[1,1,3,4,3,1],barre:2},
 };
 
-function buildChordSVG(name){
+// ── CHORD DIAGRAM TYPE ──
+let _chordDiagramType = 'Guitar'; // 'Guitar' or 'Piano'
+
+const PIANO_CHORD_NOTES={
+  'C':   [[0,2,4],'C-E-G'],
+  'D':   [[2,6,9],'D-F#-A'],
+  'E':   [[4,8,11],'E-G#-B'],
+  'F':   [[5,9,0],'F-A-C'],
+  'G':   [[7,11,2],'G-B-D'],
+  'A':   [[9,1,4],'A-C#-E'],
+  'B':   [[11,3,6],'B-D#-F#'],
+  'Am':  [[9,0,4],'A-C-E'],
+  'Em':  [[4,7,11],'E-G-B'],
+  'Dm':  [[2,5,9],'D-F-A'],
+  'Bm':  [[11,2,6],'B-D-F#'],
+  'Gm':  [[7,10,2],'G-Bb-D'],
+  'Fm':  [[5,8,0],'F-Ab-C'],
+  'Cm':  [[0,3,7],'C-Eb-G'],
+  'C#':  [[1,5,8],'C#-F-G#'],
+  'Bb':  [[10,2,5],'Bb-D-F'],
+  'Eb':  [[3,7,10],'Eb-G-Bb'],
+  'F#':  [[6,10,1],'F#-A#-C#'],
+};
+
+function buildPianoChordSVG(name){
+  const data=PIANO_CHORD_NOTES[name];
+  if(!data) return `<div style="font-size:11px;color:var(--text3);padding:8px">Nuk ka diagram</div>`;
+  const [positions, noteNames]=data;
+  const W=120,H=60,kw=10,bw=6;
+  const keys=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const whites=keys.filter(k=>!k.includes('#'));
+  const whiteW=W/whites.length;
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // White keys
+  whites.forEach((k,i)=>{
+    const noteIdx=keys.indexOf(k);
+    const isActive=positions.includes(noteIdx);
+    svg+=`<rect x="${i*whiteW+1}" y="0" width="${whiteW-2}" height="${H}" rx="2" fill="${isActive?'var(--blue-mid)':'white'}" stroke="#ccc" stroke-width="1"/>`;
+    if(isActive) svg+=`<circle cx="${i*whiteW+whiteW/2}" cy="${H-8}" r="5" fill="white"/>`;
+  });
+  // Black keys
+  let bi=0;
+  keys.forEach((k,noteIdx)=>{
+    if(!k.includes('#')) {bi++;return;}
+    const wIdx=bi-1;
+    const x=wIdx*whiteW+whiteW-bw/2-1;
+    const isActive=positions.includes(noteIdx);
+    svg+=`<rect x="${x}" y="0" width="${bw}" height="${H*0.6}" rx="2" fill="${isActive?'var(--blue-mid)':'#1a1a2e'}" stroke="none"/>`;
+    if(isActive) svg+=`<circle cx="${x+bw/2}" cy="${H*0.6-5}" r="3.5" fill="white"/>`;
+  });
+  svg+=`</svg>`;
+  return svg+`<div style="font-size:10px;color:var(--text3);margin-top:4px">${noteNames}</div>`;
+}
+
+function buildChordDiagram(name, type){
+  type = type||_chordDiagramType;
+  return type==='Piano' ? buildPianoChordSVG(name) : buildChordSVG(name);
+}
   const shape=CHORD_SHAPES[name]||CHORD_SHAPES[name.replace('m','')];
   if(!shape) return `<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>`;
   const {frets,barre}=shape;
@@ -4260,13 +4346,43 @@ function buildChordSVG(name){
 
 function showChordDiagram(name, el){
   let popup=document.getElementById('chordPopup');
-  if(!popup){popup=document.createElement('div');popup.id='chordPopup';popup.className='chord-popup';document.body.appendChild(popup);}
-  popup.innerHTML=`<div class="chord-popup-name">${name}</div>${buildChordSVG(name)}`;
+  if(!popup){
+    popup=document.createElement('div');
+    popup.id='chordPopup';
+    popup.className='chord-popup';
+    popup.style.cssText='position:fixed;z-index:10000;display:none;min-width:140px;text-align:center';
+    document.body.appendChild(popup);
+  }
+  popup.innerHTML=`
+    <div style="display:flex;gap:4px;justify-content:center;margin-bottom:8px">
+      <button onclick="setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎸</button>
+      <button onclick="setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎹</button>
+    </div>
+    <div class="chord-popup-name">${name}</div>
+    <div id="chordDiagramContent">${buildChordDiagram(name)}</div>`;
+  popup._chord = name;
   const rect=el.getBoundingClientRect();
   popup.style.display='block';
-  popup.style.left=(rect.left+rect.width/2-40)+'px';
-  popup.style.top=(rect.bottom+8+window.scrollY)+'px';
+  const left=Math.min(rect.left+rect.width/2-70, window.innerWidth-160);
+  const top=rect.bottom+8;
+  popup.style.left=Math.max(8,left)+'px';
+  popup.style.top=top+'px';
 }
+
+function setChordDiagramType(type, popupEl){
+  _chordDiagramType=type;
+  const popup=popupEl||document.getElementById('chordPopup');
+  if(!popup) return;
+  const content=popup.querySelector('#chordDiagramContent');
+  if(content) content.innerHTML=buildChordDiagram(popup._chord, type);
+  // Update buttons
+  popup.querySelectorAll('button').forEach((btn,i)=>{
+    const isActive=(i===0&&type==='Guitar')||(i===1&&type==='Piano');
+    btn.style.background=isActive?'var(--blue-mid)':'var(--bg3)';
+    btn.style.color=isActive?'#fff':'var(--text2)';
+  });
+}
+
 function hideChordDiagram(){
   const p=document.getElementById('chordPopup'); if(p) p.style.display='none';
 }
@@ -4288,27 +4404,46 @@ function addChordInteraction(){
 //  SWIPE GESTURES — Song navigation on mobile
 // ═══════════════════════════════════════════════════════
 (function initSwipe(){
-  let startX=0,startY=0,startTime=0;
-  document.addEventListener('touchstart',e=>{
+  let startX=0, startY=0, startTime=0, target=null;
+
+  function onTouchStart(e){
     startX=e.touches[0].clientX;
     startY=e.touches[0].clientY;
     startTime=Date.now();
-  },{passive:true});
-  document.addEventListener('touchend',e=>{
-    if(!currentSong) return;
-    if(document.getElementById('performanceMode')?.style.display==='flex') return;
+    target=e.currentTarget;
+  }
+  function onTouchEnd(e){
     const dx=e.changedTouches[0].clientX-startX;
     const dy=Math.abs(e.changedTouches[0].clientY-startY);
     const dt=Date.now()-startTime;
-    if(Math.abs(dx)>60&&dy<50&&dt<400){
-      const page=document.getElementById('page-song');
-      if(page?.classList.contains('active')){
-        const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
-        if(dx<0&&idx<SONGS.length-1) openSong(SONGS[idx+1].id); // swipe left = next
-        else if(dx>0&&idx>0) openSong(SONGS[idx-1].id);          // swipe right = prev
-      }
+    if(Math.abs(dx)<50||dy>60||dt>500) return;
+    // Performance mode swipe
+    if(target===document.getElementById('perfContent')){
+      if(dx<0) nextPerformanceSong();
+      else prevPerformanceSong();
+      return;
     }
-  },{passive:true});
+    // Song page swipe
+    if(!currentSong) return;
+    const page=document.getElementById('page-song');
+    if(!page?.classList.contains('active')) return;
+    const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
+    if(dx<0&&idx<SONGS.length-1) openSong(SONGS[idx+1].id);
+    else if(dx>0&&idx>0) openSong(SONGS[idx-1].id);
+  }
+
+  // Song page swipe
+  document.addEventListener('touchstart',onTouchStart,{passive:true});
+  document.addEventListener('touchend',onTouchEnd,{passive:true});
+
+  // Perf content swipe (dedicated listener for Samsung compatibility)
+  document.addEventListener('DOMContentLoaded',()=>{
+    const perfContent=document.getElementById('perfContent');
+    if(perfContent){
+      perfContent.addEventListener('touchstart',onTouchStart,{passive:true});
+      perfContent.addEventListener('touchend',onTouchEnd,{passive:true});
+    }
+  });
 })();
 
 // ═══════════════════════════════════════════════════════
@@ -4562,13 +4697,19 @@ let _perfFontSize = 18;
 let _perfLang = null;
 let _perfTranspose = {};
 let _perfArrangements = {};
+let _perfShowChords = false;
 
 function setPerfLang(lang){
   _perfLang = lang;
   const sq = document.getElementById('perfLangSQ');
   const en = document.getElementById('perfLangEN');
-  if(sq){ sq.style.background = lang==='sq'?'var(--blue-mid)':'transparent'; sq.style.color = lang==='sq'?'#fff':'var(--text2)'; }
-  if(en){ en.style.background = lang==='en'?'var(--blue-mid)':'transparent'; en.style.color = lang==='en'?'#fff':'var(--text2)'; }
+  if(sq){ sq.style.background=lang==='sq'?'var(--blue-mid)':'transparent'; sq.style.color=lang==='sq'?'#fff':'var(--text2)'; }
+  if(en){ en.style.background=lang==='en'?'var(--blue-mid)':'transparent'; en.style.color=lang==='en'?'#fff':'var(--text2)'; }
+  // Update perf UI labels
+  const autoBtn=document.getElementById('autoScrollBtn');
+  if(autoBtn&&!_autoScrollInterval) autoBtn.textContent=lang==='sq'?'▶ Auto':'▶ Auto';
+  const exitBtn=document.querySelector('#performanceMode button[onclick="exitPerformanceMode()"]');
+  if(exitBtn) exitBtn.textContent=lang==='sq'?'✕ Dil':'✕ Exit';
   // Re-render lyrics
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
@@ -4602,20 +4743,10 @@ function exitPerformanceMode(){
 function togglePerfDark(){
   const pm=document.getElementById('performanceMode');
   const isDark=pm.dataset.dark==='1';
-  if(isDark){
-    pm.dataset.dark='0'; pm.style.background='var(--bg)'; pm.style.color='';
-    const btn=document.getElementById('perfDarkBtn'); if(btn) btn.textContent='🌙';
-  } else {
-    pm.dataset.dark='1'; pm.style.background='#06070F'; pm.style.color='#F0F0FF';
-    const btn=document.getElementById('perfDarkBtn'); if(btn) btn.textContent='☀️';
-  }
-  const sl=getSetlist();const item=sl.songs[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));if(!s) return;
-  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
-  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
-  const allSections=parseLyricsText(rawText);
-  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
+  pm.dataset.dark = isDark?'0':'1';
+  const btn=document.getElementById('perfDarkBtn');
+  if(btn) btn.textContent = isDark?'🌙':'☀️';
+  showPerfSong();
 }
 
 function showPerfShortcuts(){
@@ -4711,8 +4842,8 @@ function showPerfSong(){
       <!-- Instrument selector -->
       <div style="display:flex;align-items:center;gap:6px">
         ${s.instruments?.length>1 ? `
-        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">Guitar</button>
-        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif">Piano</button>` :
+        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Guitar">🎸</button>
+        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Piano">🎹</button>` :
         `<span style="font-size:11px;font-weight:700;color:var(--text3)">${perfInst}</span>`}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
@@ -4724,8 +4855,9 @@ function showPerfSong(){
         ${steps!==0?`<button onclick="_perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Font size -->
-      <div style="display:flex;align-items:center;gap:6px">
+      <!-- Chord diagram toggle -->
+      <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif">${_perfShowChords?'🎼 ON':'🎼'}</button>
+      <div style="width:1px;height:20px;background:var(--border)"></div>
         <span style="font-size:11px;color:var(--text3)">A</span>
         <input type="range" min="14" max="28" value="${_perfFontSize||18}" oninput="setPerfFont(this.value)" style="width:60px;accent-color:var(--blue-mid)"/>
         <span style="font-size:16px;color:var(--text3)">A</span>
@@ -4746,6 +4878,13 @@ function showPerfSong(){
     <div id="perfLyricsContent"></div>`;
 
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
+}
+
+function togglePerfChords(){
+  _perfShowChords=!_perfShowChords;
+  const btn=document.getElementById('perfChordsBtn');
+  if(btn){btn.textContent=_perfShowChords?'🎼 ON':'🎼';btn.style.background=_perfShowChords?'var(--blue-mid)':'var(--bg3)';btn.style.color=_perfShowChords?'#fff':'var(--text2)';}
+  showPerfSong();
 }
 
 function perfSwitchInst(songId, inst){
@@ -4789,7 +4928,17 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       const tc=l.chords?transposeChordLine(l.chords,steps):'';
       const lyricText = lang==='en' && l.en ? l.en : l.sq;
       const secondaryText = lang==='en' ? (l.sq||'') : (l.en||'');
-      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>`;
+      // Build chord diagrams inline if enabled
+      let chordDiagramsHtml='';
+      if(_perfShowChords && tc){
+        const chords=[...new Set(tc.split(/\s+/).filter(c=>c.trim()&&(typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[c.trim()]||PIANO_CHORD_NOTES[c.trim()]))))];
+        if(chords.length){
+          chordDiagramsHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">'
+            +chords.map(ch=>`<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--chord-color);margin-bottom:4px">${ch}</div>${buildChordDiagram(ch)}</div>`).join('')
+            +'</div>';
+        }
+      }
+      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>${chordDiagramsHtml}`;
     }).join('');
     return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
@@ -4814,25 +4963,44 @@ function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
     stopAutoScroll();
-    if(btn){btn.textContent='Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+    if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
   } else {
-    // BPM-based speed: higher BPM = faster scroll
     const sl=getSetlist(); const item=sl.songs[perfIdx];
     const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
     const bpm=s?.bpm||0;
-    // Base: 1px per 40ms (slow). BPM 60=40ms, BPM 120=20ms, BPM 180=13ms
-    const interval = bpm>0 ? Math.max(10, Math.round(2400/bpm)) : 35;
-    _autoScrollInterval=setInterval(()=>{
-      const c=document.getElementById('perfContent');
-      if(c) c.scrollBy({top:1,behavior:'auto'});
-    }, interval);
+    // BPM scroll: at 120 BPM, 1 beat = 500ms
+    // We scroll 1px per beat = smooth teleprompter pace
+    // Lower BPM = slower scroll, Higher BPM = faster scroll
+    const pxPerBeat = 1; // px to scroll per beat
+    const msPerBeat = bpm>0 ? (60000/bpm) : 2000;
+    const pxPerMs = pxPerBeat / msPerBeat;
+    let lastTime = null;
+    let accumulated = 0;
+    function scrollFrame(ts){
+      if(!lastTime) lastTime=ts;
+      const dt=ts-lastTime; lastTime=ts;
+      accumulated += pxPerMs * dt;
+      if(accumulated >= 1){
+        const px = Math.floor(accumulated);
+        accumulated -= px;
+        const c=document.getElementById('perfContent');
+        if(c) c.scrollTop += px;
+      }
+      _autoScrollInterval = requestAnimationFrame(scrollFrame);
+    }
+    _autoScrollInterval = requestAnimationFrame(scrollFrame);
     if(btn){
-      const label = bpm>0 ? `Ndalo (${bpm} BPM)` : 'Ndalo';
+      const label=bpm>0?`⏸ ${bpm} BPM`:'⏸ Stop';
       btn.textContent=label;btn.style.background='var(--blue-mid)';btn.style.color='#fff';
     }
   }
 }
-function stopAutoScroll(){if(_autoScrollInterval){clearInterval(_autoScrollInterval);_autoScrollInterval=null;}}
+function stopAutoScroll(){
+  if(_autoScrollInterval){
+    cancelAnimationFrame(_autoScrollInterval);
+    _autoScrollInterval=null;
+  }
+}
 
 async function sendContactEmail() {
   const name    = document.getElementById('contactName').value.trim();
