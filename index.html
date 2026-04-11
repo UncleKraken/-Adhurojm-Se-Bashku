@@ -578,6 +578,25 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
 /* ── POPULARITY SCORE ── */
 .pop-score{display:inline-flex;align-items:center;gap:4px;background:var(--gold-muted);border:1px solid rgba(201,151,58,0.3);border-radius:100px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--gold)}
+
+/* ── CHORD DIAGRAM POPUP ── */
+.chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
+.chord-popup svg{display:block;margin:0 auto}
+.chord-popup-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px}
+.chord-clickable{cursor:help;position:relative;display:inline-block}
+.chord-clickable:hover{color:var(--gold)}
+
+/* ── METRONOME ── */
+.metro-beat{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--red);opacity:0;transition:opacity .05s}
+.metro-beat.on{opacity:1}
+
+/* ── SIMILAR SONGS ── */
+.similar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+
+/* ── SWIPE HINT on mobile ── */
+@media(max-width:768px){
+  .page-song-swipe-hint{font-size:11px;color:var(--text3);text-align:center;padding:8px;display:none}
+}
 </style>
 
 </head>
@@ -729,6 +748,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <option value="" data-sq="Çdo instrument" data-en="Any instrument">Çdo instrument</option>
           <option value="Guitar">🎸 Kitarë / Guitar</option>
           <option value="Piano">🎹 Piano</option>
+        </select>
+        <select class="f-select" id="filterBpm" onchange="renderLibrary()">
+          <option value="">🥁 Çdo BPM</option>
+          <option value="0-70">🐢 Ngadalë (&lt;70)</option>
+          <option value="70-100">🚶 Mesatar (70-100)</option>
+          <option value="100-130">🏃 Shpejt (100-130)</option>
+          <option value="130-999">⚡ Shumë shpejt (&gt;130)</option>
         </select>
       </div>
       <div class="songs-grid" id="libraryGrid"></div>
@@ -2954,6 +2980,7 @@ function renderLibrary(){
   const artist=document.getElementById('filterArtist').value;
   const key=document.getElementById('filterKey').value;
   const inst=document.getElementById('filterInst').value;
+  const bpmRange=document.getElementById('filterBpm')?.value||'';
   const catFilter = window._categoryFilter || null;
   const STATS = window._statsForFilter || {};
   const grid=document.getElementById('libraryGrid');grid.innerHTML='';
@@ -3000,6 +3027,12 @@ function renderLibrary(){
     if(artist&&s.artist!==artist)return false;
     if(key&&s.key!==key)return false;
     if(inst&&!s.instruments.includes(inst))return false;
+    if(bpmRange){
+      const [minB,maxB]=bpmRange.split('-').map(Number);
+      const bpm=s.bpm||0;
+      if(bpm===0)return false; // exclude songs without BPM when filtering by BPM
+      if(bpm<minB||bpm>maxB)return false;
+    }
     return true;
   });
 
@@ -3083,8 +3116,17 @@ function renderSong(){
     const color=sec.color||'var(--blue)';
     const lines=sec.lines.map(l=>{
       const transposedChords=l.chords?transposeChordLine(l.chords,transposeSteps):'';
-      // Render chord+lyric as a single pre block so spacing is pixel-perfect
-      const chordLine = transposedChords ? `<span style="color:var(--chord-color);font-weight:700;display:block;white-space:pre;">${transposedChords}</span>` : '';
+      // Build chord line safely without nested template literals
+      let chordLine='';
+      if(transposedChords){
+        const parts=transposedChords.split(/(\s+)/);
+        const html=parts.map(ch=>{
+          const t=ch.trim();
+          return (t&&typeof CHORD_SHAPES!=='undefined'&&CHORD_SHAPES[t])
+            ? '<span class="chord-clickable" data-chord="'+t+'">'+ch+'</span>' : ch;
+        }).join('');
+        chordLine='<span style="color:var(--chord-color);font-weight:700;display:block;white-space:pre;">'+html+'</span>';
+      }
       const lyricLine = `<span style="font-weight:600;display:block;white-space:pre;">${l.sq}</span>`;
       const englishLine = (l.en && s.bilingual !== false) ? `<span style="color:var(--text3);font-style:italic;font-weight:400;display:block;">${l.en}</span>` : '';
       return `<div class="lyric-line" style="margin-bottom:10px;">${chordLine}${lyricLine}${englishLine}</div>`;
@@ -3168,9 +3210,35 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
         <button onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
       </div>
     </div>`;
+
+  // Metronome (if BPM set)
+  if(s.bpm) setTimeout(()=>{
+    document.getElementById('metronomeSection')?.remove();
+    const metro=document.createElement('div');
+    metro.id='metronomeSection';
+    metro.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
+    metro.innerHTML=`<span style="font-size:20px">🥁</span><div><div style="font-size:13px;font-weight:700;color:var(--text)">Metronom</div><div style="font-size:11px;color:var(--text3)">${s.bpm} BPM</div></div><input id="metroBpmInput" type="number" value="${s.bpm}" min="30" max="300" style="width:68px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;text-align:center"/><div class="metro-beat" id="metroBeatDot"></div><button id="metroBtn" onclick="toggleMetronome()" style="padding:7px 18px;border-radius:100px;border:none;background:var(--bg3);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">▶ Start</button>`;
+    document.getElementById('songDetail')?.appendChild(metro);
+  },50);
+
+  // Similar songs
+  setTimeout(()=>{
+    document.getElementById('similarSection')?.remove();
+    const similar=getSimilarSongs(s,4);
+    if(!similar.length) return;
+    const simDiv=document.createElement('div');
+    simDiv.id='similarSection';
+    simDiv.style.cssText='margin-top:28px';
+    simDiv.innerHTML=`<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">🎵 ${currentLang==='sq'?'Këngë të Ngjashme':'Similar Songs'}</div><div class="similar-grid" id="similarGrid"></div>`;
+    document.getElementById('songDetail')?.appendChild(simDiv);
+    similar.forEach(song=>document.getElementById('similarGrid')?.appendChild(buildCard(song)));
+  },60);
+
+  // Chord diagram interactions
+  setTimeout(addChordInteraction,120);
 }
 
-function selectInst(i){currentInst=i;renderSong();}
+function selectInst(i){currentInst=i;renderSong();stopMetronome();}
 function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
 
@@ -3781,6 +3849,27 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 // Load preferences
 window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 
+// Auto dark mode — follow system if user hasn't set a preference
+(()=>{
+  const saved = localStorage.getItem('aa-theme');
+  if(!saved){
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    if(prefersDark){
+      document.documentElement.setAttribute('data-theme','dark');
+      const btn = document.getElementById('themeBtn');
+      if(btn) btn.innerHTML='<span style="font-size:15px">☀</span>';
+    }
+  }
+  // Listen for system changes
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', e=>{
+    if(!localStorage.getItem('aa-theme')){
+      document.documentElement.setAttribute('data-theme', e.matches?'dark':'light');
+      const btn = document.getElementById('themeBtn');
+      if(btn) btn.innerHTML=e.matches?'<span style="font-size:15px">☀</span>':'<span style="font-size:15px">🌙</span>';
+    }
+  });
+})();
+
 initData();
 
 // ── SERVICE WORKER (Offline Mode) ──
@@ -4033,8 +4122,209 @@ function loadSocialAdminForm(){
 emailjs.init('_nY20miCLwZSC-jow');
 
 // ═══════════════════════════════════════════════════════
-//  RECENTLY VIEWED
+//  METRONOME
 // ═══════════════════════════════════════════════════════
+let _metroCtx=null, _metroInterval=null, _metroBeat=0;
+
+function startMetronome(bpm){
+  stopMetronome();
+  if(!bpm||bpm<=0) return;
+  _metroCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const intervalMs = (60/bpm)*1000;
+  _metroBeat=0;
+  function tick(){
+    // Audio click
+    const osc=_metroCtx.createOscillator();
+    const gain=_metroCtx.createGain();
+    osc.connect(gain); gain.connect(_metroCtx.destination);
+    osc.frequency.value = _metroBeat%4===0 ? 1000 : 700; // accent on beat 1
+    gain.gain.setValueAtTime(0.3,_metroCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,_metroCtx.currentTime+0.08);
+    osc.start(_metroCtx.currentTime);
+    osc.stop(_metroCtx.currentTime+0.08);
+    // Visual flash
+    const dot=document.getElementById('metroBeatDot');
+    if(dot){ dot.classList.add('on'); setTimeout(()=>dot.classList.remove('on'),80); }
+    _metroBeat++;
+  }
+  tick();
+  _metroInterval = setInterval(tick, intervalMs);
+  const btn=document.getElementById('metroBtn');
+  if(btn){btn.textContent='⏹ Stop';btn.style.background='var(--red)';btn.style.color='#fff';}
+}
+
+function stopMetronome(){
+  if(_metroInterval){clearInterval(_metroInterval);_metroInterval=null;}
+  if(_metroCtx){_metroCtx.close();_metroCtx=null;}
+  const btn=document.getElementById('metroBtn');
+  if(btn){btn.textContent='▶ Start';btn.style.background='var(--bg3)';btn.style.color='var(--text)';}
+}
+
+function toggleMetronome(){
+  if(_metroInterval) stopMetronome();
+  else {
+    const bpm=parseInt(document.getElementById('metroBpmInput')?.value)||currentSong?.bpm||80;
+    startMetronome(bpm);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CIRCLE OF FIFTHS — KEY COMPATIBILITY
+// ═══════════════════════════════════════════════════════
+const CIRCLE_MAJOR=['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];
+const CIRCLE_MINOR=['Am','Em','Bm','F#m','C#m','G#m','Ebm','Bbm','Fm','Cm','Gm','Dm'];
+
+function getCompatibleKeys(key){
+  const isMinor=key.endsWith('m')&&!key.endsWith('maj');
+  const circle=isMinor?CIRCLE_MINOR:CIRCLE_MAJOR;
+  const oppCircle=isMinor?CIRCLE_MAJOR:CIRCLE_MINOR;
+  const idx=circle.findIndex(k=>k===key||(FLAT_MAP[k.replace('m','')]+'')===key.replace('m',''));
+  if(idx<0) return {related:[],parallel:null,relative:null};
+  const prev=(idx-1+12)%12, next=(idx+1)%12;
+  return {
+    related:[circle[prev],circle[next]], // adjacent on circle
+    relative:oppCircle[idx],              // relative major/minor
+    parallel:isMinor?key.replace('m',''):key+'m', // parallel
+  };
+}
+
+function renderKeyCompatibility(songKey){
+  const {related,relative,parallel}=getCompatibleKeys(songKey);
+  const relatedSongs=SONGS.filter(s=>
+    s.id!==currentSong?.id && (
+      related.includes(s.key)||s.key===relative||s.key===parallel
+    )
+  ).slice(0,6);
+  return relatedSongs;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHORD DIAGRAMS — Guitar fingering
+// ═══════════════════════════════════════════════════════
+const CHORD_SHAPES={
+  'C':   {frets:[0,3,2,0,1,0],fingers:[0,3,2,0,1,0],barre:0},
+  'D':   {frets:[-1,-1,0,2,3,2],fingers:[0,0,0,1,3,2],barre:0},
+  'E':   {frets:[0,2,2,1,0,0],fingers:[0,2,3,1,0,0],barre:0},
+  'F':   {frets:[1,1,2,3,3,1],fingers:[1,1,2,4,3,1],barre:1},
+  'G':   {frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,3],barre:0},
+  'A':   {frets:[0,0,2,2,2,0],fingers:[0,0,1,2,3,0],barre:0},
+  'B':   {frets:[-1,2,4,4,4,2],fingers:[0,1,3,3,3,1],barre:2},
+  'Am':  {frets:[0,0,2,2,1,0],fingers:[0,0,2,3,1,0],barre:0},
+  'Em':  {frets:[0,2,2,0,0,0],fingers:[0,2,3,0,0,0],barre:0},
+  'Dm':  {frets:[-1,-1,0,2,3,1],fingers:[0,0,0,2,3,1],barre:0},
+  'Bm':  {frets:[-1,2,4,4,3,2],fingers:[0,1,3,4,2,1],barre:2},
+  'Gm':  {frets:[3,5,5,3,3,3],fingers:[1,3,4,1,1,1],barre:3},
+  'Fm':  {frets:[1,3,3,1,1,1],fingers:[1,3,4,1,1,1],barre:1},
+  'C#':  {frets:[-1,4,3,1,2,1],fingers:[0,4,3,1,2,1],barre:0},
+  'Bb':  {frets:[-1,1,3,3,3,1],fingers:[0,1,3,4,3,1],barre:1},
+  'Eb':  {frets:[-1,-1,1,3,4,3],fingers:[0,0,1,3,4,3],barre:0},
+  'F#':  {frets:[2,2,4,4,4,2],fingers:[1,1,3,4,3,1],barre:2},
+};
+
+function buildChordSVG(name){
+  const shape=CHORD_SHAPES[name]||CHORD_SHAPES[name.replace('m','')];
+  if(!shape) return `<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>`;
+  const {frets,barre}=shape;
+  const STRING_COUNT=6, FRET_COUNT=4;
+  const W=80,H=90,pad=14,sw=(W-pad*2)/5,sh=(H-pad*2-14)/FRET_COUNT;
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // Nut or capo line
+  svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="2.5" fill="${barre?'none':'#888'}"/>`;
+  // Strings
+  for(let s=0;s<STRING_COUNT;s++){
+    const x=pad+s*sw;
+    svg+=`<line x1="${x}" y1="${pad+16}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  // Frets
+  for(let f=0;f<=FRET_COUNT;f++){
+    const y=pad+14+f*sh;
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  // Barre
+  if(barre>0){
+    const y=pad+14+(barre-Math.max(0,Math.min(...frets.filter(f=>f>0))-1)-1)*sh+sh/2;
+    svg+=`<rect x="${pad}" y="${y-6}" width="${W-pad*2}" height="12" rx="6" fill="var(--blue-mid)" opacity=".85"/>`;
+  }
+  // Dots
+  frets.forEach((f,s)=>{
+    const x=pad+s*sw;
+    if(f<0){ svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="9" fill="var(--text3)">x</text>`; return; }
+    if(f===0){ svg+=`<circle cx="${x}" cy="${pad+9}" r="4" fill="none" stroke="var(--text3)" stroke-width="1.2"/>`; return; }
+    const minF=Math.max(0,Math.min(...frets.filter(v=>v>0))-1);
+    const y=pad+14+(f-minF-1)*sh+sh/2;
+    svg+=`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--blue-mid)"/>`;
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+
+function showChordDiagram(name, el){
+  let popup=document.getElementById('chordPopup');
+  if(!popup){popup=document.createElement('div');popup.id='chordPopup';popup.className='chord-popup';document.body.appendChild(popup);}
+  popup.innerHTML=`<div class="chord-popup-name">${name}</div>${buildChordSVG(name)}`;
+  const rect=el.getBoundingClientRect();
+  popup.style.display='block';
+  popup.style.left=(rect.left+rect.width/2-40)+'px';
+  popup.style.top=(rect.bottom+8+window.scrollY)+'px';
+}
+function hideChordDiagram(){
+  const p=document.getElementById('chordPopup'); if(p) p.style.display='none';
+}
+
+// Make chord spans clickable with diagrams
+function addChordInteraction(){
+  document.querySelectorAll('.chord-clickable').forEach(el=>{
+    el.addEventListener('mouseenter',()=>showChordDiagram(el.dataset.chord,el));
+    el.addEventListener('mouseleave',hideChordDiagram);
+    el.addEventListener('click',()=>{
+      const p=document.getElementById('chordPopup');
+      if(p&&p.style.display==='block'&&p._forChord===el.dataset.chord) hideChordDiagram();
+      else{ showChordDiagram(el.dataset.chord,el); if(p) p._forChord=el.dataset.chord; }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  SWIPE GESTURES — Song navigation on mobile
+// ═══════════════════════════════════════════════════════
+(function initSwipe(){
+  let startX=0,startY=0,startTime=0;
+  document.addEventListener('touchstart',e=>{
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    startTime=Date.now();
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!currentSong) return;
+    if(document.getElementById('performanceMode')?.style.display==='flex') return;
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=Math.abs(e.changedTouches[0].clientY-startY);
+    const dt=Date.now()-startTime;
+    if(Math.abs(dx)>60&&dy<50&&dt<400){
+      const page=document.getElementById('page-song');
+      if(page?.classList.contains('active')){
+        const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
+        if(dx<0&&idx<SONGS.length-1) openSong(SONGS[idx+1].id); // swipe left = next
+        else if(dx>0&&idx>0) openSong(SONGS[idx-1].id);          // swipe right = prev
+      }
+    }
+  },{passive:true});
+})();
+
+// ═══════════════════════════════════════════════════════
+//  SIMILAR SONGS
+// ═══════════════════════════════════════════════════════
+function getSimilarSongs(song, limit=4){
+  if(!song) return [];
+  const compatible=getCompatibleKeys(song.key);
+  const allCompatible=[...compatible.related, compatible.relative, compatible.parallel].filter(Boolean);
+  return SONGS.filter(s=>
+    Number(s.id)!==Number(song.id) && (
+      allCompatible.includes(s.key) ||
+      (s.categories||[]).some(c=>(song.categories||[]).includes(c))
+    )
+  ).slice(0, limit);
+}
 const RV_KEY = 'aa_recently_viewed';
 const RV_MAX = 10;
 
