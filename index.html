@@ -4554,7 +4554,14 @@ function updateSetlistBadge(){
   if(link) link.innerHTML=total>0?`📋 ${currentLang==='sq'?'Setlista':'Setlist'} <span style="background:var(--blue-mid);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${total}</span>`:`📋 ${currentLang==='sq'?'Setlista':'Setlist'}`;
 }
 
-let _perfLang = null; // null = follows site lang
+// ── PERFORMANCE MODE STATE ──
+let perfIdx = 0;
+let _autoScrollInterval = null;
+let _wakeLock = null;
+let _perfFontSize = 18;
+let _perfLang = null;
+let _perfTranspose = {};
+let _perfArrangements = {};
 
 function setPerfLang(lang){
   _perfLang = lang;
@@ -4569,7 +4576,7 @@ function setPerfLang(lang){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(s.id,sectionMap,window._perfTranspose?.[s.id]||0,perfInst);
+  renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
 function startPerformanceMode(){
@@ -4608,7 +4615,7 @@ function togglePerfDark(){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(s.id,sectionMap,window._perfTranspose?.[s.id]||0,perfInst);
+  renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
 function showPerfShortcuts(){
@@ -4653,8 +4660,8 @@ function showPerfSong(){
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
   stopAutoScroll();
 
-  if(!window._perfTranspose) window._perfTranspose={};
-  if(window._perfTranspose[s.id]===undefined) window._perfTranspose[s.id]=0;
+  if(!_perfTranspose) _perfTranspose={};
+  if(_perfTranspose[s.id]===undefined) _perfTranspose[s.id]=0;
 
   // Declare perfInst FIRST before any use
   const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
@@ -4679,13 +4686,13 @@ function showPerfSong(){
   },50);
 
   const arrKey=`perf_arr_${s.id}`;
-  if(!window._perfArrangements) window._perfArrangements={};
+  if(!_perfArrangements) _perfArrangements={};
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
   const allSections=parseLyricsText(rawText);
-  if(!window._perfArrangements[arrKey]) window._perfArrangements[arrKey]=allSections.map(sec=>sec.label);
+  if(!_perfArrangements[arrKey]) _perfArrangements[arrKey]=allSections.map(sec=>sec.label);
   const sectionMap={};
   allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  const steps=window._perfTranspose[s.id]||0;
+  const steps=_perfTranspose[s.id]||0;
   const origKeyIdx=noteToIdx((s.key||'').replace('m',''))||0;
   const tIdx=((origKeyIdx+steps)%12+12)%12;
   const isMinor=s.key?.includes('m')&&!s.key?.includes('maj');
@@ -4714,13 +4721,13 @@ function showPerfSong(){
         <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">-</button>
         <span style="font-size:12px;font-weight:700;color:${steps!==0?'var(--blue-mid)':'var(--text3)'};min-width:80px;text-align:center">${keyLabel}</span>
         <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">+</button>
-        ${steps!==0?`<button onclick="window._perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
+        ${steps!==0?`<button onclick="_perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
       <!-- Font size -->
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:11px;color:var(--text3)">A</span>
-        <input type="range" min="14" max="28" value="${window._perfFontSize||18}" oninput="setPerfFont(this.value)" style="width:60px;accent-color:var(--blue-mid)"/>
+        <input type="range" min="14" max="28" value="${_perfFontSize||18}" oninput="setPerfFont(this.value)" style="width:60px;accent-color:var(--blue-mid)"/>
         <span style="font-size:16px;color:var(--text3)">A</span>
       </div>
     </div>
@@ -4747,7 +4754,7 @@ function perfSwitchInst(songId, inst){
 }
 
 function setPerfFont(size){
-  window._perfFontSize = Number(size);
+  _perfFontSize = Number(size);
   // Re-render lyrics with new size without full reload
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
@@ -4755,21 +4762,21 @@ function setPerfFont(size){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  renderPerfArrangement(s.id, sectionMap, window._perfTranspose?.[s.id]||0, perfInst);
+  renderPerfArrangement(s.id, sectionMap, _perfTranspose?.[s.id]||0, perfInst);
 }
 
 function perfTranspose(songId,dir){
-  if(!window._perfTranspose) window._perfTranspose={};
-  window._perfTranspose[songId]=(window._perfTranspose[songId]||0)+dir;
+  if(!_perfTranspose) _perfTranspose={};
+  _perfTranspose[songId]=(_perfTranspose[songId]||0)+dir;
   showPerfSong();
 }
 
 function renderPerfArrangement(songId,sectionMap,steps,perfInst){
-  steps=steps||window._perfTranspose?.[songId]||0;
-  const fs=window._perfFontSize||18;
+  steps=steps||_perfTranspose?.[songId]||0;
+  const fs=_perfFontSize||18;
   const lang = _perfLang || currentLang; // use perf-specific lang or site lang
   const key=`perf_arr_${songId}`;
-  const arrangement=window._perfArrangements?.[key]||[];
+  const arrangement=_perfArrangements?.[key]||[];
   const chipsEl=document.getElementById('perfArrChips');
   const lyricsEl=document.getElementById('perfLyricsContent');
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
@@ -4790,14 +4797,14 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
 
 function perfAddSection(songId,label){
   const key=`perf_arr_${songId}`;
-  if(!window._perfArrangements) window._perfArrangements={};
-  window._perfArrangements[key].push(label); showPerfSong();
+  if(!_perfArrangements) _perfArrangements={};
+  _perfArrangements[key].push(label); showPerfSong();
 }
 function perfRemoveSection(songId,idx){
-  window._perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
+  _perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
 }
 function perfResetArr(songId){
-  delete window._perfArrangements[`perf_arr_${songId}`]; showPerfSong();
+  delete _perfArrangements[`perf_arr_${songId}`]; showPerfSong();
 }
 
 function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
