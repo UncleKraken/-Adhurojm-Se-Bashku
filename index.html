@@ -4338,7 +4338,9 @@ function showChordDiagram(name, el){
     popup=document.createElement('div');
     popup.id='chordPopup';
     popup.className='chord-popup';
-    popup.style.cssText='position:fixed;z-index:10000;display:none;min-width:140px;text-align:center';
+    popup.style.cssText='position:fixed;z-index:10000;display:none;min-width:140px;text-align:center;pointer-events:auto';
+    // Hide when mouse leaves popup itself
+    popup.addEventListener('mouseleave',()=>hideChordDiagram());
     document.body.appendChild(popup);
   }
   popup.innerHTML=`
@@ -4352,9 +4354,43 @@ function showChordDiagram(name, el){
   const rect=el.getBoundingClientRect();
   popup.style.display='block';
   const left=Math.min(rect.left+rect.width/2-70, window.innerWidth-160);
-  const top=rect.bottom+8;
+  const top=rect.bottom+4;
   popup.style.left=Math.max(8,left)+'px';
   popup.style.top=top+'px';
+}
+
+function addChordInteraction(){
+  document.querySelectorAll('.chord-clickable').forEach(el=>{
+    // Remove old listeners by cloning
+    const fresh=el.cloneNode(true);
+    el.parentNode.replaceChild(fresh,el);
+    fresh.addEventListener('mouseenter',()=>showChordDiagram(fresh.dataset.chord,fresh));
+    // Hide only when leaving chord span AND mouse not going into popup
+    fresh.addEventListener('mouseleave',(e)=>{
+      setTimeout(()=>{
+        const popup=document.getElementById('chordPopup');
+        if(popup && popup.matches(':hover')) return; // mouse moved into popup
+        hideChordDiagram();
+      },50);
+    });
+    // Mobile tap
+    fresh.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const popup=document.getElementById('chordPopup');
+      if(popup&&popup.style.display==='block'&&popup._chord===fresh.dataset.chord){
+        hideChordDiagram();
+      } else {
+        showChordDiagram(fresh.dataset.chord,fresh);
+      }
+    });
+  });
+  // Close on click outside
+  document.addEventListener('click',(e)=>{
+    const popup=document.getElementById('chordPopup');
+    if(popup&&!popup.contains(e.target)&&!e.target.classList.contains('chord-clickable')){
+      hideChordDiagram();
+    }
+  });
 }
 
 function setChordDiagramType(type, popupEl){
@@ -4375,18 +4411,7 @@ function hideChordDiagram(){
   const p=document.getElementById('chordPopup'); if(p) p.style.display='none';
 }
 
-// Make chord spans clickable with diagrams
-function addChordInteraction(){
-  document.querySelectorAll('.chord-clickable').forEach(el=>{
-    el.addEventListener('mouseenter',()=>showChordDiagram(el.dataset.chord,el));
-    el.addEventListener('mouseleave',hideChordDiagram);
-    el.addEventListener('click',()=>{
-      const p=document.getElementById('chordPopup');
-      if(p&&p.style.display==='block'&&p._forChord===el.dataset.chord) hideChordDiagram();
-      else{ showChordDiagram(el.dataset.chord,el); if(p) p._forChord=el.dataset.chord; }
-    });
-  });
-}
+// Chord interactions added in addChordInteraction() called after renderSong
 
 // ═══════════════════════════════════════════════════════
 //  SWIPE GESTURES — Song navigation on mobile
