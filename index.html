@@ -828,6 +828,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     </div>
     <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
       <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">Auto</button>
+      <!-- Language toggle in perf mode -->
+      <div style="display:flex;background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+        <button onclick="setPerfLang('sq')" id="perfLangSQ" style="padding:6px 10px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">SQ</button>
+        <button onclick="setPerfLang('en')" id="perfLangEN" style="padding:6px 10px;border:none;background:transparent;color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">EN</button>
+      </div>
       <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#127769;</button>
       <button onclick="togglePerfFullscreen()" id="perfFsBtn" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#11036;</button>
       <button onclick="showPerfShortcuts()" title="Shortcuts" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#9000;&#65039;</button>
@@ -1261,6 +1266,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
+    <!-- Lang toggle in admin -->
+    <div style="display:flex;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-left:8px">
+      <button onclick="setLang('sq')" id="adminLangSQ" style="padding:5px 10px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">SQ</button>
+      <button onclick="setLang('en')" id="adminLangEN" style="padding:5px 10px;border:none;background:transparent;color:rgba(255,255,255,0.6);font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">EN</button>
+    </div>
   </div>
   <div class="admin-body">
 
@@ -2321,6 +2331,7 @@ function mapRow(row){
     categories: row.categories || [],
     bpm: row.bpm || null,
     adminNote: row.admin_note || '',
+    created_at: row.created_at || null,
     lyricsRaw: { Guitar: row.lyrics_guitar || '', Piano: row.lyrics_piano || '' }
   };
 }
@@ -3798,7 +3809,7 @@ const TRANSLATIONS = {
     'hero-sub':'Një bibliotekë falas për muzikantët dhe ekipet e adhurimit në territoret shqipfolëse.',
     'hero-placeholder':'Kërko këngë...',
     // SECTIONS
-    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','fav-title':'❤️ Të Preferuarat e Tua','top-downloaded-title':'⬇ Më të Shkarkuara','top-viewed-title':'👁 Më të Shikuara','see-all':'Shiko të gjitha →',
+    'popular-title':'Këngët e Njohura','recent-title':'Të Shtuara së Fundi','fav-title':'❤️ Të Preferuarat e Tua','top-downloaded-title':'⬇ Më të Shkarkuara','top-viewed-title':'👁 Më të Shikuara','recently-viewed-title':'🕐 Kohët e Fundit','see-all':'Shiko të gjitha →',
     // LIBRARY
     'library-title':'Biblioteka e Këngëve','library-sub':'Gjej, filtro dhe shfaq çdo këngë adhurimi',
     'search-placeholder':'Kërko këngë...','all-artists':'Të gjithë artistët','any-key':'Çdo tonalitet','any-inst':'Çdo instrument',
@@ -3830,7 +3841,7 @@ const TRANSLATIONS = {
     'hero-tagline':'The Albanian worship song archive',
     'hero-sub':'A free library for musicians and worship teams in Albanian-speaking territories.',
     'hero-placeholder':'Search songs...',
-    'popular-title':'Popular Songs','recent-title':'Recently Added','fav-title':'❤️ Your Favorites','top-downloaded-title':'⬇ Most Downloaded','top-viewed-title':'👁 Most Viewed','see-all':'View all →',
+    'popular-title':'Popular Songs','recent-title':'Recently Added','fav-title':'❤️ Your Favorites','top-downloaded-title':'⬇ Most Downloaded','top-viewed-title':'👁 Most Viewed','recently-viewed-title':'🕐 Recently Viewed','see-all':'View all →',
     'library-title':'Song Library','library-sub':'Find, filter and view every worship song',
     'search-placeholder':'Search songs...','all-artists':'All artists','any-key':'Any key','any-inst':'Any instrument',
     'back-btn':'← Back to Library',
@@ -3891,6 +3902,13 @@ function applyLang(){
   const topViewTitle = document.getElementById('topViewedTitle');
   if(topDownTitle) topDownTitle.textContent = t('top-downloaded-title');
   if(topViewTitle) topViewTitle.textContent = t('top-viewed-title');
+  const rvTitle = document.getElementById('recentlyViewedTitle');
+  if(rvTitle) rvTitle.textContent = t('recently-viewed-title');
+  // Sync admin language buttons
+  const alSQ = document.getElementById('adminLangSQ');
+  const alEN = document.getElementById('adminLangEN');
+  if(alSQ){ alSQ.style.background = currentLang==='sq'?'rgba(255,255,255,0.25)':'transparent'; alSQ.style.color = currentLang==='sq'?'#fff':'rgba(255,255,255,0.5)'; }
+  if(alEN){ alEN.style.background = currentLang==='en'?'rgba(255,255,255,0.25)':'transparent'; alEN.style.color = currentLang==='en'?'#fff':'rgba(255,255,255,0.5)'; }
   document.querySelectorAll('.see-all').forEach(el=>el.textContent = t('see-all'));
   // Library
   const libHero = document.querySelector('#page-songs .page-hero');
@@ -4246,14 +4264,33 @@ function updateSetlistBadge(){
   if(link) link.innerHTML=total>0?`📋 ${currentLang==='sq'?'Setlista':'Setlist'} <span style="background:var(--blue-mid);color:#fff;border-radius:100px;font-size:10px;padding:1px 6px;margin-left:4px">${total}</span>`:`📋 ${currentLang==='sq'?'Setlista':'Setlist'}`;
 }
 
-let perfIdx=0,_autoScrollInterval=null,_wakeLock=null;
+let _perfLang = null; // null = follows site lang
+
+function setPerfLang(lang){
+  _perfLang = lang;
+  const sq = document.getElementById('perfLangSQ');
+  const en = document.getElementById('perfLangEN');
+  if(sq){ sq.style.background = lang==='sq'?'var(--blue-mid)':'transparent'; sq.style.color = lang==='sq'?'#fff':'var(--text2)'; }
+  if(en){ en.style.background = lang==='en'?'var(--blue-mid)':'transparent'; en.style.color = lang==='en'?'#fff':'var(--text2)'; }
+  // Re-render lyrics
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+  const allSections=parseLyricsText(rawText);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  renderPerfArrangement(s.id,sectionMap,window._perfTranspose?.[s.id]||0,perfInst);
+}
 
 function startPerformanceMode(){
   const sl=getSetlist(); if(!sl.songs.length) return;
-  perfIdx=0;
+  perfIdx=0; _perfLang=null; // reset to follow site lang
   const pm=document.getElementById('performanceMode');
-  pm.style.display='flex'; document.body.style.overflow='hidden';
+  pm.style.display='flex'; pm.dataset.dark='0';
+  document.body.style.overflow='hidden';
   if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(wl=>_wakeLock=wl).catch(()=>{});
+  // Sync lang buttons to current site lang
+  setPerfLang(currentLang);
   showPerfSong();
   document.addEventListener('keydown',perfKeyHandler);
 }
@@ -4440,6 +4477,7 @@ function perfTranspose(songId,dir){
 function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   steps=steps||window._perfTranspose?.[songId]||0;
   const fs=window._perfFontSize||18;
+  const lang = _perfLang || currentLang; // use perf-specific lang or site lang
   const key=`perf_arr_${songId}`;
   const arrangement=window._perfArrangements?.[key]||[];
   const chipsEl=document.getElementById('perfArrChips');
@@ -4452,7 +4490,9 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
     const sec=sectionMap[label]; if(!sec) return '';
     const lines=sec.lines.map(l=>{
       const tc=l.chords?transposeChordLine(l.chords,steps):'';
-      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${l.sq}</div>${l.en?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${l.en}</div>`:''}</div>`;
+      const lyricText = lang==='en' && l.en ? l.en : l.sq;
+      const secondaryText = lang==='en' ? (l.sq||'') : (l.en||'');
+      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>`;
     }).join('');
     return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
