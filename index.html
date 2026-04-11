@@ -2593,20 +2593,7 @@ function saveSongLocal(song){ const s=loadData(); const i=s.findIndex(x=>x.id===
 function loadArtists(){ const r=localStorage.getItem('aa_artists'); return r?JSON.parse(r):[...DEFAULT_ARTISTS]; }
 function saveArtists(a){ localStorage.setItem('aa_artists',JSON.stringify(a)); }
 function loadPDFs(){ const r=localStorage.getItem('aa_pdfs'); return r?JSON.parse(r):{}; }
-async function loadPDFsAsync(){
-  const sb = getSB();
-  if(!sb) return loadPDFs();
-  const { data, error } = await sb.from('song_pdfs').select('song_id,instrument,pdf_url');
-  if(error || !data) return loadPDFs();
-  const result = {};
-  data.forEach(row => {
-    if(!result[row.song_id]) result[row.song_id]={};
-    result[row.song_id][row.instrument] = row.pdf_url;
-  });
-  return result;
-}
 function savePDFs(p){ localStorage.setItem('aa_pdfs',JSON.stringify(p)); }
-function loadSocialLinks(){ const r=localStorage.getItem('aa_social'); return r?JSON.parse(r):{}; }
 
 let SONGS   = loadData();
 let ARTISTS = loadArtists();
@@ -3986,11 +3973,10 @@ function t(key){ return TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS['sq'][k
 function setLang(lang){
   currentLang = lang;
   localStorage.setItem('aa-lang', lang);
-  document.getElementById('langSQ').classList.toggle('active', lang==='sq');
-  document.getElementById('langEN').classList.toggle('active', lang==='en');
+  document.getElementById('langSQ')?.classList.toggle('active', lang==='sq');
+  document.getElementById('langEN')?.classList.toggle('active', lang==='en');
   applyLang();
-  // Re-render song page if open so translations update
-  if(currentSong && document.getElementById('page-song').classList.contains('active')){
+  if(currentSong && document.getElementById('page-song')?.classList.contains('active')){
     renderSong();
   }
 }
@@ -4308,6 +4294,8 @@ function buildChordDiagram(name, type){
   type = type||_chordDiagramType;
   return type==='Piano' ? buildPianoChordSVG(name) : buildChordSVG(name);
 }
+
+function buildChordSVG(name){
   const shape=CHORD_SHAPES[name]||CHORD_SHAPES[name.replace('m','')];
   if(!shape) return `<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>`;
   const {frets,barre}=shape;
