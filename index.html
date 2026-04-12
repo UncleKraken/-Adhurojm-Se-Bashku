@@ -882,7 +882,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
     </div>
     <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
-      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">Auto</button>
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">▶ Auto</button>
+      <span id="perfTimerDisplay" style="font-size:12px;font-weight:700;color:var(--text3);font-family:'Roboto Mono',monospace;min-width:38px">00:00</span>
       <!-- Language toggle in perf mode -->
       <div style="display:flex;background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--border)">
         <button onclick="setPerfLang('sq')" id="perfLangSQ" style="padding:6px 10px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">SQ</button>
@@ -1734,7 +1735,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div class="admin-form" style="margin-bottom:16px">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">📦 Shkarko të gjitha të dhënat</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Shkarkon një skedar JSON me të gjitha këngët, lyrics dhe linqet e PDF-ve. Ruaje si backup!</p>
-          <button class="btn btn-primary" onclick="exportAllData()">⬇ Shkarko Backup JSON</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="exportAllData()">⬇ Shkarko Backup JSON</button>
+            <button class="btn btn-outline" onclick="downloadAllPDFs()">📄 Shkarko të gjitha PDF-ët</button>
+          </div>
         </div>
         <div class="admin-form" style="background:var(--gold-muted);border-color:rgba(201,151,58,0.3)">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">🛡️ Si të rikthesh faqen</div>
@@ -3065,6 +3069,7 @@ async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
   addRecentlyViewed(id);
+  updateSongUrl(currentSong);
   currentInst = currentSong.instruments?.[0] || 'Guitar';
   transposeSteps=0;
   // Only load PDFs if not already cached
@@ -3224,18 +3229,25 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
         ${dlBtns}${transposedPdfBtn}
         <button onclick="addToSetlist(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">📋 +Setlist</button>
         <button onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
+        <button onclick="openReportError(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer" title="${currentLang==='sq'?'Raporto gabim':'Report error'}">⚠️</button>
       </div>
     </div>`;
 
-  // Metronome (if BPM set)
-  if(s.bpm) setTimeout(()=>{
-    document.getElementById('metronomeSection')?.remove();
-    const metro=document.createElement('div');
-    metro.id='metronomeSection';
-    metro.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
-    metro.innerHTML=`<span style="font-size:20px">🥁</span><div><div style="font-size:13px;font-weight:700;color:var(--text)">Metronom</div><div style="font-size:11px;color:var(--text3)">${s.bpm} BPM</div></div><input id="metroBpmInput" type="number" value="${s.bpm}" min="30" max="300" style="width:68px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;text-align:center"/><div class="metro-beat" id="metroBeatDot"></div><button id="metroBtn" onclick="toggleMetronome()" style="padding:7px 18px;border-radius:100px;border:none;background:var(--bg3);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">▶ Start</button>`;
-    document.getElementById('songDetail')?.appendChild(metro);
-  },50);
+  // Song Rating
+  setTimeout(()=>{
+    document.getElementById('ratingSection')?.remove();
+    const rDiv=document.createElement('div');
+    rDiv.id='ratingSection';
+    rDiv.style.cssText='margin-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+    const userRating=getSongRating(s.id);
+    rDiv.innerHTML=`
+      <span style="font-size:13px;color:var(--text3)">${currentLang==='sq'?'Vlëreso:':'Rate:'}</span>
+      <div style="display:flex;gap:4px" id="ratingStars">
+        ${[1,2,3,4,5].map(n=>`<button onclick="rateSong(${s.id},${n})" style="font-size:22px;background:none;border:none;cursor:pointer;transition:transform .15s;opacity:${n<=userRating?1:0.3}" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="${n} ⭐">⭐</button>`).join('')}
+      </div>
+      ${userRating?`<span style="font-size:12px;color:var(--gold)">${currentLang==='sq'?'Faleminderit!':'Thank you!'}</span>`:''}`;
+    document.getElementById('songDetail')?.appendChild(rDiv);
+  },70);
 
   // Similar songs
   setTimeout(()=>{
@@ -3248,7 +3260,25 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
     simDiv.innerHTML=`<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">🎵 ${currentLang==='sq'?'Këngë të Ngjashme':'Similar Songs'}</div><div class="similar-grid" id="similarGrid"></div>`;
     document.getElementById('songDetail')?.appendChild(simDiv);
     similar.forEach(song=>document.getElementById('similarGrid')?.appendChild(buildCard(song)));
-  },60);
+  },80);
+
+  // Rating + Report
+  setTimeout(()=>{
+    document.getElementById('songActionsSection')?.remove();
+    const actDiv=document.createElement('div');
+    actDiv.id='songActionsSection';
+    actDiv.style.cssText='margin-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+    const userRating=getUserRating(s.id);
+    actDiv.innerHTML=`
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:12px;color:var(--text3);font-weight:600">${currentLang==='sq'?'Vlerëso:':'Rate:'}</span>
+        <div id="starRating" style="display:flex;gap:2px">
+          ${[1,2,3,4,5].map(n=>`<button onclick="rateSong(${s.id},${n})" style="background:none;border:none;cursor:pointer;font-size:22px;padding:0;line-height:1;color:${n<=userRating?'#F5CF7A':'var(--border)'};transition:color .15s" onmouseover="hoverStars(${n})" onmouseout="unhoverStars(${userRating})">★</button>`).join('')}
+        </div>
+      </div>
+      <button onclick="openReportError(${s.id})" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer">⚠️ ${currentLang==='sq'?'Raport Gabim':'Report Error'}</button>`;
+    document.getElementById('songDetail')?.appendChild(actDiv);
+  },90);
 
   // Chord diagram interactions
   setTimeout(addChordInteraction,120);
@@ -3519,6 +3549,9 @@ async function refreshAdminSongs(){
       <td>
         <div class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicateSong(${s.id})" style="font-size:12px" title="Kopjo">📋</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicateSong(${s.id})" style="font-size:12px" title="Kopjo këngën">📋</button>
           <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
         </div>
       </td>`;
@@ -4484,6 +4517,72 @@ function getSimilarSongs(song, limit=4){
       (s.categories||[]).some(c=>(song.categories||[]).includes(c))
     )
   ).slice(0, limit);
+// ═══════════════════════════════════════════════════════
+//  SONG RATING
+// ═══════════════════════════════════════════════════════
+function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
+function rateSong(songId, stars){
+  try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
+  renderSong(); showToast(''+stars+'/5 — Faleminderit!','success');
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORT ERROR
+// ═══════════════════════════════════════════════════════
+function openReportError(songId){
+  const s=SONGS.find(x=>Number(x.id)===Number(songId)); if(!s) return;
+  const modal=document.createElement('div'); modal.id='reportModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--text)">Raporto Gabim</div><button onclick="this.closest('#reportModal').remove()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--text2)">X</button></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px">${s.title}</div><select id="reportType" class="form-select" style="margin-bottom:10px"><option value="chord">Akord i gabuar</option><option value="lyrics">Tekst i gabuar</option><option value="key">Tonalitet i gabuar</option><option value="other">Tjeter</option></select><textarea id="reportNote" class="form-textarea" placeholder="Pershkruaj problemin..." style="min-height:80px;margin-bottom:12px;font-size:13px"></textarea><button onclick="submitReport(${songId})" class="btn btn-primary btn-sm">Dergo</button></div>`;
+  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+async function submitReport(songId){
+  const s=SONGS.find(x=>Number(x.id)===Number(songId));
+  const type=document.getElementById('reportType')?.value;
+  const note=document.getElementById('reportNote')?.value.trim();
+  if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
+  const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
+  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
+  catch(e){ showToast('Gabim ne dergim','error'); }
+  document.getElementById('reportModal')?.remove();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INDIVIDUAL SONG URLs
+// ═══════════════════════════════════════════════════════
+function updateSongUrl(song){
+  if(!song) return;
+  const url=new URL(window.location);
+  url.searchParams.set('song',song.id);
+  history.replaceState(null,'',url);
+  document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
+}
+// ═══════════════════════════════════════════════════════
+//  DUPLICATE SONG
+// ═══════════════════════════════════════════════════════
+async function duplicateSong(songId){
+  const s=SONGS.find(x=>Number(x.id)===Number(songId));
+  if(!s||!confirm('Kopjo "'+s.title+'"?')) return;
+  const copy={...s,id:Date.now(),title:s.title+' (kopje)',recent:true,created_at:new Date().toISOString()};
+  const saved=await upsertSongAsync(copy);
+  if(saved){ SONGS.unshift(saved); invalidateCache(); showToast('Kenga u kopjua!','success'); refreshAdminSongs(); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PDF BATCH DOWNLOAD
+// ═══════════════════════════════════════════════════════
+function downloadAllPDFs(){
+  const items=[];
+  Object.entries(PDFS).forEach(([songId,pdfs])=>{
+    const song=SONGS.find(s=>Number(s.id)===Number(songId));
+    Object.entries(pdfs).forEach(([inst,url])=>{ if(url) items.push({url,name:buildPDFFileName(song,inst,false)}); });
+  });
+  if(!items.length){ showToast('Nuk ka PDF','error'); return; }
+  items.forEach((item,i)=>setTimeout(()=>{ const a=document.createElement('a'); a.href=item.url; a.download=item.name; a.target='_blank'; a.click(); },i*900));
+  showToast('Duke shkarkuar '+items.length+' PDF...','success');
+}
+
 }
 const RV_KEY = 'aa_recently_viewed';
 const RV_MAX = 10;
@@ -4747,20 +4846,23 @@ function setPerfLang(lang){
 
 function startPerformanceMode(){
   const sl=getSetlist(); if(!sl.songs.length) return;
-  perfIdx=0; _perfLang=null; // reset to follow site lang
+  perfIdx=0; _perfLang=null;
   const pm=document.getElementById('performanceMode');
   pm.style.display='flex'; pm.dataset.dark='0';
   document.body.style.overflow='hidden';
   if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(wl=>_wakeLock=wl).catch(()=>{});
-  // Sync lang buttons to current site lang
   setPerfLang(currentLang);
-  showPerfSong();
+  // Show countdown then start
+  startCountdown(()=>{
+    showPerfSong();
+    startPerfTimer();
+  });
   document.addEventListener('keydown',perfKeyHandler);
 }
 
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
-  document.body.style.overflow=''; stopAutoScroll();
+  document.body.style.overflow=''; stopAutoScroll(); stopPerfTimer(); stopMetronome();
   if(_wakeLock){_wakeLock.release();_wakeLock=null;}
   document.removeEventListener('keydown',perfKeyHandler);
 }
@@ -4858,59 +4960,154 @@ function showPerfSong(){
   const pContent=document.getElementById('perfContent');
   pContent.scrollTop=0;
 
-  // BPM indicator for autoscroll speed hint
-  const bpmHint = s.bpm ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">(Auto: ${s.bpm} BPM)</span>` : '';
+  // Next song
+  const nextItem = sl.songs[perfIdx+1];
+  const nextSong = nextItem ? SONGS.find(x=>Number(x.id)===Number(nextItem.id)) : null;
 
   pContent.innerHTML=`
+    <!-- Notes banner (if set) -->
+    ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:12px;padding:10px 16px;margin-bottom:12px;font-size:14px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px">📝 ${item.note}</div>`:''}
+
     <!-- Controls bar -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:16px">
-      <!-- Instrument selector -->
-      <div style="display:flex;align-items:center;gap:6px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:12px">
+      <!-- Instrument -->
+      <div style="display:flex;align-items:center;gap:5px">
         ${s.instruments?.length>1 ? `
-        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Guitar">🎸</button>
-        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Piano">🎹</button>` :
+        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Guitar">🎸</button>
+        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Piano">🎹</button>` :
         `<span style="font-size:18px" title="${perfInst}">${perfInst==='Piano'?'🎹':'🎸'}</span>`}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
       <!-- Transpose -->
-      <div style="display:flex;align-items:center;gap:6px">
-        <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">-</button>
-        <span style="font-size:12px;font-weight:700;color:${steps!==0?'var(--blue-mid)':'var(--text3)'};min-width:80px;text-align:center">${keyLabel}</span>
-        <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">+</button>
-        ${steps!==0?`<button onclick="_perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Poppins',sans-serif">Reset</button>`:''}
+      <div style="display:flex;align-items:center;gap:5px">
+        <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">-</button>
+        <span style="font-size:11px;font-weight:700;color:${steps!==0?'var(--blue-mid)':'var(--text3)'};min-width:70px;text-align:center">${keyLabel}${s.capo>0&&perfInst==='Guitar'?' · Capo '+s.capo:''}</span>
+        <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">+</button>
+        ${steps!==0?`<button onclick="_perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 7px;height:26px;cursor:pointer;font-size:10px;color:var(--text3);font-family:'Poppins',sans-serif">↺</button>`:''}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Chord diagram toggle -->
-      <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif">${_perfShowChords?'🎼 ON':'🎼'}</button>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-        <span style="font-size:11px;color:var(--text3)">A</span>
-        <input type="range" min="14" max="28" value="${_perfFontSize||18}" oninput="setPerfFont(this.value)" style="width:60px;accent-color:var(--blue-mid)"/>
-        <span style="font-size:16px;color:var(--text3)">A</span>
+      <!-- Font size -->
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:10px;color:var(--text3)">A</span>
+        <input type="range" min="14" max="28" value="${_perfFontSize}" oninput="setPerfFont(this.value)" style="width:55px;accent-color:var(--blue-mid)"/>
+        <span style="font-size:14px;color:var(--text3)">A</span>
       </div>
+      <div style="width:1px;height:20px;background:var(--border)"></div>
+      <!-- Scroll speed override -->
+      <div style="display:flex;align-items:center;gap:5px" title="Shpejtësia e scroll (% e BPM)">
+        <span style="font-size:10px;color:var(--text3)">🐢</span>
+        <input type="range" min="25" max="300" value="${_perfScrollSpeed}" oninput="setPerfScrollSpeed(this.value)" style="width:55px;accent-color:var(--gold)"/>
+        <span style="font-size:10px;color:var(--text3)">🐇</span>
+        <span id="perfSpeedLabel" style="font-size:10px;color:var(--text3);min-width:28px">${_perfScrollSpeed}%</span>
+      </div>
+      <div style="width:1px;height:20px;background:var(--border)"></div>
+      <!-- Chords toggle -->
+      <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams" style="padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:${_perfShowChords?'var(--blue-mid)':'var(--bg3)'};color:${_perfShowChords?'#fff':'var(--text2)'};font-size:13px;cursor:pointer">🎼</button>
+      <!-- Metronome -->
+      ${s.bpm?`<button onclick="toggleMetronome()" id="metroBtn" style="padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer" title="Metronom ${s.bpm} BPM">🥁</button><div class="metro-beat" id="metroBeatDot" style="display:inline-block"></div>`:''}
     </div>
-    <!-- Section arrangement -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:16px">
+
+    <!-- Section arrangement + jump -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Seksionet</span>
-        <button onclick="perfResetArr('${s.id}')" style="padding:2px 10px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer">Reset</button>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Rend:</span>
+          <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+        </div>
+        <button onclick="perfResetArr('${s.id}')" style="padding:2px 8px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
       </div>
-      <div id="perfArrChips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:3px 10px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+${sec.label}</button>`).join('')}
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--text3);align-self:center">+</span>
+        ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
+        <span style="width:1px;height:16px;background:var(--border);margin:0 4px;align-self:center"></span>
+        <span style="font-size:10px;color:var(--text3);align-self:center">→</span>
+        ${allSections.map((sec,si)=>`<button onclick="perfJumpToSection('${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">${sec.label}</button>`).join('')}
       </div>
     </div>
+
     <!-- Lyrics -->
-    <div id="perfLyricsContent"></div>`;
+    <div id="perfLyricsContent"></div>
+
+    <!-- Next song preview -->
+    ${nextSong?`<div style="margin-top:32px;padding:14px 16px;border:1px dashed var(--border);border-radius:12px;color:var(--text3);font-size:13px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Tjetër →</span>
+      <span style="font-weight:600;color:var(--text2)">${nextSong.title}</span>
+      <span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${nextSong.key}</span>
+      ${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}
+    </div>`:''}`;
 
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
-  // Enable chord hover diagrams in perf mode
   setTimeout(addChordInteraction, 80);
+  // Update metronome BPM input if metronome section exists
+  const mbi=document.getElementById('metroBpmInput');
+  if(mbi&&s.bpm) mbi.value=s.bpm;
+}
+
+let _perfScrollSpeed = 100; // % of base speed
+let _perfTimerInterval = null;
+let _perfTimerStart = null;
+
+function setPerfScrollSpeed(val){
+  _perfScrollSpeed = Number(val);
+  const label = document.getElementById('perfSpeedLabel');
+  if(label) label.textContent = val+'%';
+}
+
+function perfJumpToSection(label){
+  const lyricsEl = document.getElementById('perfLyricsContent');
+  if(!lyricsEl) return;
+  // Find section div by its label text
+  const divs = lyricsEl.querySelectorAll('.perf-section-block');
+  for(const div of divs){
+    if(div.dataset.label===label){
+      div.scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+  }
+}
+
+function startPerfTimer(){
+  _perfTimerStart = Date.now();
+  if(_perfTimerInterval) clearInterval(_perfTimerInterval);
+  _perfTimerInterval = setInterval(()=>{
+    const el = document.getElementById('perfTimerDisplay');
+    if(!el) return;
+    const sec = Math.floor((Date.now()-_perfTimerStart)/1000);
+    const m = Math.floor(sec/60).toString().padStart(2,'0');
+    const s = (sec%60).toString().padStart(2,'0');
+    el.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function stopPerfTimer(){
+  if(_perfTimerInterval){ clearInterval(_perfTimerInterval); _perfTimerInterval=null; }
+}
+
+function startCountdown(cb){
+  const pm = document.getElementById('performanceMode');
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column';
+  let count = 3;
+  overlay.innerHTML=`<div id="countNum" style="font-size:120px;font-weight:900;color:#fff;line-height:1;font-family:'Poppins',sans-serif">${count}</div><div style="font-size:16px;color:rgba(255,255,255,0.5);margin-top:12px">Gati...</div>`;
+  pm.appendChild(overlay);
+  const numEl = overlay.querySelector('#countNum');
+  const tick = setInterval(()=>{
+    count--;
+    if(count>0){
+      numEl.textContent=count;
+      numEl.style.color=count===1?'var(--gold)':'#fff';
+    } else {
+      clearInterval(tick);
+      overlay.remove();
+      if(cb) cb();
+    }
+  }, 800);
 }
 
 function togglePerfChords(){
   _perfShowChords=!_perfShowChords;
   const btn=document.getElementById('perfChordsBtn');
-  if(btn){btn.textContent=_perfShowChords?'🎼 ON':'🎼';btn.style.background=_perfShowChords?'var(--blue-mid)':'var(--bg3)';btn.style.color=_perfShowChords?'#fff':'var(--text2)';}
+  if(btn){btn.style.background=_perfShowChords?'var(--blue-mid)':'var(--bg3)';btn.style.color=_perfShowChords?'#fff':'var(--text2)';}
   showPerfSong();
 }
 
@@ -4982,7 +5179,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
 
       return `<div style="margin-bottom:${fs}px">${chordHtml}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>${chordDiagramsHtml}`;
     }).join('');
-    return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
+    return `<div class="perf-section-block" data-label="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
 }
 
@@ -5026,7 +5223,7 @@ function toggleAutoScroll(){
     ? Math.max(60, (scrollableHeight / (bpm * 0.4))) // calibrated to BPM
     : 180; // default 3 min if no BPM
 
-  const pxPerSec = scrollableHeight / durationSec;
+  const pxPerSec = (scrollableHeight / durationSec) * (_perfScrollSpeed/100);
   let lastTs = null;
 
   function frame(ts){
