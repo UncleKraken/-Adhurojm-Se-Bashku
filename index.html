@@ -3979,6 +3979,18 @@ function setLang(lang){
   if(currentSong && document.getElementById('page-song')?.classList.contains('active')){
     renderSong();
   }
+  // Update admin panel if open - refresh admin songs to show translated content
+  const adminOverlay = document.getElementById('adminOverlay');
+  if(adminOverlay && adminOverlay.style.display!=='none'){
+    // Re-apply data-sq/data-en inside admin too
+    adminOverlay.querySelectorAll('[data-sq]').forEach(el=>{
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') return;
+      el.textContent = lang==='sq' ? el.dataset.sq : el.dataset.en;
+    });
+    adminOverlay.querySelectorAll('[data-placeholder-sq]').forEach(el=>{
+      el.placeholder = lang==='sq' ? el.dataset.placeholderSq : el.dataset.placeholderEn;
+    });
+  }
 }
 
 function applyLang(){
@@ -4812,7 +4824,7 @@ function showPerfSong(){
 
   document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`${s.artist} \u00b7 ${s.key}${s.bpm?' \u00b7 '+s.bpm+' BPM':''}${perfInst==='Piano'?' \u00b7 Piano':' \u00b7 Guitar'}${item.note?' \u00b7 '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`${s.artist} \u00b7 ${s.key}${s.capo>0&&perfInst==='Guitar'?' \u00b7 Capo '+s.capo:''}${s.bpm?' \u00b7 '+s.bpm+' BPM':''}${perfInst==='Piano'?' \u00b7 \u{1F3B9}':' \u00b7 \u{1F3B8}'}${item.note?' \u00b7 '+item.note:''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
 
@@ -4857,7 +4869,7 @@ function showPerfSong(){
         ${s.instruments?.length>1 ? `
         <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Guitar">🎸</button>
         <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:6px 12px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Piano">🎹</button>` :
-        `<span style="font-size:11px;font-weight:700;color:var(--text3)">${perfInst}</span>`}
+        `<span style="font-size:18px" title="${perfInst}">${perfInst==='Piano'?'🎹':'🎸'}</span>`}
       </div>
       <div style="width:1px;height:20px;background:var(--border)"></div>
       <!-- Transpose -->
@@ -4891,6 +4903,8 @@ function showPerfSong(){
     <div id="perfLyricsContent"></div>`;
 
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
+  // Enable chord hover diagrams in perf mode
+  setTimeout(addChordInteraction, 80);
 }
 
 function togglePerfChords(){
@@ -4941,17 +4955,32 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       const tc=l.chords?transposeChordLine(l.chords,steps):'';
       const lyricText = lang==='en' && l.en ? l.en : l.sq;
       const secondaryText = lang==='en' ? (l.sq||'') : (l.en||'');
-      // Build chord diagrams inline if enabled
+
+      // Build chord line with clickable hover diagrams (same as song page)
+      let chordHtml='';
+      if(tc){
+        const parts=tc.split(/(\s+)/);
+        const mapped=parts.map(ch=>{
+          const t=ch.trim();
+          return (t&&typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[t]||PIANO_CHORD_NOTES[t]))
+            ? '<span class="chord-clickable" data-chord="'+t+'" style="cursor:help;color:var(--chord-color)">'+ch+'</span>'
+            : '<span style="color:var(--chord-color)">'+ch+'</span>';
+        });
+        chordHtml='<div style="font-weight:700;font-family:\'Roboto Mono\',monospace;white-space:pre;font-size:'+(fs-2)+'px;margin-bottom:2px;line-height:1.4">'+mapped.join('')+'</div>';
+      }
+
+      // Chord diagrams block (when 🎼 toggle is ON)
       let chordDiagramsHtml='';
       if(_perfShowChords && tc){
         const chords=[...new Set(tc.split(/\s+/).filter(c=>c.trim()&&(typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[c.trim()]||PIANO_CHORD_NOTES[c.trim()]))))];
         if(chords.length){
           chordDiagramsHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">'
-            +chords.map(ch=>`<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--chord-color);margin-bottom:4px">${ch}</div>${buildChordDiagram(ch)}</div>`).join('')
+            +chords.map(ch=>'<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--chord-color);margin-bottom:4px">'+ch+'</div>'+buildChordDiagram(ch)+'</div>').join('')
             +'</div>';
         }
       }
-      return `<div style="margin-bottom:${fs}px">${tc?`<div style="color:var(--chord-color);font-weight:700;font-family:'Roboto Mono',monospace;white-space:pre;font-size:${fs-2}px;margin-bottom:2px;line-height:1.4">${tc}</div>`:''}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>${chordDiagramsHtml}`;
+
+      return `<div style="margin-bottom:${fs}px">${chordHtml}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>${chordDiagramsHtml}`;
     }).join('');
     return `<div style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
@@ -4977,35 +5006,40 @@ function toggleAutoScroll(){
   if(_autoScrollInterval){
     stopAutoScroll();
     if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-  } else {
-    const sl=getSetlist(); const item=sl.songs[perfIdx];
-    const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-    const bpm=s?.bpm||0;
-    // BPM scroll: at 120 BPM, 1 beat = 500ms
-    // We scroll 1px per beat = smooth teleprompter pace
-    // Lower BPM = slower scroll, Higher BPM = faster scroll
-    const pxPerBeat = 1; // px to scroll per beat
-    const msPerBeat = bpm>0 ? (60000/bpm) : 2000;
-    const pxPerMs = pxPerBeat / msPerBeat;
-    let lastTime = null;
-    let accumulated = 0;
-    function scrollFrame(ts){
-      if(!lastTime) lastTime=ts;
-      const dt=ts-lastTime; lastTime=ts;
-      accumulated += pxPerMs * dt;
-      if(accumulated >= 1){
-        const px = Math.floor(accumulated);
-        accumulated -= px;
-        const c=document.getElementById('perfContent');
-        if(c) c.scrollTop += px;
-      }
-      _autoScrollInterval = requestAnimationFrame(scrollFrame);
-    }
-    _autoScrollInterval = requestAnimationFrame(scrollFrame);
-    if(btn){
-      const label=bpm>0?`⏸ ${bpm} BPM`:'⏸ Stop';
-      btn.textContent=label;btn.style.background='var(--blue-mid)';btn.style.color='#fff';
-    }
+    return;
+  }
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+  const bpm=s?.bpm||0;
+
+  // Calculate scroll speed:
+  // At 120 BPM, assume ~4 beats per line, so lines scroll at 30 lines/min
+  // Content height / lines * 30 = scroll speed in px/min
+  const content=document.getElementById('perfContent');
+  if(!content) return;
+
+  // Base speed: px per second
+  // 60 BPM = very slow (1 beat/sec), 120 BPM = moderate, 180 BPM = fast
+  // We want roughly: at 120 BPM, scroll the full content in ~3 min (typical worship song)
+  const scrollableHeight = content.scrollHeight - content.clientHeight;
+  const durationSec = bpm>0
+    ? Math.max(60, (scrollableHeight / (bpm * 0.4))) // calibrated to BPM
+    : 180; // default 3 min if no BPM
+
+  const pxPerSec = scrollableHeight / durationSec;
+  let lastTs = null;
+
+  function frame(ts){
+    if(!lastTs) lastTs=ts;
+    const dt=(ts-lastTs)/1000; lastTs=ts;
+    if(content) content.scrollTop += pxPerSec * dt;
+    _autoScrollInterval = requestAnimationFrame(frame);
+  }
+  _autoScrollInterval = requestAnimationFrame(frame);
+
+  if(btn){
+    btn.textContent = bpm>0 ? `⏸ ${bpm} BPM` : '⏸ Stop';
+    btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
   }
 }
 function stopAutoScroll(){
