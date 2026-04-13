@@ -1802,7 +1802,18 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn btn-primary" onclick="exportAllData()">⬇ Shkarko Backup JSON</button>
             <button class="btn btn-outline" onclick="downloadAllPDFs()">📄 Shkarko të gjitha PDF-ët</button>
+            <button class="btn btn-outline" onclick="generateAndDownloadSitemap()">🗺️ Gjenero Sitemap.xml</button>
           </div>
+        </div>
+        <div class="admin-form" style="margin-bottom:16px;border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">🔍 SEO — Google Indexing</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.9;margin-bottom:12px">
+            1. Shkarko <strong>sitemap.xml</strong> → ngarko në GitHub root (pranë index.html)<br>
+            2. Shko te <a href="https://search.google.com/search-console" target="_blank" style="color:var(--blue-mid)">Google Search Console</a> → <strong>Sitemaps</strong><br>
+            3. Shto: <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">https://unclekraken.github.io/-Adhurojm-Se-Bashku/sitemap.xml</code><br>
+            4. Kliko <strong>"Submit"</strong> → Google do e indexojë brenda 1-7 ditëve
+          </p>
+          <button class="btn btn-primary btn-sm" onclick="generateAndDownloadSitemap()">🗺️ Gjenero Sitemap tani</button>
         </div>
         <div class="admin-form" style="background:var(--gold-muted);border-color:rgba(201,151,58,0.3)">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">🛡️ Si të rikthesh faqen</div>
@@ -3430,6 +3441,60 @@ async function removeBulkCategory(){
   showToast(`✅ Kategoria u hoq nga ${done} këngë!`,'success');
   renderBulkSongList();
 }
+function generateAndDownloadSitemap(){
+  const BASE = 'https://unclekraken.github.io/-Adhurojm-Se-Bashku/';
+  const today = new Date().toISOString().slice(0,10);
+
+  const staticUrls = [
+    {loc: BASE, priority: '1.0', freq: 'weekly'},
+    {loc: BASE+'?page=songs', priority: '0.9', freq: 'weekly'},
+    {loc: BASE+'?page=guide', priority: '0.7', freq: 'monthly'},
+    {loc: BASE+'?page=about', priority: '0.5', freq: 'monthly'},
+    {loc: BASE+'?page=contact', priority: '0.5', freq: 'monthly'},
+  ];
+
+  const songUrls = SONGS.map(s=>{
+    const slug = s.title.toLowerCase().replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').slice(0,60);
+    return {
+      loc: `${BASE}?song=${s.id}&slug=${slug}`,
+      priority: '0.8',
+      freq: 'monthly',
+      title: s.title,
+      artist: s.artist,
+    };
+  });
+
+  const allUrls = [...staticUrls, ...songUrls];
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<?xml-stylesheet type="text/xsl" href="sitemap.xsl"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n`;
+  xml += `        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n\n`;
+
+  allUrls.forEach(u=>{
+    xml += `  <url>\n`;
+    xml += `    <loc>${u.loc}</loc>\n`;
+    xml += `    <lastmod>${today}</lastmod>\n`;
+    xml += `    <changefreq>${u.freq}</changefreq>\n`;
+    xml += `    <priority>${u.priority}</priority>\n`;
+    if(u.title){
+      xml += `    <!-- ${u.title}${u.artist?' — '+u.artist:''} -->\n`;
+    }
+    xml += `  </url>\n\n`;
+  });
+
+  xml += `</urlset>\n`;
+
+  const blob = new Blob([xml], {type:'application/xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sitemap.xml';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast(`✅ Sitemap u gjenerua me ${songUrls.length} këngë + ${staticUrls.length} faqe!`, 'success');
+}
+
 async function exportAllData(){
   showToast('⏳ Duke eksportuar të dhënat...','');
   const sb = getSB();
