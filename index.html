@@ -870,41 +870,89 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
 <!-- Performance Mode Overlay -->
 <div id="performanceMode" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);overflow:hidden;flex-direction:column">
-  <!-- Top bar -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;min-height:54px">
-    <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">&#9664;</button>
-      <span id="perfCounter" style="font-size:12px;color:var(--text3);font-weight:700;min-width:44px;text-align:center"></span>
-      <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 14px;cursor:pointer;font-size:16px;font-weight:700;color:var(--text)">&#9654;</button>
+
+  <!-- ROW 1: Navigation + Song Title + Utility buttons -->
+  <div style="display:flex;align-items:center;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;min-height:50px">
+    <!-- Prev/Next -->
+    <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">◀</button>
+    <span id="perfCounter" style="font-size:11px;color:var(--text3);font-weight:700;flex-shrink:0;min-width:36px;text-align:center"></span>
+    <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">▶</button>
+    <!-- Song title -->
+    <div style="flex:1;min-width:0;overflow:hidden">
+      <div id="perfSongTitle" style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div id="perfSongMeta" style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
     </div>
-    <div style="flex:1;text-align:center;min-width:0;overflow:hidden">
-      <div id="perfSongTitle" style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-      <div id="perfSongMeta" style="font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
-      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">▶ Auto</button>
-      <span id="perfTimerDisplay" style="font-size:12px;font-weight:700;color:var(--text3);font-family:'Roboto Mono',monospace;min-width:38px">00:00</span>
-      <!-- Language toggle in perf mode -->
-      <div style="display:flex;background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--border)">
-        <button onclick="setPerfLang('sq')" id="perfLangSQ" style="padding:6px 10px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">SQ</button>
-        <button onclick="setPerfLang('en')" id="perfLangEN" style="padding:6px 10px;border:none;background:transparent;color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">EN</button>
+    <!-- Timer + Lang + Dark + Fullscreen + Shortcuts + Exit -->
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+      <span id="perfTimerDisplay" style="font-size:11px;font-weight:700;color:var(--text3);font-family:'Roboto Mono',monospace;min-width:36px">00:00</span>
+      <div style="display:flex;background:var(--bg3);border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+        <button onclick="setPerfLang('sq')" id="perfLangSQ" style="padding:5px 9px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">SQ</button>
+        <button onclick="setPerfLang('en')" id="perfLangEN" style="padding:5px 9px;border:none;background:transparent;color:var(--text2);font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">EN</button>
       </div>
-      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#127769;</button>
-      <button onclick="togglePerfFullscreen()" id="perfFsBtn" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#11036;</button>
-      <button onclick="showPerfShortcuts()" title="Shortcuts" style="background:var(--bg3);border:none;border-radius:10px;padding:7px 10px;cursor:pointer;font-size:14px;color:var(--text2)">&#9000;&#65039;</button>
-      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:10px;padding:7px 11px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600">X Dil</button>
+      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🌙</button>
+      <button onclick="togglePerfFullscreen()" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⛶</button>
+      <button onclick="showPerfShortcuts()" title="⌨️" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⌨️</button>
+      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700">✕</button>
     </div>
   </div>
-  <!-- Mini song list -->
-  <div id="perfSongList" style="display:flex;gap:6px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
-  <!-- Content -->
+
+  <!-- ROW 2: STICKY CONTROLS — always visible -->
+  <div id="perfControlsBar" style="background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;min-width:max-content">
+      <!-- Auto scroll -->
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">▶ Auto</button>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- Instrument -->
+      <div id="perfInstBtns" style="display:flex;gap:4px"></div>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- Transpose -->
+      <div style="display:flex;align-items:center;gap:4px">
+        <button onclick="perfTransposeActive(-1)" style="background:var(--bg3);border:none;border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">-</button>
+        <span id="perfKeyLabel" style="font-size:11px;font-weight:700;color:var(--blue-mid);min-width:70px;text-align:center"></span>
+        <button onclick="perfTransposeActive(1)" style="background:var(--bg3);border:none;border-radius:7px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">+</button>
+        <button id="perfTransposeReset" onclick="perfTransposeResetActive()" style="display:none;background:var(--bg3);border:none;border-radius:6px;padding:0 7px;height:26px;cursor:pointer;font-size:10px;color:var(--text3);font-family:'Poppins',sans-serif">↺</button>
+      </div>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- Font size -->
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-size:10px;color:var(--text3)">A</span>
+        <input type="range" min="14" max="28" value="${_perfFontSize}" id="perfFontSlider" oninput="setPerfFont(this.value)" style="width:50px;accent-color:var(--blue-mid)"/>
+        <span style="font-size:14px;color:var(--text3)">A</span>
+        <button onclick="setPerfFont(18);document.getElementById('perfFontSlider').value=18" style="background:var(--bg3);border:none;border-radius:5px;padding:1px 5px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
+      </div>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- Scroll speed -->
+      <div style="display:flex;align-items:center;gap:4px" title="Scroll speed">
+        <span style="font-size:10px">🐢</span>
+        <input type="range" min="25" max="300" value="${_perfScrollSpeed}" id="perfSpeedSlider" oninput="setPerfScrollSpeed(this.value)" style="width:50px;accent-color:var(--gold)"/>
+        <span style="font-size:10px">🐇</span>
+        <span id="perfSpeedLabel" style="font-size:9px;color:var(--text3);min-width:24px">${_perfScrollSpeed}%</span>
+        <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" style="background:var(--bg3);border:none;border-radius:5px;padding:1px 5px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
+      </div>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- Chord diagrams -->
+      <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams (🎼)" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer">🎼</button>
+      <!-- Metronome -->
+      <span id="perfMetroWrap" style="display:flex;align-items:center;gap:4px"></span>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- SECTION JUMP — always visible here -->
+      <span style="font-size:10px;color:var(--text3);font-weight:700;white-space:nowrap">→</span>
+      <div id="perfSectionJumpBtns" style="display:flex;gap:4px"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Mini song list -->
+  <div id="perfSongList" style="display:flex;gap:6px;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+
+  <!-- ROW 4: Scrollable content (lyrics only — no controls inside) -->
   <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
+
   <!-- Shortcuts overlay -->
   <div id="perfShortcutsOverlay" onclick="this.style.display='none'" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:10;align-items:center;justify-content:center">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px 28px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div style="font-size:15px;font-weight:700;color:var(--text)">Shkurtesat e Tastierës</div>
-        <button onclick="document.getElementById('perfShortcutsOverlay').style.display='none'" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">X</button>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">⌨️ Shkurtesat</div>
+        <button onclick="document.getElementById('perfShortcutsOverlay').style.display='none'" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
       </div>
       <div id="perfShortcutsList" style="display:flex;flex-direction:column;gap:0"></div>
       <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Kliko kudo jashtë per ta mbyllur</div>
@@ -1059,6 +1107,22 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     <!-- 7. PDF Guide -->
     <div class="g-block" style="border-color:rgba(201,151,58,0.4);background:linear-gradient(135deg,var(--gold-muted),transparent)">
       <div class="g-block-title" data-sq="7. 📄 Si Funksionojnë PDF-ët" data-en="7. 📄 How the PDFs Work">7. 📄 Si Funksionojnë PDF-ët</div>
+
+    <!-- 8. Performance Mode -->
+    <div class="g-block" style="border-color:rgba(139,26,26,0.3);background:linear-gradient(135deg,var(--red-muted),transparent)">
+      <div class="g-block-title" data-sq="8. 🎤 Performance Mode — Mënyra e Shërbimit" data-en="8. 🎤 Performance Mode — Service Mode">8. 🎤 Performance Mode</div>
+      <p style="font-size:13.5px;color:var(--text2);margin-bottom:16px" data-sq="Performance Mode është mënyra e plotë për shërbimin e adhurimit — shfaq lyrics të mëdha, akorde, dhe të gjitha kontrollat e nevojshme." data-en="Performance Mode is the full worship service mode — shows large lyrics, chords, and all necessary controls.">Performance Mode hapet nga Setlista → 🎤 Fillo Shërbimin</p>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text2)">
+        <div><strong style="color:var(--text)">🎵 Kontrolla kryesore:</strong> Transpose (−/+), Instrument (🎸/🎹), Font Size (A slider ↺), Scroll Speed (🐢🐇 slider ↺), Chord Diagrams (🎼), Metronome (🥁)</div>
+        <div><strong style="color:var(--text)">📋 Seksionet:</strong> Shto kopje të V1/CH/BR duke klikuar butonin "+". Kliko emrin e seksionit për të shkuar direkt (Section Jump)</div>
+        <div><strong style="color:var(--text)">🌙 Dark Mode:</strong> Butoni 🌙 → background i errët për skenë. Tasti <kbd style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">D</kbd></div>
+        <div><strong style="color:var(--text)">⛶ Fullscreen:</strong> Butoni ⛶ ose tasti <kbd style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">F</kbd> — ideal për tableta</div>
+        <div><strong style="color:var(--text)">▶ Auto-scroll:</strong> Ndjek BPM-in e këngës automatikisht. Space = start/stop</div>
+        <div><strong style="color:var(--text)">⌨️ Keyboard shortcuts:</strong> ← → navigim, Space = scroll, F = fullscreen, D = dark, Esc = dil</div>
+        <div><strong style="color:var(--text)">📱 Mobile:</strong> Swipe majtas/djathtas për këngën tjetër/mëparshme</div>
+        <div><strong style="color:var(--text)">🌐 Gjuha:</strong> SQ/EN ndryshon lyrics dhe UI brenda Performance Mode</div>
+      </div>
+    </div>
       <p style="font-size:13.5px;color:var(--text2);margin-bottom:18px"
         data-sq="Çdo këngë mund të ketë deri në dy versione PDF — një për Piano dhe një për Kitarë. Ja si të zgjidhni atë që ju nevojitet:"
         data-en="Each song can have up to two PDF versions — one for Piano and one for Guitar. Here's how to choose the right one for you:">
@@ -3065,6 +3129,13 @@ function renderLibrary(){
 // ═══════════════════════════════════════════════════════
 let currentSong=null,currentInst='Guitar',transposeSteps=0;
 
+function updateSongUrl(song){
+  if(!song) return;
+  const url=new URL(window.location);
+  url.searchParams.set('song',song.id);
+  history.replaceState(null,'',url);
+  document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
+}
 async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
@@ -3551,8 +3622,6 @@ async function refreshAdminSongs(){
           <button class="btn btn-outline btn-sm" onclick="editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateSong(${s.id})" style="font-size:12px" title="Kopjo">📋</button>
           <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
-          <button class="btn btn-outline btn-sm" onclick="duplicateSong(${s.id})" style="font-size:12px" title="Kopjo këngën">📋</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -4012,17 +4081,18 @@ function setLang(lang){
   if(currentSong && document.getElementById('page-song')?.classList.contains('active')){
     renderSong();
   }
-  // Update admin panel if open - refresh admin songs to show translated content
+  // Update admin if open
   const adminOverlay = document.getElementById('adminOverlay');
-  if(adminOverlay && adminOverlay.style.display!=='none'){
-    // Re-apply data-sq/data-en inside admin too
+  if(adminOverlay?.classList.contains('open')){
     adminOverlay.querySelectorAll('[data-sq]').forEach(el=>{
-      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') return;
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT') return;
       el.textContent = lang==='sq' ? el.dataset.sq : el.dataset.en;
     });
     adminOverlay.querySelectorAll('[data-placeholder-sq]').forEach(el=>{
       el.placeholder = lang==='sq' ? el.dataset.placeholderSq : el.dataset.placeholderEn;
     });
+    // Refresh admin song list to apply new language
+    refreshAdminSongs();
   }
 }
 
@@ -4551,13 +4621,6 @@ async function submitReport(songId){
 // ═══════════════════════════════════════════════════════
 //  INDIVIDUAL SONG URLs
 // ═══════════════════════════════════════════════════════
-function updateSongUrl(song){
-  if(!song) return;
-  const url=new URL(window.location);
-  url.searchParams.set('song',song.id);
-  history.replaceState(null,'',url);
-  document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
-}
 // ═══════════════════════════════════════════════════════
 //  DUPLICATE SONG
 // ═══════════════════════════════════════════════════════
@@ -4920,125 +4983,83 @@ function showPerfSong(){
 
   if(!_perfTranspose) _perfTranspose={};
   if(_perfTranspose[s.id]===undefined) _perfTranspose[s.id]=0;
-
-  // Declare perfInst FIRST before any use
   const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
+  const steps=_perfTranspose[s.id]||0;
+  const origKeyIdx=noteToIdx((s.key||'').replace('m',''))||0;
+  const tIdx=((origKeyIdx+steps)%12+12)%12;
+  const isMinor=s.key?.includes('m')&&!s.key?.includes('maj');
+  const dispKey=SHARP_DISPLAY[tIdx]+(isMinor?'m':'');
+  const keyLabel=steps===0?s.key:`${s.key}→${dispKey}(${steps>0?'+':''}${steps})`;
+  const capoTxt=s.capo>0&&perfInst==='Guitar'?` · Capo ${s.capo}`:'';
 
-  document.getElementById('perfCounter').textContent=`${perfIdx+1} / ${sl.songs.length}`;
+  // ── Row 1: title/meta/counter ──
+  document.getElementById('perfCounter').textContent=`${perfIdx+1}/${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`${s.artist} \u00b7 ${s.key}${s.capo>0&&perfInst==='Guitar'?' \u00b7 Capo '+s.capo:''}${s.bpm?' \u00b7 '+s.bpm+' BPM':''}${perfInst==='Piano'?' \u00b7 \u{1F3B9}':' \u00b7 \u{1F3B8}'}${item.note?' \u00b7 '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`${s.artist} · ${s.key}${capoTxt}${s.bpm?' · '+s.bpm+' BPM':''}${item.note?' · 📝 '+item.note:''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
 
+  // ── Row 2 sticky: populate controls ──
+  // Instrument buttons
+  const instEl=document.getElementById('perfInstBtns');
+  if(instEl) instEl.innerHTML = s.instruments?.length>1
+    ? `<button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:4px 9px;border-radius:7px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:15px;cursor:pointer">🎸</button><button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:4px 9px;border-radius:7px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:15px;cursor:pointer">🎹</button>`
+    : `<span style="font-size:16px">${perfInst==='Piano'?'🎹':'🎸'}</span>`;
+  // Transpose label
+  const klEl=document.getElementById('perfKeyLabel');
+  if(klEl){ klEl.textContent=keyLabel+capoTxt; klEl.style.color=steps!==0?'var(--blue-mid)':'var(--text3)'; }
+  const trEl=document.getElementById('perfTransposeReset');
+  if(trEl) trEl.style.display=steps!==0?'block':'none';
+  // Chords btn
+  const chEl=document.getElementById('perfChordsBtn');
+  if(chEl){ chEl.style.background=_perfShowChords?'var(--blue-mid)':'var(--bg3)'; chEl.style.color=_perfShowChords?'#fff':'var(--text2)'; }
+  // Metronome
+  const metEl=document.getElementById('perfMetroWrap');
+  if(metEl) metEl.innerHTML=s.bpm?`<button onclick="toggleMetronome()" id="metroBtn" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer" title="🥁 ${s.bpm} BPM">🥁</button><div class="metro-beat" id="metroBeatDot" style="display:inline-block"></div>`:'';
+  // Section jump buttons in sticky bar
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
+  const allSections=parseLyricsText(rawText);
+  const arrKey=`perf_arr_${s.id}`;
+  if(!_perfArrangements) _perfArrangements={};
+  if(!_perfArrangements[arrKey]) _perfArrangements[arrKey]=allSections.map(sec=>sec.label);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  const jumpEl=document.getElementById('perfSectionJumpBtns');
+  if(jumpEl) jumpEl.innerHTML=allSections.map(sec=>`<button onclick="perfJumpToSection('${sec.label}')" style="padding:3px 10px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">${sec.label}</button>`).join('');
+
+  // ── Row 3: mini song list ──
   const list=document.getElementById('perfSongList');
   if(list) list.innerHTML=sl.songs.map((x,i)=>{
     const isCurrent=i===perfIdx;
-    return `<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:6px 14px;border-radius:100px;border:none;background:${isCurrent?'var(--blue-mid)':'var(--bg3)'};color:${isCurrent?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`;
+    return `<button onclick="perfIdx=${i};showPerfSong()" style="flex-shrink:0;padding:5px 12px;border-radius:100px;border:none;background:${isCurrent?'var(--blue-mid)':'var(--bg3)'};color:${isCurrent?'#fff':'var(--text2)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${i+1}. ${x.title}</button>`;
   }).join('');
-
-  // Scroll active mini-song into view
   setTimeout(()=>{
     const listEl=document.getElementById('perfSongList');
     const activeBtn=listEl?.children[perfIdx];
     if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   },50);
 
-  const arrKey=`perf_arr_${s.id}`;
-  if(!_perfArrangements) _perfArrangements={};
-  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
-  const allSections=parseLyricsText(rawText);
-  if(!_perfArrangements[arrKey]) _perfArrangements[arrKey]=allSections.map(sec=>sec.label);
-  const sectionMap={};
-  allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  const steps=_perfTranspose[s.id]||0;
-  const origKeyIdx=noteToIdx((s.key||'').replace('m',''))||0;
-  const tIdx=((origKeyIdx+steps)%12+12)%12;
-  const isMinor=s.key?.includes('m')&&!s.key?.includes('maj');
-  const dispKey=SHARP_DISPLAY[tIdx]+(isMinor?'m':'');
-  const keyLabel=steps===0?s.key:`${s.key} -> ${dispKey} (${steps>0?'+':''}${steps})`;
-
+  // ── Row 4: content (lyrics only — no controls) ──
   const pContent=document.getElementById('perfContent');
   pContent.scrollTop=0;
-
-  // Next song
-  const nextItem = sl.songs[perfIdx+1];
-  const nextSong = nextItem ? SONGS.find(x=>Number(x.id)===Number(nextItem.id)) : null;
-
+  const nextItem=sl.songs[perfIdx+1];
+  const nextSong=nextItem?SONGS.find(x=>Number(x.id)===Number(nextItem.id)):null;
   pContent.innerHTML=`
-    <!-- Notes banner (if set) -->
-    ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:12px;padding:10px 16px;margin-bottom:12px;font-size:14px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px">📝 ${item.note}</div>`:''}
-
-    <!-- Controls bar -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:12px">
-      <!-- Instrument -->
-      <div style="display:flex;align-items:center;gap:5px">
-        ${s.instruments?.length>1 ? `
-        <button onclick="perfSwitchInst('${s.id}','Guitar')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Guitar'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Guitar">🎸</button>
-        <button onclick="perfSwitchInst('${s.id}','Piano')" style="padding:5px 10px;border-radius:8px;border:none;background:${perfInst==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${perfInst==='Piano'?'#fff':'var(--text2)'};font-size:16px;cursor:pointer" title="Piano">🎹</button>` :
-        `<span style="font-size:18px" title="${perfInst}">${perfInst==='Piano'?'🎹':'🎸'}</span>`}
-      </div>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Transpose -->
-      <div style="display:flex;align-items:center;gap:5px">
-        <button onclick="perfTranspose(${s.id},-1)" style="background:var(--bg3);border:none;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">-</button>
-        <span style="font-size:11px;font-weight:700;color:${steps!==0?'var(--blue-mid)':'var(--text3)'};min-width:70px;text-align:center">${keyLabel}${s.capo>0&&perfInst==='Guitar'?' · Capo '+s.capo:''}</span>
-        <button onclick="perfTranspose(${s.id},1)" style="background:var(--bg3);border:none;border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text)">+</button>
-        ${steps!==0?`<button onclick="_perfTranspose[${s.id}]=0;showPerfSong()" style="background:var(--bg3);border:none;border-radius:8px;padding:0 7px;height:26px;cursor:pointer;font-size:10px;color:var(--text3);font-family:'Poppins',sans-serif">↺</button>`:''}
-      </div>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Font size -->
-      <div style="display:flex;align-items:center;gap:5px">
-        <span style="font-size:10px;color:var(--text3)">A</span>
-        <input type="range" min="14" max="28" value="${_perfFontSize}" oninput="setPerfFont(this.value)" style="width:55px;accent-color:var(--blue-mid)"/>
-        <span style="font-size:14px;color:var(--text3)">A</span>
-      </div>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Scroll speed override -->
-      <div style="display:flex;align-items:center;gap:5px" title="Shpejtësia e scroll (% e BPM)">
-        <span style="font-size:10px;color:var(--text3)">🐢</span>
-        <input type="range" min="25" max="300" value="${_perfScrollSpeed}" oninput="setPerfScrollSpeed(this.value)" style="width:55px;accent-color:var(--gold)"/>
-        <span style="font-size:10px;color:var(--text3)">🐇</span>
-        <span id="perfSpeedLabel" style="font-size:10px;color:var(--text3);min-width:28px">${_perfScrollSpeed}%</span>
-      </div>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-      <!-- Chords toggle -->
-      <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams" style="padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:${_perfShowChords?'var(--blue-mid)':'var(--bg3)'};color:${_perfShowChords?'#fff':'var(--text2)'};font-size:13px;cursor:pointer">🎼</button>
-      <!-- Metronome -->
-      ${s.bpm?`<button onclick="toggleMetronome()" id="metroBtn" style="padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer" title="Metronom ${s.bpm} BPM">🥁</button><div class="metro-beat" id="metroBeatDot" style="display:inline-block"></div>`:''}
+    ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:12px;padding:10px 16px;margin-bottom:16px;font-size:15px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px">📝 ${item.note}</div>`:''}
+    <!-- Section arrangement editor (compact) -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;white-space:nowrap">Rend:</span>
+      <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+      <button onclick="perfResetArr('${s.id}')" style="padding:1px 7px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
+      <span style="font-size:10px;color:var(--text3);flex-shrink:0">+</span>
+      ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:1px 8px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
     </div>
-
-    <!-- Section arrangement + jump -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px">Rend:</span>
-          <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-        </div>
-        <button onclick="perfResetArr('${s.id}')" style="padding:2px 8px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        <span style="font-size:10px;color:var(--text3);align-self:center">+</span>
-        ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
-        <span style="width:1px;height:16px;background:var(--border);margin:0 4px;align-self:center"></span>
-        <span style="font-size:10px;color:var(--text3);align-self:center">→</span>
-        ${allSections.map((sec,si)=>`<button onclick="perfJumpToSection('${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer">${sec.label}</button>`).join('')}
-      </div>
-    </div>
-
     <!-- Lyrics -->
     <div id="perfLyricsContent"></div>
-
-    <!-- Next song preview -->
-    ${nextSong?`<div style="margin-top:32px;padding:14px 16px;border:1px dashed var(--border);border-radius:12px;color:var(--text3);font-size:13px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Tjetër →</span>
-      <span style="font-weight:600;color:var(--text2)">${nextSong.title}</span>
-      <span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${nextSong.key}</span>
-      ${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}
-    </div>`:''}`;
+    <!-- Next song -->
+    ${nextSong?`<div style="margin-top:28px;padding:12px 16px;border:1px dashed var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:14px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}`;
 
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
   setTimeout(addChordInteraction, 80);
-  // Update metronome BPM input if metronome section exists
   const mbi=document.getElementById('metroBpmInput');
   if(mbi&&s.bpm) mbi.value=s.bpm;
 }
@@ -5126,6 +5147,19 @@ function setPerfFont(size){
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
   renderPerfArrangement(s.id, sectionMap, _perfTranspose?.[s.id]||0, perfInst);
+}
+
+function perfTransposeActive(dir){
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  _perfTranspose[s.id]=(_perfTranspose[s.id]||0)+dir;
+  showPerfSong();
+}
+function perfTransposeResetActive(){
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  _perfTranspose[s.id]=0;
+  showPerfSong();
 }
 
 function perfTranspose(songId,dir){
