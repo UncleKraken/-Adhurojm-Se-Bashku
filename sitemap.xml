@@ -1,9 +1,465 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<?xml-stylesheet type="text/xsl" href="sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
   <url>
     <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/</loc>
-    <lastmod>2026-03-22</lastmod>
+    <lastmod>2026-04-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?page=songs</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?page=guide</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?page=about</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?page=contact</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=57&slug=prjet</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Përjetë — Chris Tomlin -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=56&slug=kndoj-haleluja</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Këndoj Haleluja — Bethel Music -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=55&slug=ky-sht-hir-pa-fund</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ky është hir pa fund — Phil Wickham -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=54&slug=hosana</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Hosana — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=53&slug=sa-emr-i-bukur-sht</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Sa emër i bukur është — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=52&slug=un-hyj-n-vendin-shum-t-shenjt</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Unë hyj në vendin shumë të shenjtë — Paul Wilbur -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=51&slug=oqeanet</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Oqeanet — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=50&slug=kur-fryma-e-shenjt</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Kur fryma e shenjtë — Fred Hammon -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=49&slug=ti-j-ktu</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ti jë këtu — Leeland -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=48&slug=ti-je-streha-ime</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ti je streha ime — Aurel Duro -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=47&slug=n-ty-zot-kam-jetn</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Në ty Zot kam jetën — Daniel Gardner -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=46&slug=jetn-time-ta-dorzoj</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Jetën time ta dorëzoj — Chris Tomlin -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=45&slug=jezus-je-zot</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Jezus je Zot — Unknown Artist -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=44&slug=kng-t-re-kndoni-zotit</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Këngë të re këndoni zotit — Jeff Hamlin -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=43&slug=sa-madhshtor</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Sa madhështor — Aurel Duro -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=41&slug=une-dorzohem</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Une Dorzohem — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=40&slug=biri-i-tij</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Biri i Tij — Isli Islami -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=39&slug=vendi-ku-fshihem-je</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Vendi ku fshihem je — Selah -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=38&slug=t-adhuroj</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Të Adhuroj — Aurel Duro -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=37&slug=knga-e-solomonit</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- KËNGA E SOLOMONIT — Martin Smith -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=36&slug=ujvar-q-rrjedh</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ujëvarë që rrjedh — Unknown Artist -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=35&slug=shkembi-i-shpetimit</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Shkembi i Shpetimit — Maranatha! Music -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=34&slug=ka-fuqi-ne-emrin-jezus</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ka Fuqi ne Emrin Jezus — Jesus Culture -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=33&slug=i-denje</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- I Denje — Elevation Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=32&slug=yahweh</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- YAHWEH — Oasis Ministry -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=31&slug=yeshua</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Yeshua — Jesus Image -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=30&slug=zot-un-ngre-lart-emrin-tnd</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Zot unë ngre lart emrin tënd — Rick Founds -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=29&slug=zot-dua-t-t-kremtoj</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Zot dua të të Kremtoj — Oltion Shena -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=28&slug=vec-n-ty</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Vec Në Ty — Fatos Kollonata -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=27&slug=gjith-nderi</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Gjithë Nderi — Ron Kenoly -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=26&slug=shpirti-im-ti-beko</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Shpirti im ti beko — Matt Redman -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=25&slug=nuk-jam-me-skllav-ne-frike</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Nuk jam me skllav ne frike — Bethel Music -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=24&slug=jam-kush-ti-thua-jam</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Jam kush ti thua jam — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=23&slug=bekimi</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Bekimi — Elevation Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=22&slug=hiri-im-t-mjafton</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Hiri Im Të Mjafton — Shtëpia Records -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=21&slug=gjith-qielli-shpall</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Gjithë QiellI Shpall — Noel Richards -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=19&slug=agnus-dei</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Agnus Dei — Michael W. Smith -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=18&slug=emri-jezus</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Emri Jezus — Tomor Ajeti -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=17&slug=mirsia-e-zotit</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Mirësia e Zotit — Bethel Music -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=16&slug=luani-i-juds</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- LUANI I JUDËS — Elevation Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=15&slug=altari-kthehuni-shpetohuni</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Altari: Kthehuni, shpetohuni — Unknown Artist -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=14&slug=zoti-yn-sht-madhshtor</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Zoti ynë është madhështor — Rich Mullins -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=13&slug=dit-me-gzim</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ç’ditë me gëzim — Tim Hughes -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=12&slug=energji-nga-lart</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Energji nga lart — Marjol Dundo -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=11&slug=duaje-perndin</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Duaje Perëndinë — Driton Gashi -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=10&slug=beko-o-shpirti-im-ti-perndin</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Beko  , o Shpirti im , ti perëndinë — Bledar Kurti -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=9&slug=bari-thahet</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Bari thahet — Unknown Artist -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=8&slug=ati-im-tani-e-ndjej</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ati im tani e   Ndjej — Ian Smale -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=7&slug=ai-q-shpton</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ai që Shpëton — Hillsong Worship -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=6&slug=cohu-gezohu</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Cohu Gezohu — Vaso Vreshtulla -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=5&slug=adonai</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- ADONAI — NATHANIEL BASSEY -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=4&slug=ai-sht-i-veshur</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Ai Është i Veshur — AGUSTIN BUSHGJOKAJ -->
+  </url>
+
+  <url>
+    <loc>https://unclekraken.github.io/-Adhurojm-Se-Bashku/?song=2&slug=emri-i-tij-sht-jezus</loc>
+    <lastmod>2026-04-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <!-- Emri i Tij është Jezus — Jeremy Riddle -->
+  </url>
+
 </urlset>
