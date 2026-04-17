@@ -4597,39 +4597,68 @@ function hideChordDiagram(){
 //  SWIPE GESTURES — Song navigation on mobile
 // ═══════════════════════════════════════════════════════
 (function initSwipe(){
-  let startX=0, startY=0, startTime=0, target=null;
+  let startX=0, startY=0, startTime=0, startScrollLeft=0, target=null, scrollEl=null;
+
+  // Find if element or any ancestor is horizontally scrollable
+  function getHScrollParent(el){
+    while(el && el!==document.body){
+      const style=window.getComputedStyle(el);
+      const overflow=style.overflowX;
+      if((overflow==='auto'||overflow==='scroll') && el.scrollWidth>el.clientWidth+4){
+        return el;
+      }
+      el=el.parentElement;
+    }
+    return null;
+  }
 
   function onTouchStart(e){
     startX=e.touches[0].clientX;
     startY=e.touches[0].clientY;
     startTime=Date.now();
     target=e.currentTarget;
+    scrollEl=getHScrollParent(e.target);
+    startScrollLeft=scrollEl?scrollEl.scrollLeft:0;
   }
+
   function onTouchEnd(e){
     const dx=e.changedTouches[0].clientX-startX;
     const dy=Math.abs(e.changedTouches[0].clientY-startY);
     const dt=Date.now()-startTime;
-    if(Math.abs(dx)<50||dy>60||dt>500) return;
+
+    // Stricter thresholds to avoid accidental swipes
+    if(Math.abs(dx)<80||dy>80||dt>600) return;
+
+    // If the user actually scrolled a horizontal container, ignore swipe
+    if(scrollEl && Math.abs(scrollEl.scrollLeft-startScrollLeft)>5) return;
+
+    // If swipe started inside a horizontally scrollable element, ignore
+    if(scrollEl && scrollEl.scrollWidth>scrollEl.clientWidth+4) return;
+
     // Performance mode swipe
     if(target===document.getElementById('perfContent')){
       if(dx<0) nextPerformanceSong();
       else prevPerformanceSong();
       return;
     }
-    // Song page swipe
+
+    // Song page swipe — only from non-scrollable areas
     if(!currentSong) return;
     const page=document.getElementById('page-song');
     if(!page?.classList.contains('active')) return;
+
+    // Extra check: don't swipe if touch started inside lyrics box
+    const lyricsBox=document.getElementById('lyricsBoxMain');
+    if(lyricsBox?.contains(e.target)) return;
+
     const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
     if(dx<0&&idx<SONGS.length-1) openSong(SONGS[idx+1].id);
     else if(dx>0&&idx>0) openSong(SONGS[idx-1].id);
   }
 
-  // Song page swipe
   document.addEventListener('touchstart',onTouchStart,{passive:true});
   document.addEventListener('touchend',onTouchEnd,{passive:true});
 
-  // Perf content swipe (dedicated listener for Samsung compatibility)
   document.addEventListener('DOMContentLoaded',()=>{
     const perfContent=document.getElementById('perfContent');
     if(perfContent){
