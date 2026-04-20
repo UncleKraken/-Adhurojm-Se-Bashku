@@ -597,17 +597,20 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 }
 #performanceMode[data-dark="1"] .sec-lbl{opacity:.9}
 #performanceMode[data-dark="1"] input,
-#performanceMode[data-dark="1"] button{
-  border-color:#1C2030 !important;
-}
+#performanceMode[data-dark="1"] button{border-color:#1C2030 !important;}
+
+/* ── PERF LYRIC LINE HIGHLIGHT ── */
+.perf-lyric-line{transition:opacity .25s,transform .25s;}
+.perf-lyric-line.active-line{opacity:1 !important;transform:scale(1.01);}
+.perf-lyric-line.dim-line{opacity:0.38 !important;}
+
+/* ── PERF CONTROLS AUTO-HIDE ── */
+#perfControlsBar{transition:opacity .4s;}
+#perfSongList{transition:opacity .4s;}
 
 /* ── PERF MODE MOBILE ── */
 @media(max-width:768px){
-  #performanceMode .perf-top-bar{flex-wrap:wrap;gap:6px;padding:8px 10px;min-height:auto}
-  #performanceMode .perf-btn-group{gap:4px}
-  #performanceMode .perf-btn-group button{padding:6px 8px;font-size:12px}
-  #perfSongList{padding:6px 10px}
-  #perfContent{padding:14px 12px}
+  #perfContent{padding:12px 10px}
 }
 .chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
 .chord-popup svg{display:block;margin:0 auto}
@@ -891,7 +894,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
       <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🌙</button>
       <button onclick="togglePerfFullscreen()" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⛶</button>
+      <button onclick="toggleSingerMode()" id="perfModeBtn" title="Singer/Musician Mode (M)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🎤</button>
       <button onclick="showPerfShortcuts()" title="⌨️" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⌨️</button>
+      <button onclick="togglePanic()" id="perfPanicBtn" title="Panic — Blank Screen (P)" style="background:rgba(139,26,26,0.2);border:1px solid rgba(139,26,26,0.4);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;font-family:'Poppins',sans-serif">⏹</button>
       <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700">✕</button>
     </div>
   </div>
@@ -946,6 +951,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
   <!-- ROW 4: Scrollable content (lyrics only — no controls inside) -->
   <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
+
+  <!-- Panic overlay — blank screen -->
+  <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:20;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+    <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif">Tap për të kthyer</div>
+  </div>
 
   <!-- Shortcuts overlay -->
   <div id="perfShortcutsOverlay" onclick="this.style.display='none'" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:10;align-items:center;justify-content:center">
@@ -4979,6 +4989,10 @@ let _perfLang = null;
 let _perfTranspose = {};
 let _perfArrangements = {};
 let _perfShowChords = false;
+let _perfMusicianMode = true;  // true = chords visible, false = singer mode (lyrics only)
+let _perfAutoHideTimer = null; // auto-hide controls timer
+let _perfControlsHidden = false;
+let _perfPanic = false;        // panic/blank screen mode
 
 function setPerfLang(lang){
   _perfLang = lang;
@@ -5003,25 +5017,35 @@ function setPerfLang(lang){
 
 function startPerformanceMode(){
   const sl=getSetlist(); if(!sl.songs.length) return;
-  perfIdx=0; _perfLang=null;
+  perfIdx=0; _perfLang=null; _perfPanic=false; _perfControlsHidden=false;
   const pm=document.getElementById('performanceMode');
   pm.style.display='flex'; pm.dataset.dark='0';
   document.body.style.overflow='hidden';
   if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(wl=>_wakeLock=wl).catch(()=>{});
   setPerfLang(currentLang);
-  // Show countdown then start
+  // Auto-hide controls on touch/mouse
+  pm.addEventListener('touchstart', resetAutoHide, {passive:true});
+  pm.addEventListener('mousemove', resetAutoHide, {passive:true});
+  resetAutoHide();
   startCountdown(()=>{
     showPerfSong();
     startPerfTimer();
+    startLineHighlight();
   });
   document.addEventListener('keydown',perfKeyHandler);
 }
 
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
-  document.body.style.overflow=''; stopAutoScroll(); stopPerfTimer(); stopMetronome();
+  document.body.style.overflow='';
+  stopAutoScroll(); stopPerfTimer(); stopMetronome(); stopLineHighlight();
+  clearTimeout(_perfAutoHideTimer);
+  _perfPanic=false; _perfControlsHidden=false;
   if(_wakeLock){_wakeLock.release();_wakeLock=null;}
   document.removeEventListener('keydown',perfKeyHandler);
+  const pm=document.getElementById('performanceMode');
+  pm.removeEventListener('touchstart',resetAutoHide);
+  pm.removeEventListener('mousemove',resetAutoHide);
 }
 
 function togglePerfDark(){
@@ -5038,15 +5062,103 @@ function showPerfShortcuts(){
   const list=document.getElementById('perfShortcutsList');
   if(!overlay||!list) return;
   const sc=[
-    ['&#8592; / PageUp','Kenga e meparshme'],
-    ['&#8594; / PageDown','Kenga tjeter'],
+    ['← / PageUp','Kenga e meparshme'],
+    ['→ / PageDown','Kenga tjeter'],
     ['Space','Auto-scroll start / stop'],
     ['F','Fullscreen on/off'],
     ['D','Dark / Light mode'],
-    ['Escape','Dil nga Performance Mode'],
+    ['M','Singer / Musician mode'],
+    ['P','Panic — ekran bosh'],
+    ['Escape','Mbyll / Dil'],
   ];
-  list.innerHTML=sc.map(([k,d])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">${d}</span><kbd style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px 11px;font-size:12px;font-weight:700;color:var(--text);font-family:'Roboto Mono',monospace">${k}</kbd></div>`).join('');
+  list.innerHTML=sc.map(([k,d])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text2)">${d}</span><kbd style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--text);font-family:'Roboto Mono',monospace;white-space:nowrap">${k}</kbd></div>`).join('');
   overlay.style.display='flex';
+}
+
+// ── SINGER / MUSICIAN MODE ──
+function toggleSingerMode(){
+  _perfMusicianMode = !_perfMusicianMode;
+  const btn = document.getElementById('perfModeBtn');
+  if(btn){
+    btn.textContent = _perfMusicianMode ? '🎤' : '🎼';
+    btn.title = _perfMusicianMode ? 'Musician Mode (akorde ON)' : 'Singer Mode (vetëm lyrics)';
+    btn.style.background = _perfMusicianMode ? 'var(--bg3)' : 'var(--blue-mid)';
+    btn.style.color = _perfMusicianMode ? 'var(--text2)' : '#fff';
+  }
+  // Re-render lyrics with/without chords
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+  const allSections=parseLyricsText(rawText);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
+}
+
+// ── PANIC / BLANK SCREEN ──
+function togglePanic(){
+  _perfPanic = !_perfPanic;
+  const overlay = document.getElementById('perfPanicOverlay');
+  const btn = document.getElementById('perfPanicBtn');
+  if(overlay) overlay.style.display = _perfPanic ? 'flex' : 'none';
+  if(btn){
+    btn.style.background = _perfPanic ? 'rgba(139,26,26,0.6)' : 'rgba(139,26,26,0.2)';
+    btn.textContent = _perfPanic ? '▶' : '⏹';
+  }
+  if(_perfPanic) stopAutoScroll();
+}
+
+// ── AUTO-HIDE CONTROLS ──
+function resetAutoHide(){
+  if(_perfControlsHidden) showPerfControls();
+  clearTimeout(_perfAutoHideTimer);
+  _perfAutoHideTimer = setTimeout(hidePerfControls, 4000);
+}
+
+function hidePerfControls(){
+  _perfControlsHidden = true;
+  const bar = document.getElementById('perfControlsBar');
+  const songList = document.getElementById('perfSongList');
+  if(bar) bar.style.opacity = '0.08';
+  if(songList) songList.style.opacity = '0';
+}
+
+function showPerfControls(){
+  _perfControlsHidden = false;
+  const bar = document.getElementById('perfControlsBar');
+  const songList = document.getElementById('perfSongList');
+  if(bar) bar.style.opacity = '1';
+  if(songList) songList.style.opacity = '1';
+}
+
+// ── CURRENT LINE HIGHLIGHT ──
+function highlightCurrentLine(){
+  const content = document.getElementById('perfContent');
+  if(!content) return;
+  const scrollTop = content.scrollTop;
+  const viewMid = scrollTop + content.clientHeight * 0.35;
+  const lines = content.querySelectorAll('.perf-lyric-line');
+  lines.forEach(line=>{
+    const lineTop = line.offsetTop;
+    const lineBot = lineTop + line.offsetHeight;
+    const isActive = lineTop <= viewMid && lineBot > viewMid;
+    line.classList.toggle('active-line', isActive);
+    line.classList.toggle('dim-line', !isActive);
+  });
+}
+
+function startLineHighlight(){
+  stopLineHighlight();
+  window._lineHighlightInterval = setInterval(highlightCurrentLine, 200);
+}
+function stopLineHighlight(){
+  if(window._lineHighlightInterval){
+    clearInterval(window._lineHighlightInterval);
+    window._lineHighlightInterval = null;
+  }
+  document.querySelectorAll('.perf-lyric-line').forEach(l=>{
+    l.classList.remove('active-line','dim-line');
+  });
 }
 
 function togglePerfFullscreen(){
@@ -5057,12 +5169,16 @@ function togglePerfFullscreen(){
 
 function perfKeyHandler(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  resetAutoHide();
   if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown') nextPerformanceSong();
   else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp') prevPerformanceSong();
   else if(e.key===' '){e.preventDefault();toggleAutoScroll();}
   else if(e.key==='f'||e.key==='F') togglePerfFullscreen();
   else if(e.key==='d'||e.key==='D') togglePerfDark();
+  else if(e.key==='m'||e.key==='M') toggleSingerMode();
+  else if(e.key==='p'||e.key==='P') togglePanic();
   else if(e.key==='Escape'){
+    if(_perfPanic){togglePanic();return;}
     const so=document.getElementById('perfShortcutsOverlay');
     if(so&&so.style.display!=='none') so.style.display='none';
     else exitPerformanceMode();
@@ -5281,9 +5397,9 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       const lyricText = lang==='en' && l.en ? l.en : l.sq;
       const secondaryText = lang==='en' ? (l.sq||'') : (l.en||'');
 
-      // Build chord line with clickable hover diagrams (same as song page)
+      // Build chord line — hidden in Singer Mode
       let chordHtml='';
-      if(tc){
+      if(tc && _perfMusicianMode){
         const parts=tc.split(/(\s+)/);
         const mapped=parts.map(ch=>{
           const t=ch.trim();
@@ -5294,9 +5410,9 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
         chordHtml='<div style="font-weight:700;font-family:\'Roboto Mono\',monospace;white-space:pre;font-size:'+(fs-2)+'px;margin-bottom:2px;line-height:1.4">'+mapped.join('')+'</div>';
       }
 
-      // Chord diagrams block (when 🎼 toggle is ON)
+      // Chord diagrams block (when 🎼 toggle is ON + musician mode)
       let chordDiagramsHtml='';
-      if(_perfShowChords && tc){
+      if(_perfShowChords && tc && _perfMusicianMode){
         const chords=[...new Set(tc.split(/\s+/).filter(c=>c.trim()&&(typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[c.trim()]||PIANO_CHORD_NOTES[c.trim()]))))];
         if(chords.length){
           chordDiagramsHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">'
@@ -5305,7 +5421,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
         }
       }
 
-      return `<div style="margin-bottom:${fs}px">${chordHtml}<div style="font-weight:600;font-size:${fs}px;line-height:1.85;font-family:'Roboto Mono',monospace">${lyricText}</div>${secondaryText&&secondaryText!==lyricText?`<div style="color:var(--text3);font-style:italic;font-size:${fs-3}px;font-family:'Roboto Mono',monospace;margin-top:2px">${secondaryText}</div>`:''}</div>${chordDiagramsHtml}`;
+      return '<div class="perf-lyric-line" style="margin-bottom:'+fs+'px;transition:opacity .3s,transform .3s">'+chordHtml+'<div style="font-weight:600;font-size:'+fs+'px;line-height:1.85;font-family:\'Roboto Mono\',monospace">'+lyricText+'</div>'+(secondaryText&&secondaryText!==lyricText?'<div style="color:var(--text3);font-style:italic;font-size:'+(fs-3)+'px;font-family:\'Roboto Mono\',monospace;margin-top:2px">'+secondaryText+'</div>':'')+'</div>'+chordDiagramsHtml;
     }).join('');
     return `<div class="perf-section-block" data-label="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
