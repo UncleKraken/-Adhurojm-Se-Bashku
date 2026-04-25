@@ -5308,6 +5308,11 @@ function setPerfScrollSpeed(val){
   _perfScrollSpeed = Number(val);
   const label = document.getElementById('perfSpeedLabel');
   if(label) label.textContent = val+'%';
+  // If autoscroll is running, restart with new speed
+  if(_autoScrollInterval){
+    stopAutoScroll();
+    toggleAutoScroll();
+  }
 }
 
 function perfJumpToSection(label){
@@ -5488,41 +5493,81 @@ function toggleAutoScroll(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
   const bpm=s?.bpm||0;
-
-  // Calculate scroll speed:
-  // At 120 BPM, assume ~4 beats per line, so lines scroll at 30 lines/min
-  // Content height / lines * 30 = scroll speed in px/min
   const content=document.getElementById('perfContent');
   if(!content) return;
 
-  // Base speed: px per second
-  // 60 BPM = very slow (1 beat/sec), 120 BPM = moderate, 180 BPM = fast
-  // We want roughly: at 120 BPM, scroll the full content in ~3 min (typical worship song)
-  const scrollableHeight = content.scrollHeight - content.clientHeight;
-  const durationSec = bpm>0
-    ? Math.max(60, (scrollableHeight / (bpm * 0.4))) // calibrated to BPM
-    : 180; // default 3 min if no BPM
+  // ── MUSIC-AWARE SCROLL CALCULATION ──
+  // In 4/4 time: 1 lyric line ≈ 1 measure = 4 beats
+  // secondsPerLine = (beatsPerLine × 60) / BPM
+  // At 120 BPM: (4 × 60) / 120 = 2 sec/line
+  // At  70 BPM: (4 × 60) /  70 = 3.4 sec/line
+  // At 160 BPM: (4 × 60) / 160 = 1.5 sec/line
 
-  const pxPerSec = (scrollableHeight / durationSec) * (_perfScrollSpeed/100);
-  let lastTs = null;
+  const BEATS_PER_LINE = 4; // assumes 4/4 time, each lyric line = 1 bar
+  const secPerLine = bpm>0 ? (BEATS_PER_LINE * 60) / bpm : 3;
+
+  // Count rendered lyric lines
+  const lyricLines = content.querySelectorAll('.perf-lyric-line');
+  const lineCount = Math.max(lyricLines.length, 1);
+
+  // Measure average line height from DOM
+  let totalLineHeight = 0;
+  lyricLines.forEach(l => totalLineHeight += l.offsetHeight);
+  const avgLineHeight = totalLineHeight / lineCount;
+
+  // Scroll speed in px/sec
+  const pxPerSec = (avgLineHeight / secPerLine) * (_perfScrollSpeed / 100);
+
+  // Show info on button
+  if(btn){
+    const label = bpm>0 ? `⏸ ${bpm} BPM` : '⏸ Auto';
+    btn.textContent=label; btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
+  }
+
+  let lastTs=null;
+  let paused=false;
+  let resumeTimer=null;
+
+  // Pause on user touch/scroll, resume after 2.5s
+  function onUserInteract(){
+    paused=true;
+    clearTimeout(resumeTimer);
+    resumeTimer=setTimeout(()=>{ paused=false; }, 2500);
+  }
+  content.addEventListener('touchstart', onUserInteract, {passive:true});
+  content.addEventListener('wheel', onUserInteract, {passive:true});
+  content._autoScrollCleanup=()=>{
+    content.removeEventListener('touchstart', onUserInteract);
+    content.removeEventListener('wheel', onUserInteract);
+    clearTimeout(resumeTimer);
+  };
 
   function frame(ts){
     if(!lastTs) lastTs=ts;
     const dt=(ts-lastTs)/1000; lastTs=ts;
-    if(content) content.scrollTop += pxPerSec * dt;
+    if(!paused && content){
+      content.scrollTop += pxPerSec * dt;
+      // Stop if reached bottom
+      if(content.scrollTop >= content.scrollHeight - content.clientHeight - 2){
+        stopAutoScroll();
+        if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+        return;
+      }
+    }
     _autoScrollInterval = requestAnimationFrame(frame);
   }
   _autoScrollInterval = requestAnimationFrame(frame);
-
-  if(btn){
-    btn.textContent = bpm>0 ? `⏸ ${bpm} BPM` : '⏸ Stop';
-    btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
-  }
 }
+
 function stopAutoScroll(){
   if(_autoScrollInterval){
     cancelAnimationFrame(_autoScrollInterval);
     _autoScrollInterval=null;
+  }
+  const content=document.getElementById('perfContent');
+  if(content?._autoScrollCleanup){
+    content._autoScrollCleanup();
+    delete content._autoScrollCleanup;
   }
 }
 
