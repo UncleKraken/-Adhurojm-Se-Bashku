@@ -3235,7 +3235,7 @@ function renderSong(){
         const parts=transposedChords.split(/(\s+)/);
         const html=parts.map(ch=>{
           const t=ch.trim();
-          return (t&&typeof CHORD_SHAPES!=='undefined'&&CHORD_SHAPES[t])
+          return (t&&hasChordDiagram(t))
             ? '<span class="chord-clickable" data-chord="'+t+'">'+ch+'</span>' : ch;
         }).join('');
         chordLine='<span style="color:var(--chord-color);font-weight:700;display:block;white-space:pre;">'+html+'</span>';
@@ -3376,7 +3376,7 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
   setTimeout(addChordInteraction,120);
 }
 
-function selectInst(i){currentInst=i;renderSong();stopMetronome();}
+function selectInst(i){currentInst=i;_chordDiagramType=i==='Piano'?'Piano':'Guitar';renderSong();stopMetronome();}
 function doTranspose(d){transposeSteps+=d;renderSong();}
 function resetTranspose(){transposeSteps=0;renderSong();}
 
@@ -4480,9 +4480,33 @@ function buildPianoChordSVG(name){
   return svg+`<div style="font-size:10px;color:var(--text3);margin-top:4px">${noteNames}</div>`;
 }
 
+// Resolve chord name for diagram lookup
+// Handles: "A/D" → "A", "Am/G" → "Am", "C#m" → "C#m", etc.
+function resolveChordName(name){
+  if(!name) return null;
+  const base = name.split('/')[0].trim(); // take left side of slash chord
+  if(CHORD_SHAPES[base]||PIANO_CHORD_NOTES[base]) return base;
+  // Try enharmonic equivalents
+  const enharmonics={'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B',
+                     'C#':'Db','D#':'Eb','E#':'F','F#':'Gb','G#':'Ab','A#':'Bb','B#':'C'};
+  const root=base.replace(/m$/,'');
+  const isMinor=base.endsWith('m')&&!base.endsWith('maj');
+  const alt=enharmonics[root];
+  if(alt){
+    const altKey=alt+(isMinor?'m':'');
+    if(CHORD_SHAPES[altKey]||PIANO_CHORD_NOTES[altKey]) return altKey;
+  }
+  return null; // no diagram available
+}
+
+function hasChordDiagram(name){
+  return !!resolveChordName(name);
+}
+
 function buildChordDiagram(name, type){
   type = type||_chordDiagramType;
-  return type==='Piano' ? buildPianoChordSVG(name) : buildChordSVG(name);
+  const resolved = resolveChordName(name) || name;
+  return type==='Piano' ? buildPianoChordSVG(resolved) : buildChordSVG(resolved);
 }
 
 function buildChordSVG(name){
@@ -4533,12 +4557,14 @@ function showChordDiagram(name, el){
     popup.addEventListener('mouseleave',()=>hideChordDiagram());
     document.body.appendChild(popup);
   }
+  const resolved = resolveChordName(name)||name;
+  const displayName = name !== resolved ? name+' <span style="font-size:10px;opacity:.6">('+resolved+')</span>' : name;
   popup.innerHTML=`
     <div style="display:flex;gap:4px;justify-content:center;margin-bottom:8px">
       <button onclick="setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎸</button>
       <button onclick="setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎹</button>
     </div>
-    <div class="chord-popup-name">${name}</div>
+    <div class="chord-popup-name">${displayName}</div>
     <div id="chordDiagramContent">${buildChordDiagram(name)}</div>`;
   popup._chord = name;
   const rect=el.getBoundingClientRect();
@@ -5343,6 +5369,8 @@ function togglePerfChords(){
 }
 
 function perfSwitchInst(songId, inst){
+  // Auto-follow instrument: Piano → Piano diagrams, Guitar → Guitar diagrams
+  _chordDiagramType = inst === 'Piano' ? 'Piano' : 'Guitar';
   updateSetlistInstrument(songId, inst);
   showPerfSong();
 }
@@ -5403,7 +5431,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
         const parts=tc.split(/(\s+)/);
         const mapped=parts.map(ch=>{
           const t=ch.trim();
-          return (t&&typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[t]||PIANO_CHORD_NOTES[t]))
+          return (t&&hasChordDiagram(t))
             ? '<span class="chord-clickable" data-chord="'+t+'" style="cursor:help;color:var(--chord-color)">'+ch+'</span>'
             : '<span style="color:var(--chord-color)">'+ch+'</span>';
         });
@@ -5413,10 +5441,18 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       // Chord diagrams block (when 🎼 toggle is ON + musician mode)
       let chordDiagramsHtml='';
       if(_perfShowChords && tc && _perfMusicianMode){
-        const chords=[...new Set(tc.split(/\s+/).filter(c=>c.trim()&&(typeof CHORD_SHAPES!=='undefined'&&(CHORD_SHAPES[c.trim()]||PIANO_CHORD_NOTES[c.trim()]))))];
-        if(chords.length){
+        const rawChords=tc.split(/\s+/).map(c=>c.trim()).filter(Boolean);
+        const seen=new Set();
+        const uniqueChords=rawChords.filter(c=>{
+          const r=resolveChordName(c); if(!r||seen.has(r)) return false; seen.add(r); return true;
+        });
+        if(uniqueChords.length){
           chordDiagramsHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">'
-            +chords.map(ch=>'<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--chord-color);margin-bottom:4px">'+ch+'</div>'+buildChordDiagram(ch)+'</div>').join('')
+            +uniqueChords.map(ch=>{
+              const resolved=resolveChordName(ch);
+              const label=ch!==resolved?ch+' ('+resolved+')':ch;
+              return '<div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--chord-color);margin-bottom:4px">'+label+'</div>'+buildChordDiagram(ch)+'</div>';
+            }).join('')
             +'</div>';
         }
       }
