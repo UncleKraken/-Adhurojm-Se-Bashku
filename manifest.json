@@ -10,33 +10,11 @@
   "lang": "sq",
   "categories": ["music", "education", "religion"],
   "icons": [
-    {
-      "src": "https://unclekraken.github.io/-Adhurojm-Se-Bashku/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://unclekraken.github.io/-Adhurojm-Se-Bashku/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ],
   "shortcuts": [
-    {
-      "name": "Këngët",
-      "short_name": "Këngët",
-      "description": "Shiko të gjitha këngët",
-      "url": "./?page=songs",
-      "icons": [{"src": "https://unclekraken.github.io/-Adhurojm-Se-Bashku/icon-192.png", "sizes": "192x192"}]
-    },
-    {
-      "name": "Setlista",
-      "short_name": "Setlist",
-      "description": "Hap setlistën time",
-      "url": "./?page=setlist",
-      "icons": [{"src": "https://unclekraken.github.io/-Adhurojm-Se-Bashku/icon-192.png", "sizes": "192x192"}]
-    }
+    {"name": "Këngët", "short_name": "Këngët", "url": "./?page=songs", "icons": [{"src": "./icon-192.png", "sizes": "192x192"}]},
+    {"name": "Setlista", "short_name": "Setlist", "url": "./?page=setlist", "icons": [{"src": "./icon-192.png", "sizes": "192x192"}]}
   ]
 }
