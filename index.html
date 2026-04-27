@@ -49,6 +49,8 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="manifest" href="./manifest.json"/>
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon.ico"/>
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png"/>
 <meta name="theme-color" content="#1A2A4A"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -4430,54 +4432,85 @@ const CHORD_SHAPES={
 let _chordDiagramType = 'Guitar'; // 'Guitar' or 'Piano'
 
 const PIANO_CHORD_NOTES={
-  'C':   [[0,2,4],'C-E-G'],
-  'D':   [[2,6,9],'D-F#-A'],
-  'E':   [[4,8,11],'E-G#-B'],
-  'F':   [[5,9,0],'F-A-C'],
-  'G':   [[7,11,2],'G-B-D'],
-  'A':   [[9,1,4],'A-C#-E'],
-  'B':   [[11,3,6],'B-D#-F#'],
-  'Am':  [[9,0,4],'A-C-E'],
-  'Em':  [[4,7,11],'E-G-B'],
-  'Dm':  [[2,5,9],'D-F-A'],
-  'Bm':  [[11,2,6],'B-D-F#'],
-  'Gm':  [[7,10,2],'G-Bb-D'],
-  'Fm':  [[5,8,0],'F-Ab-C'],
-  'Cm':  [[0,3,7],'C-Eb-G'],
-  'C#':  [[1,5,8],'C#-F-G#'],
-  'Bb':  [[10,2,5],'Bb-D-F'],
-  'Eb':  [[3,7,10],'Eb-G-Bb'],
-  'F#':  [[6,10,1],'F#-A#-C#'],
+  // Major chords: root + major3rd(+4) + perfect5th(+7)
+  'C':   [[0,4,7],  'C-E-G'],     // C(0) E(4) G(7)
+  'D':   [[2,6,9],  'D-F#-A'],    // D(2) F#(6) A(9)
+  'E':   [[4,8,11], 'E-G#-B'],    // E(4) G#(8) B(11)
+  'F':   [[5,9,0],  'F-A-C'],     // F(5) A(9) C(0)
+  'G':   [[7,11,2], 'G-B-D'],     // G(7) B(11) D(2)
+  'A':   [[9,1,4],  'A-C#-E'],    // A(9) C#(1) E(4)
+  'B':   [[11,3,6], 'B-D#-F#'],   // B(11) D#(3) F#(6)
+  // Minor chords: root + minor3rd(+3) + perfect5th(+7)
+  'Am':  [[9,0,4],  'A-C-E'],     // A(9) C(0) E(4)
+  'Em':  [[4,7,11], 'E-G-B'],     // E(4) G(7) B(11)
+  'Dm':  [[2,5,9],  'D-F-A'],     // D(2) F(5) A(9)
+  'Bm':  [[11,2,6], 'B-D-F#'],    // B(11) D(2) F#(6)
+  'Gm':  [[7,10,2], 'G-Bb-D'],    // G(7) Bb(10) D(2)
+  'Fm':  [[5,8,0],  'F-Ab-C'],    // F(5) Ab(8) C(0)
+  'Cm':  [[0,3,7],  'C-Eb-G'],    // C(0) Eb(3) G(7)
+  // Accidentals
+  'C#':  [[1,5,8],  'C#-E#-G#'],  // C#(1) F(5)=E# G#(8)
+  'Db':  [[1,5,8],  'Db-F-Ab'],   // same keys as C#
+  'Bb':  [[10,2,5], 'Bb-D-F'],    // Bb(10) D(2) F(5)
+  'Eb':  [[3,7,10], 'Eb-G-Bb'],   // Eb(3) G(7) Bb(10)
+  'Ab':  [[8,0,3],  'Ab-C-Eb'],   // Ab(8) C(0) Eb(3)
+  'F#':  [[6,10,1], 'F#-A#-C#'],  // F#(6) A#(10) C#(1)
+  'Gb':  [[6,10,1], 'Gb-Bb-Db'],  // same as F#
+  'D#':  [[3,7,10], 'D#-G-A#'],   // enharmonic of Eb
+  // Minor accidentals
+  'C#m': [[1,4,8],  'C#-E-G#'],   // C#(1) E(4) G#(8)
+  'Dbm': [[1,4,8],  'Db-E-Ab'],
+  'Ebm': [[3,6,10], 'Eb-Gb-Bb'],  // Eb(3) F#(6) Bb(10)
+  'Abm': [[8,11,3], 'Ab-B-Eb'],   // Ab(8) B(11) Eb(3)
+  'F#m': [[6,9,1],  'F#-A-C#'],   // F#(6) A(9) C#(1)
+  'Bbm': [[10,1,5], 'Bb-Db-F'],   // Bb(10) Db(1) F(5)
 };
 
 function buildPianoChordSVG(name){
   const data=PIANO_CHORD_NOTES[name];
-  if(!data) return `<div style="font-size:11px;color:var(--text3);padding:8px">Nuk ka diagram</div>`;
+  if(!data) return '<div style="font-size:11px;color:var(--text3);padding:8px">Nuk ka diagram</div>';
   const [positions, noteNames]=data;
-  const W=120,H=60,kw=10,bw=6;
-  const keys=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const whites=keys.filter(k=>!k.includes('#'));
-  const whiteW=W/whites.length;
+
+  const W=130, H=70;
+  // 7 white keys shown (C to B), each white key width
+  const wkW = W/7;
+  const bkW = wkW*0.6, bkH = H*0.62;
+
+  // White keys: C D E F G A B → chromatic indices 0,2,4,5,7,9,11
+  const whiteKeys=[{n:'C',idx:0},{n:'D',idx:2},{n:'E',idx:4},
+                   {n:'F',idx:5},{n:'G',idx:7},{n:'A',idx:9},{n:'B',idx:11}];
+  // Black keys: C# D# F# G# A# → chromatic indices 1,3,6,8,10
+  // Position between white keys (x offset based on white key positions)
+  const blackKeys=[
+    {n:'C#',idx:1, wPos:0}, // between C(0) and D(1)
+    {n:'D#',idx:3, wPos:1}, // between D(1) and E(2)
+    {n:'F#',idx:6, wPos:3}, // between F(3) and G(4)
+    {n:'G#',idx:8, wPos:4}, // between G(4) and A(5)
+    {n:'A#',idx:10,wPos:5}, // between A(5) and B(6)
+  ];
+
   let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  // White keys
-  whites.forEach((k,i)=>{
-    const noteIdx=keys.indexOf(k);
-    const isActive=positions.includes(noteIdx);
-    svg+=`<rect x="${i*whiteW+1}" y="0" width="${whiteW-2}" height="${H}" rx="2" fill="${isActive?'var(--blue-mid)':'white'}" stroke="#ccc" stroke-width="1"/>`;
-    if(isActive) svg+=`<circle cx="${i*whiteW+whiteW/2}" cy="${H-8}" r="5" fill="white"/>`;
+
+  // Draw white keys
+  whiteKeys.forEach((k,i)=>{
+    const isActive=positions.includes(k.idx);
+    const x=i*wkW;
+    svg+=`<rect x="${x+0.5}" y="0.5" width="${wkW-1}" height="${H-1}" rx="2"
+      fill="${isActive?'#6b8de3':'#ffffff'}" stroke="#bbb" stroke-width="1"/>`;
+    if(isActive) svg+=`<circle cx="${x+wkW/2}" cy="${H-9}" r="5.5" fill="white"/>`;
   });
-  // Black keys
-  let bi=0;
-  keys.forEach((k,noteIdx)=>{
-    if(!k.includes('#')) {bi++;return;}
-    const wIdx=bi-1;
-    const x=wIdx*whiteW+whiteW-bw/2-1;
-    const isActive=positions.includes(noteIdx);
-    svg+=`<rect x="${x}" y="0" width="${bw}" height="${H*0.6}" rx="2" fill="${isActive?'var(--blue-mid)':'#1a1a2e'}" stroke="none"/>`;
-    if(isActive) svg+=`<circle cx="${x+bw/2}" cy="${H*0.6-5}" r="3.5" fill="white"/>`;
+
+  // Draw black keys
+  blackKeys.forEach(k=>{
+    const isActive=positions.includes(k.idx);
+    const x=k.wPos*wkW+wkW-bkW/2;
+    svg+=`<rect x="${x}" y="0" width="${bkW}" height="${bkH}" rx="2"
+      fill="${isActive?'#6b8de3':'#1a1a2e'}" stroke="none"/>`;
+    if(isActive) svg+=`<circle cx="${x+bkW/2}" cy="${bkH-6}" r="4" fill="white"/>`;
   });
+
   svg+=`</svg>`;
-  return svg+`<div style="font-size:10px;color:var(--text3);margin-top:4px">${noteNames}</div>`;
+  return svg+`<div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center">${noteNames}</div>`;
 }
 
 // Resolve chord name for diagram lookup
@@ -5497,14 +5530,14 @@ function toggleAutoScroll(){
   if(!content) return;
 
   // ── MUSIC-AWARE SCROLL CALCULATION ──
-  // In 4/4 time: 1 lyric line ≈ 1 measure = 4 beats
-  // secondsPerLine = (beatsPerLine × 60) / BPM
-  // At 120 BPM: (4 × 60) / 120 = 2 sec/line
-  // At  70 BPM: (4 × 60) /  70 = 3.4 sec/line
-  // At 160 BPM: (4 × 60) / 160 = 1.5 sec/line
+  // Worship songs: each lyric line ≈ 2 measures = 8 beats (in 4/4 time)
+  // secPerLine = (beatsPerLine × 60) / BPM
+  // At 120 BPM: (8 × 60) / 120 = 4 sec/line  (comfortable reading pace)
+  // At  70 BPM: (8 × 60) /  70 = 6.9 sec/line (slow worship song)
+  // At 160 BPM: (8 × 60) / 160 = 3 sec/line   (faster praise song)
 
-  const BEATS_PER_LINE = 4; // assumes 4/4 time, each lyric line = 1 bar
-  const secPerLine = bpm>0 ? (BEATS_PER_LINE * 60) / bpm : 3;
+  const BEATS_PER_LINE = 8; // 2 measures of 4/4 per lyric line
+  const secPerLine = bpm>0 ? (BEATS_PER_LINE * 60) / bpm : 5;
 
   // Count rendered lyric lines
   const lyricLines = content.querySelectorAll('.perf-lyric-line');
