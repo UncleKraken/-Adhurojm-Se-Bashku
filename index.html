@@ -613,6 +613,20 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 /* ── PERF MODE MOBILE ── */
 @media(max-width:768px){
   #perfContent{padding:12px 10px}
+  /* Controls bar — bigger touch targets on mobile */
+  #perfControlsBar button{min-height:36px;min-width:36px;}
+  /* Top bar compact on mobile */
+  #performanceMode > div:first-child{padding:6px 8px;min-height:44px;}
+  #performanceMode > div:first-child button{padding:6px 9px;font-size:13px;}
+  /* Singer mode: bigger font */
+  #perfLyricsContent .perf-lyric-line{padding:4px 0;}
+}
+@media(max-width:480px){
+  /* iPhone SE / small screens */
+  #perfControlsBar>div{gap:4px;padding:5px 8px;}
+  #perfControlsBar input[type=range]{width:40px;}
+  #perfSectionJumpBtns button{padding:2px 7px;font-size:10px;}
+  #perfSongList button{padding:4px 10px;font-size:10px;}
 }
 .chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
 .chord-popup svg{display:block;margin:0 auto}
@@ -939,8 +953,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
       <!-- Chord diagrams -->
       <button onclick="togglePerfChords()" id="perfChordsBtn" title="Chord Diagrams (🎼)" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer">🎼</button>
+      <!-- Singer/Musician mode -->
+      <button onclick="toggleSingerMode()" id="perfSingerBtn" title="Singer/Musician (M)" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer">🎤</button>
       <!-- Metronome -->
       <span id="perfMetroWrap" style="display:flex;align-items:center;gap:4px"></span>
+      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
+      <!-- PANIC BUTTON — big red, touch-friendly -->
+      <button onclick="togglePanic()" id="perfPanicBtn" title="Panic — Blank Screen (P)" style="padding:5px 14px;border-radius:7px;border:none;background:rgba(180,30,30,0.2);color:#E06060;font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:1px solid rgba(180,30,30,0.4)">🚨</button>
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
       <!-- SECTION JUMP — always visible here -->
       <span style="font-size:10px;color:var(--text3);font-weight:700;white-space:nowrap">→</span>
@@ -5137,14 +5156,15 @@ function showPerfShortcuts(){
 // ── SINGER / MUSICIAN MODE ──
 function toggleSingerMode(){
   _perfMusicianMode = !_perfMusicianMode;
-  const btn = document.getElementById('perfModeBtn');
-  if(btn){
-    btn.textContent = _perfMusicianMode ? '🎤' : '🎼';
-    btn.title = _perfMusicianMode ? 'Musician Mode (akorde ON)' : 'Singer Mode (vetëm lyrics)';
+  // Sync both possible button IDs
+  ['perfModeBtn','perfSingerBtn'].forEach(id=>{
+    const btn=document.getElementById(id);
+    if(!btn) return;
+    btn.textContent = _perfMusicianMode ? '🎤' : '🎵';
     btn.style.background = _perfMusicianMode ? 'var(--bg3)' : 'var(--blue-mid)';
     btn.style.color = _perfMusicianMode ? 'var(--text2)' : '#fff';
-  }
-  // Re-render lyrics with/without chords
+    btn.title = _perfMusicianMode ? 'Singer Mode — vetëm lyrics (M)' : 'Musician Mode — lyrics + akorde (M)';
+  });
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
   const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
@@ -5155,16 +5175,29 @@ function toggleSingerMode(){
 }
 
 // ── PANIC / BLANK SCREEN ──
+// Qëllimi: Fsheh ekranin plotësisht (i zi) për emergjenca gjatë shërbimit live
+// P.sh. nëse shfaqet gabim, duhet të ndërrosh këngë shpejt, ose projektor duhet fshehur
+// Tap kudo ose P → kthehet te kënga
 function togglePanic(){
   _perfPanic = !_perfPanic;
-  const overlay = document.getElementById('perfPanicOverlay');
-  const btn = document.getElementById('perfPanicBtn');
-  if(overlay) overlay.style.display = _perfPanic ? 'flex' : 'none';
-  if(btn){
-    btn.style.background = _perfPanic ? 'rgba(139,26,26,0.6)' : 'rgba(139,26,26,0.2)';
-    btn.textContent = _perfPanic ? '▶' : '⏹';
+  let overlay=document.getElementById('perfPanicOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='perfPanicOverlay';
+    overlay.style.cssText='position:fixed;inset:0;background:#000;z-index:99999;display:none;align-items:center;justify-content:center;cursor:pointer';
+    overlay.innerHTML='<div style="color:rgba(255,255,255,0.15);font-size:18px;font-family:Poppins,sans-serif">Tap / P për të vazhduar</div>';
+    overlay.onclick=()=>{ _perfPanic=false; overlay.style.display='none'; updatePanicBtn(); };
+    document.getElementById('performanceMode')?.appendChild(overlay);
   }
+  overlay.style.display=_perfPanic?'flex':'none';
+  updatePanicBtn();
   if(_perfPanic) stopAutoScroll();
+}
+function updatePanicBtn(){
+  const btn=document.getElementById('perfPanicBtn');
+  if(!btn) return;
+  btn.style.background=_perfPanic?'rgba(180,30,30,0.6)':'rgba(180,30,30,0.15)';
+  btn.textContent=_perfPanic?'▶ Resume':'🚨';
 }
 
 // ── AUTO-HIDE CONTROLS ──
@@ -5208,12 +5241,22 @@ function highlightCurrentLine(){
 
 function startLineHighlight(){
   stopLineHighlight();
-  window._lineHighlightInterval = setInterval(highlightCurrentLine, 200);
+  const content=document.getElementById('perfContent');
+  if(content){
+    content._manualScrollHL=()=>highlightCurrentLine();
+    content.addEventListener('scroll',content._manualScrollHL,{passive:true});
+  }
+  window._lineHighlightInterval = setInterval(highlightCurrentLine, 250);
 }
 function stopLineHighlight(){
   if(window._lineHighlightInterval){
     clearInterval(window._lineHighlightInterval);
-    window._lineHighlightInterval = null;
+    window._lineHighlightInterval=null;
+  }
+  const content=document.getElementById('perfContent');
+  if(content?._manualScrollHL){
+    content.removeEventListener('scroll',content._manualScrollHL);
+    delete content._manualScrollHL;
   }
   document.querySelectorAll('.perf-lyric-line').forEach(l=>{
     l.classList.remove('active-line','dim-line');
@@ -5521,6 +5564,7 @@ function toggleAutoScroll(){
   if(_autoScrollInterval){
     stopAutoScroll();
     if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+    stopLineHighlight();
     return;
   }
   const sl=getSetlist(); const item=sl.songs[perfIdx];
@@ -5529,39 +5573,46 @@ function toggleAutoScroll(){
   const content=document.getElementById('perfContent');
   if(!content) return;
 
-  // ── MUSIC-AWARE SCROLL CALCULATION ──
-  // Worship songs: each lyric line ≈ 2 measures = 8 beats (in 4/4 time)
-  // secPerLine = (beatsPerLine × 60) / BPM
-  // At 120 BPM: (8 × 60) / 120 = 4 sec/line  (comfortable reading pace)
-  // At  70 BPM: (8 × 60) /  70 = 6.9 sec/line (slow worship song)
-  // At 160 BPM: (8 × 60) / 160 = 3 sec/line   (faster praise song)
+  // Wait for DOM to be ready then start
+  requestAnimationFrame(()=>_startScrollEngine(content, bpm, btn, s));
+}
 
-  const BEATS_PER_LINE = 8; // 2 measures of 4/4 per lyric line
+function _startScrollEngine(content, bpm, btn, s){
+  const BEATS_PER_LINE = 8;
   const secPerLine = bpm>0 ? (BEATS_PER_LINE * 60) / bpm : 5;
 
-  // Count rendered lyric lines
+  // Measure line heights from rendered DOM
   const lyricLines = content.querySelectorAll('.perf-lyric-line');
-  const lineCount = Math.max(lyricLines.length, 1);
+  const lineCount = lyricLines.length;
 
-  // Measure average line height from DOM
-  let totalLineHeight = 0;
-  lyricLines.forEach(l => totalLineHeight += l.offsetHeight);
-  const avgLineHeight = totalLineHeight / lineCount;
+  let avgLineHeight = 60; // fallback: assume 60px per line
+  if(lineCount > 0){
+    let total = 0;
+    lyricLines.forEach(l => total += l.offsetHeight);
+    const measured = total / lineCount;
+    if(measured > 0) avgLineHeight = measured;
+  }
 
-  // Scroll speed in px/sec
   const pxPerSec = (avgLineHeight / secPerLine) * (_perfScrollSpeed / 100);
 
-  // Show info on button
+  // Safety check
+  if(pxPerSec <= 0 || !isFinite(pxPerSec)){
+    console.warn('AutoScroll: invalid pxPerSec', pxPerSec, 'avgLineHeight:', avgLineHeight);
+    return;
+  }
+
   if(btn){
     const label = bpm>0 ? `⏸ ${bpm} BPM` : '⏸ Auto';
     btn.textContent=label; btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
   }
 
+  // Start line highlight only when scrolling
+  startLineHighlight();
+
   let lastTs=null;
   let paused=false;
   let resumeTimer=null;
 
-  // Pause on user touch/scroll, resume after 2.5s
   function onUserInteract(){
     paused=true;
     clearTimeout(resumeTimer);
@@ -5577,13 +5628,13 @@ function toggleAutoScroll(){
 
   function frame(ts){
     if(!lastTs) lastTs=ts;
-    const dt=(ts-lastTs)/1000; lastTs=ts;
+    const dt=Math.min((ts-lastTs)/1000, 0.1); lastTs=ts; // cap dt at 100ms
     if(!paused && content){
       content.scrollTop += pxPerSec * dt;
-      // Stop if reached bottom
       if(content.scrollTop >= content.scrollHeight - content.clientHeight - 2){
         stopAutoScroll();
         if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+        stopLineHighlight();
         return;
       }
     }
