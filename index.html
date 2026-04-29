@@ -922,6 +922,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;min-width:max-content">
       <!-- Auto scroll -->
       <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">▶ Auto</button>
+      <button onclick="toggleBeatScroll()" id="beatScrollBtn" title="Beat Detection — scroll me zë" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:13px;color:var(--text2)">🎙️</button>
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
       <!-- Instrument -->
       <div id="perfInstBtns" style="display:flex;gap:4px"></div>
@@ -4348,8 +4349,129 @@ function loadSocialAdminForm(){
 emailjs.init('_nY20miCLwZSC-jow');
 
 // ═══════════════════════════════════════════════════════
-//  METRONOME
+//  BEAT DETECTION — Audio-driven scroll
 // ═══════════════════════════════════════════════════════
+let _beatCtx=null, _beatAnalyser=null, _beatStream=null;
+let _beatAnimFrame=null, _beatActive=false;
+let _lastBeatTime=0, _beatEnergyHistory=[], _lastScrollBeat=0;
+
+async function toggleBeatScroll(){
+  const btn=document.getElementById('beatScrollBtn');
+  if(_beatActive){
+    stopBeatScroll();
+    if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+    return;
+  }
+  // Request microphone
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{
+      echoCancellation:false,
+      noiseSuppression:false,
+      autoGainControl:false
+    },video:false});
+    _beatStream=stream;
+    _beatCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=_beatCtx.createMediaStreamSource(stream);
+    _beatAnalyser=_beatCtx.createAnalyser();
+    _beatAnalyser.fftSize=512;
+    _beatAnalyser.smoothingTimeConstant=0.8;
+    src.connect(_beatAnalyser);
+
+    _beatActive=true;
+    _beatEnergyHistory=new Array(43).fill(0); // ~1 second of history at 60fps
+    _lastBeatTime=0;
+    _lastScrollBeat=0;
+
+    if(btn){
+      btn.textContent='🎙️ ON';
+      btn.style.background='var(--red)';
+      btn.style.color='#fff';
+    }
+    showToast('🎙️ Mikrofoni aktiv — luaj muzikë!','success');
+    stopAutoScroll(); // stop BPM scroll if running
+    _runBeatDetection();
+  }catch(e){
+    showToast('❌ Mikrofoni nuk u lejua — kontrollo lejet','error');
+    console.error('Beat scroll mic error:',e);
+  }
+}
+
+function stopBeatScroll(){
+  _beatActive=false;
+  if(_beatAnimFrame){ cancelAnimationFrame(_beatAnimFrame); _beatAnimFrame=null; }
+  if(_beatStream){ _beatStream.getTracks().forEach(t=>t.stop()); _beatStream=null; }
+  if(_beatCtx){ _beatCtx.close(); _beatCtx=null; }
+  _beatAnalyser=null;
+}
+
+function _runBeatDetection(){
+  if(!_beatActive||!_beatAnalyser) return;
+  const data=new Uint8Array(_beatAnalyser.frequencyBinCount);
+
+  // Visual beat indicator in button
+  const btn=document.getElementById('beatScrollBtn');
+
+  const tick=(ts)=>{
+    if(!_beatActive) return;
+    _beatAnalyser.getByteFrequencyData(data);
+
+    // Focus on bass frequencies (40-250 Hz) — where guitar/piano fundamentals are
+    // At 44100Hz sample rate, fftSize=512: each bin = 86Hz
+    // Bin 0≈0Hz, Bin 1≈86Hz, Bin 2≈172Hz, Bin 3≈258Hz
+    const bassStart=0, bassEnd=4;
+    let bassEnergy=0;
+    for(let i=bassStart;i<=bassEnd;i++) bassEnergy+=data[i];
+    bassEnergy/=(bassEnd-bassStart+1);
+
+    // Also check mid frequencies (250-2000Hz) for chords
+    const midStart=3, midEnd=23;
+    let midEnergy=0;
+    for(let i=midStart;i<=midEnd;i++) midEnergy+=data[i];
+    midEnergy/=(midEnd-midStart+1);
+
+    // Weighted energy — bass dominant
+    const energy=bassEnergy*0.7+midEnergy*0.3;
+
+    // Rolling average for adaptive threshold
+    _beatEnergyHistory.push(energy);
+    if(_beatEnergyHistory.length>43) _beatEnergyHistory.shift();
+    const avgEnergy=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
+
+    // Beat = energy significantly above average + minimum time between beats
+    const BEAT_THRESHOLD=1.4; // 40% above average
+    const MIN_BEAT_GAP=350;   // ms — prevents double-triggers
+    const now=performance.now();
+    const isBeat=energy>avgEnergy*BEAT_THRESHOLD && energy>30 && (now-_lastBeatTime)>MIN_BEAT_GAP;
+
+    if(isBeat){
+      _lastBeatTime=now;
+      // Visual flash on button
+      if(btn){ btn.style.background='#E06060'; setTimeout(()=>{ if(_beatActive&&btn) btn.style.background='var(--red)'; },80); }
+
+      // Scroll logic — scroll 1 line per N beats to avoid scrolling too fast
+      // Typical worship: 4/4 time, scroll 1 line every 4 beats
+      _lastScrollBeat++;
+      const BEATS_PER_SCROLL=4; // tune this: 2=fast, 4=normal, 8=slow
+      if(_lastScrollBeat>=BEATS_PER_SCROLL){
+        _lastScrollBeat=0;
+        const content=document.getElementById('perfContent');
+        if(content){
+          // Scroll by 1 average line height
+          const lines=content.querySelectorAll('.perf-lyric-line');
+          let avgH=80;
+          if(lines.length>0){
+            let tot=0; lines.forEach(l=>tot+=l.offsetHeight);
+            avgH=tot/lines.length;
+          }
+          content.scrollBy({top:avgH, behavior:'smooth'});
+          highlightCurrentLine();
+        }
+      }
+    }
+    _beatAnimFrame=requestAnimationFrame(tick);
+  };
+  _beatAnimFrame=requestAnimationFrame(tick);
+}
 let _metroCtx=null, _metroInterval=null, _metroBeat=0;
 
 function startMetronome(bpm){
@@ -4428,23 +4550,65 @@ function renderKeyCompatibility(songKey){
 //  CHORD DIAGRAMS — Guitar fingering
 // ═══════════════════════════════════════════════════════
 const CHORD_SHAPES={
-  'C':   {frets:[0,3,2,0,1,0],fingers:[0,3,2,0,1,0],barre:0},
-  'D':   {frets:[-1,-1,0,2,3,2],fingers:[0,0,0,1,3,2],barre:0},
-  'E':   {frets:[0,2,2,1,0,0],fingers:[0,2,3,1,0,0],barre:0},
-  'F':   {frets:[1,1,2,3,3,1],fingers:[1,1,2,4,3,1],barre:1},
-  'G':   {frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,3],barre:0},
-  'A':   {frets:[0,0,2,2,2,0],fingers:[0,0,1,2,3,0],barre:0},
-  'B':   {frets:[-1,2,4,4,4,2],fingers:[0,1,3,3,3,1],barre:2},
-  'Am':  {frets:[0,0,2,2,1,0],fingers:[0,0,2,3,1,0],barre:0},
-  'Em':  {frets:[0,2,2,0,0,0],fingers:[0,2,3,0,0,0],barre:0},
-  'Dm':  {frets:[-1,-1,0,2,3,1],fingers:[0,0,0,2,3,1],barre:0},
-  'Bm':  {frets:[-1,2,4,4,3,2],fingers:[0,1,3,4,2,1],barre:2},
-  'Gm':  {frets:[3,5,5,3,3,3],fingers:[1,3,4,1,1,1],barre:3},
-  'Fm':  {frets:[1,3,3,1,1,1],fingers:[1,3,4,1,1,1],barre:1},
-  'C#':  {frets:[-1,4,3,1,2,1],fingers:[0,4,3,1,2,1],barre:0},
-  'Bb':  {frets:[-1,1,3,3,3,1],fingers:[0,1,3,4,3,1],barre:1},
-  'Eb':  {frets:[-1,-1,1,3,4,3],fingers:[0,0,1,3,4,3],barre:0},
-  'F#':  {frets:[2,2,4,4,4,2],fingers:[1,1,3,4,3,1],barre:2},
+  // ── MAJOR ──
+  'C':   {frets:[0,3,2,0,1,0],   barre:0},
+  'C#':  {frets:[-1,4,3,1,2,1],  barre:0},
+  'Db':  {frets:[-1,4,3,1,2,1],  barre:0},  // = C#
+  'D':   {frets:[-1,-1,0,2,3,2], barre:0},
+  'D#':  {frets:[-1,-1,1,3,4,3], barre:0},
+  'Eb':  {frets:[-1,-1,1,3,4,3], barre:0},  // = D#
+  'E':   {frets:[0,2,2,1,0,0],   barre:0},
+  'F':   {frets:[1,1,2,3,3,1],   barre:1},
+  'F#':  {frets:[2,2,4,4,4,2],   barre:2},
+  'Gb':  {frets:[2,2,4,4,4,2],   barre:2},  // = F#
+  'G':   {frets:[3,2,0,0,0,3],   barre:0},
+  'G#':  {frets:[4,6,6,5,4,4],   barre:4},
+  'Ab':  {frets:[4,6,6,5,4,4],   barre:4},  // = G#
+  'A':   {frets:[0,0,2,2,2,0],   barre:0},
+  'A#':  {frets:[1,1,3,3,3,1],   barre:1},
+  'Bb':  {frets:[1,1,3,3,3,1],   barre:1},  // = A#
+  'B':   {frets:[-1,2,4,4,4,2],  barre:2},
+  // ── MINOR ──
+  'Cm':  {frets:[3,3,5,5,4,3],   barre:3},
+  'C#m': {frets:[4,4,6,6,5,4],   barre:4},
+  'Dbm': {frets:[4,4,6,6,5,4],   barre:4},
+  'Dm':  {frets:[-1,-1,0,2,3,1], barre:0},
+  'D#m': {frets:[-1,-1,1,3,4,2], barre:0},
+  'Ebm': {frets:[-1,-1,1,3,4,2], barre:0},
+  'Em':  {frets:[0,2,2,0,0,0],   barre:0},
+  'Fm':  {frets:[1,3,3,1,1,1],   barre:1},
+  'F#m': {frets:[2,4,4,2,2,2],   barre:2},
+  'Gbm': {frets:[2,4,4,2,2,2],   barre:2},
+  'Gm':  {frets:[3,5,5,3,3,3],   barre:3},
+  'G#m': {frets:[4,6,6,4,4,4],   barre:4},
+  'Abm': {frets:[4,6,6,4,4,4],   barre:4},
+  'Am':  {frets:[0,0,2,2,1,0],   barre:0},
+  'A#m': {frets:[1,1,3,3,2,1],   barre:1},
+  'Bbm': {frets:[1,1,3,3,2,1],   barre:1},
+  'Bm':  {frets:[-1,2,4,4,3,2],  barre:2},
+  // ── 7TH ──
+  'G7':  {frets:[3,2,0,0,0,1],   barre:0},
+  'C7':  {frets:[0,3,2,3,1,0],   barre:0},
+  'D7':  {frets:[-1,-1,0,2,1,2], barre:0},
+  'E7':  {frets:[0,2,0,1,0,0],   barre:0},
+  'A7':  {frets:[0,0,2,0,2,0],   barre:0},
+  'B7':  {frets:[-1,2,1,2,0,2],  barre:0},
+  'F7':  {frets:[1,1,2,1,3,1],   barre:1},
+  // ── SUS ──
+  'Dsus2':{frets:[-1,-1,0,2,3,0],barre:0},
+  'Dsus4':{frets:[-1,-1,0,2,3,3],barre:0},
+  'Asus2':{frets:[0,0,2,2,0,0],  barre:0},
+  'Asus4':{frets:[0,0,2,2,3,0],  barre:0},
+  'Esus4':{frets:[0,2,2,2,0,0],  barre:0},
+  // ── MAJ7 ──
+  'Cmaj7':{frets:[0,3,2,0,0,0],  barre:0},
+  'Gmaj7':{frets:[3,2,0,0,0,2],  barre:0},
+  'Amaj7':{frets:[0,0,2,1,2,0],  barre:0},
+  'Emaj7':{frets:[0,2,1,1,0,0],  barre:0},
+  'Fmaj7':{frets:[1,0,2,2,2,1],  barre:1},
+  // ── DIM ──
+  'Bdim': {frets:[-1,2,3,4,3,-1],barre:0},
+  'Adim': {frets:[0,0,1,2,1,-1], barre:0},
 };
 
 // ── CHORD DIAGRAM TYPE ──
@@ -4536,19 +4700,26 @@ function buildPianoChordSVG(name){
 // Handles: "A/D" → "A", "Am/G" → "Am", "C#m" → "C#m", etc.
 function resolveChordName(name){
   if(!name) return null;
-  const base = name.split('/')[0].trim(); // take left side of slash chord
+  const base=name.split('/')[0].trim(); // slash chords: A/D → A
+  // Direct lookup
   if(CHORD_SHAPES[base]||PIANO_CHORD_NOTES[base]) return base;
-  // Try enharmonic equivalents
-  const enharmonics={'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B',
-                     'C#':'Db','D#':'Eb','E#':'F','F#':'Gb','G#':'Ab','A#':'Bb','B#':'C'};
-  const root=base.replace(/m$/,'');
-  const isMinor=base.endsWith('m')&&!base.endsWith('maj');
-  const alt=enharmonics[root];
-  if(alt){
-    const altKey=alt+(isMinor?'m':'');
-    if(CHORD_SHAPES[altKey]||PIANO_CHORD_NOTES[altKey]) return altKey;
+  // Enharmonic map
+  const ENHARMONIC={
+    'Db':'C#','D#':'Eb','E#':'F','Fb':'E',
+    'Gb':'F#','G#':'Ab','A#':'Bb','B#':'C','Cb':'B',
+    'C#':'Db','Eb':'D#','F#':'Gb','Ab':'G#','Bb':'A#',
+  };
+  // Try enharmonic on full chord name (e.g. G#m → Abm)
+  const root=base.replace(/m$|maj7$|sus2$|sus4$|dim$|7$/, '');
+  const suffix=base.slice(root.length);
+  const altRoot=ENHARMONIC[root];
+  if(altRoot){
+    const alt=altRoot+suffix;
+    if(CHORD_SHAPES[alt]||PIANO_CHORD_NOTES[alt]) return alt;
   }
-  return null; // no diagram available
+  // Try without suffix as fallback
+  if(CHORD_SHAPES[root]||PIANO_CHORD_NOTES[root]) return root;
+  return null;
 }
 
 function hasChordDiagram(name){
@@ -4562,38 +4733,66 @@ function buildChordDiagram(name, type){
 }
 
 function buildChordSVG(name){
-  const shape=CHORD_SHAPES[name]||CHORD_SHAPES[name.replace('m','')];
-  if(!shape) return `<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>`;
+  const shape=CHORD_SHAPES[name];
+  if(!shape) return '<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>';
   const {frets,barre}=shape;
-  const STRING_COUNT=6, FRET_COUNT=4;
-  const W=80,H=90,pad=14,sw=(W-pad*2)/5,sh=(H-pad*2-14)/FRET_COUNT;
+  const FRET_COUNT=4;
+  const W=80, H=94, pad=14;
+  const sw=(W-pad*2)/5;
+  const sh=(H-pad*2-16)/FRET_COUNT;
+
+  // Find the min fret position to determine starting fret
+  const activeFrets=frets.filter(f=>f>0);
+  const minFret=activeFrets.length>0?Math.min(...activeFrets):1;
+  const startFret=barre>0?barre:minFret<=1?1:minFret;
+  const showFretNum=startFret>1;
+
   let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  // Nut or capo line
-  svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="2.5" fill="${barre?'none':'#888'}"/>`;
-  // Strings
-  for(let s=0;s<STRING_COUNT;s++){
+
+  // Nut (thick line at top) or fret number
+  if(startFret===1){
+    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="#888" rx="1"/>`;
+  } else {
+    svg+=`<text x="${W-pad+3}" y="${pad+22}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
+  }
+
+  // Fret lines
+  for(let f=0;f<=FRET_COUNT;f++){
+    const y=pad+16+f*sh;
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="${f===0?1.5:1}"/>`;
+  }
+
+  // String lines
+  for(let s=0;s<6;s++){
     const x=pad+s*sw;
     svg+=`<line x1="${x}" y1="${pad+16}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
   }
-  // Frets
-  for(let f=0;f<=FRET_COUNT;f++){
-    const y=pad+14+f*sh;
-    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
-  }
-  // Barre
+
+  // Barre bar
   if(barre>0){
-    const y=pad+14+(barre-Math.max(0,Math.min(...frets.filter(f=>f>0))-1)-1)*sh+sh/2;
-    svg+=`<rect x="${pad}" y="${y-6}" width="${W-pad*2}" height="12" rx="6" fill="var(--blue-mid)" opacity=".85"/>`;
+    const barY=pad+16+sh/2-6;
+    svg+=`<rect x="${pad}" y="${barY}" width="${W-pad*2}" height="12" rx="6" fill="var(--blue-mid)" opacity=".9"/>`;
   }
+
   // Dots
   frets.forEach((f,s)=>{
     const x=pad+s*sw;
-    if(f<0){ svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="9" fill="var(--text3)">x</text>`; return; }
-    if(f===0){ svg+=`<circle cx="${x}" cy="${pad+9}" r="4" fill="none" stroke="var(--text3)" stroke-width="1.2"/>`; return; }
-    const minF=Math.max(0,Math.min(...frets.filter(v=>v>0))-1);
-    const y=pad+14+(f-minF-1)*sh+sh/2;
-    svg+=`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--blue-mid)"/>`;
+    if(f<0){
+      svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="10" fill="var(--text3)">✕</text>`;
+      return;
+    }
+    if(f===0){
+      svg+=`<circle cx="${x}" cy="${pad+8}" r="4" fill="none" stroke="var(--text3)" stroke-width="1.5"/>`;
+      return;
+    }
+    // Active fret dot
+    const relFret=f-startFret+1;
+    if(relFret>=1&&relFret<=FRET_COUNT){
+      const y=pad+16+(relFret-1)*sh+sh/2;
+      svg+=`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--blue-mid)"/>`;
+    }
   });
+
   svg+=`</svg>`;
   return svg;
 }
@@ -5127,7 +5326,7 @@ function startPerformanceMode(){
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
   document.body.style.overflow='';
-  stopAutoScroll(); stopPerfTimer(); stopMetronome(); stopLineHighlight();
+  stopAutoScroll(); stopBeatScroll(); stopPerfTimer(); stopMetronome(); stopLineHighlight();
   clearTimeout(_perfAutoHideTimer);
   _perfPanic=false; _perfControlsHidden=false;
   if(_wakeLock){_wakeLock.release();_wakeLock=null;}
