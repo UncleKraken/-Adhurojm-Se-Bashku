@@ -4360,113 +4360,105 @@ async function toggleBeatScroll(){
   if(_beatActive){
     stopBeatScroll();
     if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+    document.getElementById('beatDebugBar')?.remove();
     return;
   }
-  // Request microphone
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{
-      echoCancellation:false,
-      noiseSuppression:false,
-      autoGainControl:false
-    },video:false});
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
     _beatStream=stream;
     _beatCtx=new (window.AudioContext||window.webkitAudioContext)();
     const src=_beatCtx.createMediaStreamSource(stream);
     _beatAnalyser=_beatCtx.createAnalyser();
-    _beatAnalyser.fftSize=512;
-    _beatAnalyser.smoothingTimeConstant=0.8;
+    _beatAnalyser.fftSize=1024;
+    _beatAnalyser.smoothingTimeConstant=0.85;
     src.connect(_beatAnalyser);
-
     _beatActive=true;
-    _beatEnergyHistory=new Array(43).fill(0); // ~1 second of history at 60fps
-    _lastBeatTime=0;
-    _lastScrollBeat=0;
-
-    if(btn){
-      btn.textContent='🎙️ ON';
-      btn.style.background='var(--red)';
-      btn.style.color='#fff';
+    _beatEnergyHistory=new Array(60).fill(0);
+    _lastBeatTime=0; _lastScrollBeat=0;
+    if(btn){btn.textContent='🎙️ ON';btn.style.background='var(--red)';btn.style.color='#fff';}
+    // Visual debug bar at bottom
+    const pm=document.getElementById('performanceMode');
+    let dbg=document.getElementById('beatDebugBar');
+    if(!dbg){
+      dbg=document.createElement('div');
+      dbg.id='beatDebugBar';
+      dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;height:38px;background:rgba(0,0,0,0.88);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:99998;font-family:Roboto Mono,monospace;font-size:11px;color:#fff';
+      dbg.innerHTML='<span style="color:#aaa;white-space:nowrap">🎙️</span><div style="flex:1;height:12px;background:#1a1a2e;border-radius:6px;overflow:hidden;position:relative"><div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);border-radius:6px;transition:width .04s"></div><div id="beatThreshLine" style="position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.4)"></div></div><span id="beatStatusTxt" style="color:#888;min-width:80px;text-align:right;font-size:10px">luaj muzike...</span><button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px">Stop</button>';
+      (pm||document.body).appendChild(dbg);
     }
-    showToast('🎙️ Mikrofoni aktiv — luaj muzikë!','success');
-    stopAutoScroll(); // stop BPM scroll if running
+    stopAutoScroll();
     _runBeatDetection();
+    showToast('🎙️ Mikrofoni aktiv — luaj muzike!','success');
   }catch(e){
-    showToast('❌ Mikrofoni nuk u lejua — kontrollo lejet','error');
-    console.error('Beat scroll mic error:',e);
+    showToast('Mikrofoni nuk u lejua','error');
+    console.error(e);
   }
 }
 
 function stopBeatScroll(){
   _beatActive=false;
-  if(_beatAnimFrame){ cancelAnimationFrame(_beatAnimFrame); _beatAnimFrame=null; }
-  if(_beatStream){ _beatStream.getTracks().forEach(t=>t.stop()); _beatStream=null; }
-  if(_beatCtx){ _beatCtx.close(); _beatCtx=null; }
+  if(_beatAnimFrame){cancelAnimationFrame(_beatAnimFrame);_beatAnimFrame=null;}
+  if(_beatStream){_beatStream.getTracks().forEach(t=>t.stop());_beatStream=null;}
+  if(_beatCtx){_beatCtx.close();_beatCtx=null;}
   _beatAnalyser=null;
+  document.getElementById('beatDebugBar')?.remove();
 }
 
 function _runBeatDetection(){
   if(!_beatActive||!_beatAnalyser) return;
   const data=new Uint8Array(_beatAnalyser.frequencyBinCount);
-
-  // Visual beat indicator in button
+  const binHz=(_beatCtx.sampleRate||44100)/_beatAnalyser.fftSize;
+  const bassLo=Math.max(0,Math.floor(60/binHz));
+  const bassHi=Math.min(data.length-1,Math.floor(300/binHz));
+  const midLo=Math.max(0,Math.floor(300/binHz));
+  const midHi=Math.min(data.length-1,Math.floor(2000/binHz));
+  const levelBar=document.getElementById('beatLevelBar');
+  const threshLine=document.getElementById('beatThreshLine');
+  const statusTxt=document.getElementById('beatStatusTxt');
   const btn=document.getElementById('beatScrollBtn');
+  const BEAT_THRESHOLD=1.3;
+  const MIN_BEAT_GAP=260;
+  const BEATS_PER_SCROLL=4;
 
   const tick=(ts)=>{
     if(!_beatActive) return;
     _beatAnalyser.getByteFrequencyData(data);
-
-    // Focus on bass frequencies (40-250 Hz) — where guitar/piano fundamentals are
-    // At 44100Hz sample rate, fftSize=512: each bin = 86Hz
-    // Bin 0≈0Hz, Bin 1≈86Hz, Bin 2≈172Hz, Bin 3≈258Hz
-    const bassStart=0, bassEnd=4;
-    let bassEnergy=0;
-    for(let i=bassStart;i<=bassEnd;i++) bassEnergy+=data[i];
-    bassEnergy/=(bassEnd-bassStart+1);
-
-    // Also check mid frequencies (250-2000Hz) for chords
-    const midStart=3, midEnd=23;
-    let midEnergy=0;
-    for(let i=midStart;i<=midEnd;i++) midEnergy+=data[i];
-    midEnergy/=(midEnd-midStart+1);
-
-    // Weighted energy — bass dominant
-    const energy=bassEnergy*0.7+midEnergy*0.3;
-
-    // Rolling average for adaptive threshold
+    let bassE=0,bc=0;
+    for(let i=bassLo;i<=bassHi;i++){bassE+=data[i];bc++;}
+    bassE=bc>0?bassE/bc:0;
+    let midE=0,mc=0;
+    for(let i=midLo;i<=midHi;i++){midE+=data[i];mc++;}
+    midE=mc>0?midE/mc:0;
+    const energy=bassE*0.6+midE*0.4;
     _beatEnergyHistory.push(energy);
-    if(_beatEnergyHistory.length>43) _beatEnergyHistory.shift();
-    const avgEnergy=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
-
-    // Beat = energy significantly above average + minimum time between beats
-    const BEAT_THRESHOLD=1.4; // 40% above average
-    const MIN_BEAT_GAP=350;   // ms — prevents double-triggers
+    if(_beatEnergyHistory.length>60) _beatEnergyHistory.shift();
+    const avg=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
+    const threshold=avg*BEAT_THRESHOLD;
+    if(levelBar) levelBar.style.width=Math.min(100,(energy/150)*100)+'%';
+    if(threshLine) threshLine.style.left=Math.min(97,(threshold/150)*100)+'%';
     const now=performance.now();
-    const isBeat=energy>avgEnergy*BEAT_THRESHOLD && energy>30 && (now-_lastBeatTime)>MIN_BEAT_GAP;
-
+    const isBeat=energy>threshold&&energy>18&&(now-_lastBeatTime)>MIN_BEAT_GAP;
     if(isBeat){
       _lastBeatTime=now;
-      // Visual flash on button
-      if(btn){ btn.style.background='#E06060'; setTimeout(()=>{ if(_beatActive&&btn) btn.style.background='var(--red)'; },80); }
-
-      // Scroll logic — scroll 1 line per N beats to avoid scrolling too fast
-      // Typical worship: 4/4 time, scroll 1 line every 4 beats
+      if(statusTxt) statusTxt.textContent='*** BEAT ***';
+      if(btn){btn.style.background='#facc15';btn.style.color='#000';setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},120);}
+      const dot=document.getElementById('metroBeatDot');
+      if(dot){dot.classList.add('on');setTimeout(()=>dot.classList.remove('on'),120);}
       _lastScrollBeat++;
-      const BEATS_PER_SCROLL=4; // tune this: 2=fast, 4=normal, 8=slow
       if(_lastScrollBeat>=BEATS_PER_SCROLL){
         _lastScrollBeat=0;
         const content=document.getElementById('perfContent');
         if(content){
-          // Scroll by 1 average line height
           const lines=content.querySelectorAll('.perf-lyric-line');
           let avgH=80;
-          if(lines.length>0){
-            let tot=0; lines.forEach(l=>tot+=l.offsetHeight);
-            avgH=tot/lines.length;
-          }
-          content.scrollBy({top:avgH, behavior:'smooth'});
+          if(lines.length>0){let tot=0;lines.forEach(l=>tot+=l.offsetHeight);avgH=tot/lines.length;}
+          content.scrollBy({top:avgH,behavior:'smooth'});
           highlightCurrentLine();
         }
       }
+      setTimeout(()=>{if(statusTxt&&_beatActive)statusTxt.textContent='E:'+energy.toFixed(0)+' A:'+avg.toFixed(0);},400);
+    } else if(statusTxt&&now-_lastBeatTime>500){
+      statusTxt.textContent='E:'+energy.toFixed(0)+' T:'+threshold.toFixed(0);
     }
     _beatAnimFrame=requestAnimationFrame(tick);
   };
