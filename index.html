@@ -4663,16 +4663,27 @@ function addChordInteraction(){
 
 function setChordDiagramType(type, popupEl){
   _chordDiagramType=type;
+  // Update popup buttons
   const popup=popupEl||document.getElementById('chordPopup');
-  if(!popup) return;
-  const content=popup.querySelector('#chordDiagramContent');
-  if(content) content.innerHTML=buildChordDiagram(popup._chord, type);
-  // Update buttons
-  popup.querySelectorAll('button').forEach((btn,i)=>{
-    const isActive=(i===0&&type==='Guitar')||(i===1&&type==='Piano');
-    btn.style.background=isActive?'var(--blue-mid)':'var(--bg3)';
-    btn.style.color=isActive?'#fff':'var(--text2)';
-  });
+  if(popup){
+    const content=popup.querySelector('#chordDiagramContent');
+    if(content) content.innerHTML=buildChordDiagram(popup._chord, type);
+    popup.querySelectorAll('button').forEach((btn,i)=>{
+      const isActive=(i===0&&type==='Guitar')||(i===1&&type==='Piano');
+      btn.style.background=isActive?'var(--blue-mid)':'var(--bg3)';
+      btn.style.color=isActive?'#fff':'var(--text2)';
+    });
+  }
+  // If perf chord diagrams are ON → re-render to show new type
+  if(_perfShowChords && document.getElementById('performanceMode')?.style.display==='flex'){
+    const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+    const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+    const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+    const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+    const allSections=parseLyricsText(rawText);
+    const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+    renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
+  }
 }
 
 function hideChordDiagram(){
@@ -5563,85 +5574,80 @@ function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
     stopAutoScroll();
-    if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     stopLineHighlight();
+    if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     return;
   }
-  const sl=getSetlist(); const item=sl.songs[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-  const bpm=s?.bpm||0;
+
+  const sl=getSetlist();
+  const item=sl?.songs?.[perfIdx];
+  if(!item){ console.warn('AutoScroll: no item at perfIdx',perfIdx); return; }
+  const s=SONGS.find(x=>Number(x.id)===Number(item.id));
+  if(!s){ console.warn('AutoScroll: song not found'); return; }
+  const bpm=s.bpm||0;
   const content=document.getElementById('perfContent');
-  if(!content) return;
+  if(!content){ console.warn('AutoScroll: perfContent not found'); return; }
 
-  // Wait for DOM to be ready then start
-  requestAnimationFrame(()=>_startScrollEngine(content, bpm, btn, s));
-}
+  const BEATS_PER_LINE=8;
+  const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
 
-function _startScrollEngine(content, bpm, btn, s){
-  const BEATS_PER_LINE = 8;
-  const secPerLine = bpm>0 ? (BEATS_PER_LINE * 60) / bpm : 5;
+  // Measure line heights — wait one more frame for layout
+  const doStart=()=>{
+    const lines=content.querySelectorAll('.perf-lyric-line');
+    let avgH=80; // generous fallback
+    if(lines.length>0){
+      let tot=0; lines.forEach(l=>tot+=l.offsetHeight);
+      const m=tot/lines.length;
+      if(m>5) avgH=m;
+    }
+    const pxPerSec=(avgH/secPerLine)*(_perfScrollSpeed/100);
+    console.log(`AutoScroll START: bpm=${bpm} secPerLine=${secPerLine.toFixed(1)} avgH=${avgH.toFixed(0)} pxPerSec=${pxPerSec.toFixed(2)}`);
 
-  // Measure line heights from rendered DOM
-  const lyricLines = content.querySelectorAll('.perf-lyric-line');
-  const lineCount = lyricLines.length;
+    if(btn){
+      btn.textContent=bpm>0?`⏸ ${bpm}BPM`:'⏸ Stop';
+      btn.style.background='var(--blue-mid)';
+      btn.style.color='#fff';
+    }
 
-  let avgLineHeight = 60; // fallback: assume 60px per line
-  if(lineCount > 0){
-    let total = 0;
-    lyricLines.forEach(l => total += l.offsetHeight);
-    const measured = total / lineCount;
-    if(measured > 0) avgLineHeight = measured;
-  }
+    startLineHighlight();
 
-  const pxPerSec = (avgLineHeight / secPerLine) * (_perfScrollSpeed / 100);
+    let last=null;
+    let paused=false;
+    let pauseTimer=null;
 
-  // Safety check
-  if(pxPerSec <= 0 || !isFinite(pxPerSec)){
-    console.warn('AutoScroll: invalid pxPerSec', pxPerSec, 'avgLineHeight:', avgLineHeight);
-    return;
-  }
+    const onTouch=()=>{ paused=true; clearTimeout(pauseTimer); pauseTimer=setTimeout(()=>paused=false,2500); };
+    const onWheel=()=>{ paused=true; clearTimeout(pauseTimer); pauseTimer=setTimeout(()=>paused=false,2500); };
+    content.addEventListener('touchstart',onTouch,{passive:true});
+    content.addEventListener('wheel',onWheel,{passive:true});
+    content._scrollCleanup=()=>{
+      content.removeEventListener('touchstart',onTouch);
+      content.removeEventListener('wheel',onWheel);
+      clearTimeout(pauseTimer);
+    };
 
-  if(btn){
-    const label = bpm>0 ? `⏸ ${bpm} BPM` : '⏸ Auto';
-    btn.textContent=label; btn.style.background='var(--blue-mid)'; btn.style.color='#fff';
-  }
-
-  // Start line highlight only when scrolling
-  startLineHighlight();
-
-  let lastTs=null;
-  let paused=false;
-  let resumeTimer=null;
-
-  function onUserInteract(){
-    paused=true;
-    clearTimeout(resumeTimer);
-    resumeTimer=setTimeout(()=>{ paused=false; }, 2500);
-  }
-  content.addEventListener('touchstart', onUserInteract, {passive:true});
-  content.addEventListener('wheel', onUserInteract, {passive:true});
-  content._autoScrollCleanup=()=>{
-    content.removeEventListener('touchstart', onUserInteract);
-    content.removeEventListener('wheel', onUserInteract);
-    clearTimeout(resumeTimer);
+    const tick=(ts)=>{
+      if(!last) last=ts;
+      const dt=Math.min((ts-last)/1000,0.1);
+      last=ts;
+      if(!paused){
+        content.scrollTop+=pxPerSec*dt;
+        if(content.scrollTop>=content.scrollHeight-content.clientHeight-2){
+          stopAutoScroll();
+          stopLineHighlight();
+          if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+          return;
+        }
+      }
+      _autoScrollInterval=requestAnimationFrame(tick);
+    };
+    _autoScrollInterval=requestAnimationFrame(tick);
   };
 
-  function frame(ts){
-    if(!lastTs) lastTs=ts;
-    const dt=Math.min((ts-lastTs)/1000, 0.1); lastTs=ts; // cap dt at 100ms
-    if(!paused && content){
-      content.scrollTop += pxPerSec * dt;
-      if(content.scrollTop >= content.scrollHeight - content.clientHeight - 2){
-        stopAutoScroll();
-        if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-        stopLineHighlight();
-        return;
-      }
-    }
-    _autoScrollInterval = requestAnimationFrame(frame);
-  }
-  _autoScrollInterval = requestAnimationFrame(frame);
+  // Two frames to ensure layout is ready
+  requestAnimationFrame(()=>requestAnimationFrame(doStart));
 }
+
+function _startScrollEngine(){} // kept for compatibility
 
 function stopAutoScroll(){
   if(_autoScrollInterval){
@@ -5649,10 +5655,8 @@ function stopAutoScroll(){
     _autoScrollInterval=null;
   }
   const content=document.getElementById('perfContent');
-  if(content?._autoScrollCleanup){
-    content._autoScrollCleanup();
-    delete content._autoScrollCleanup;
-  }
+  if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
+  if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
 }
 
 async function sendContactEmail() {
