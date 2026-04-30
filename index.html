@@ -4503,7 +4503,7 @@ async function toggleBeatScroll(){
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:8px">'
       +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Ndjeshmeria:</span>'
-      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:70px;accent-color:#ef4444" oninput="window._onsetThreshold=parseFloat(this.value);document.getElementById('beatSensVal').textContent=this.value"/>'
+      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:70px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
       +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
       +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Scroll/akord:</span>'
       +'<select id="beatPerScrollSel" style="background:#222;color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:11px" onchange="window._onsetScrollLines=parseInt(this.value)">'
@@ -4524,6 +4524,12 @@ async function toggleBeatScroll(){
     showToast('Mikrofoni nuk u lejua — kontrollo lejet','error');
     console.error(e);
   }
+}
+
+function setPerfSens(val){
+  window._onsetThreshold=parseFloat(val);
+  const el=document.getElementById('beatSensVal');
+  if(el) el.textContent=parseFloat(val).toFixed(2);
 }
 
 function stopBeatScroll(){
