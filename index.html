@@ -4451,65 +4451,77 @@ function stopTapTempoMode(){
 // ═══════════════════════════════════════════════════════
 //  BEAT DETECTION — Audio-driven scroll
 // ═══════════════════════════════════════════════════════
-let _beatCtx=null, _beatAnalyser=null, _beatStream=null;
-let _beatAnimFrame=null, _beatActive=false;
-let _lastBeatTime=0, _beatEnergyHistory=[], _lastScrollBeat=0;
+// ═══════════════════════════════════════════════════════
+//  ONSET DETECTION — Audio scroll (chord change detection)
+// ═══════════════════════════════════════════════════════
+let _beatCtx=null,_beatAnalyser=null,_beatStream=null;
+let _beatAnimFrame=null,_beatActive=false;
+let _lastBeatTime=0,_beatEnergyHistory=[],_lastScrollBeat=0;
+let _prevSpectrum=null; // for onset (change) detection
 
 async function toggleBeatScroll(){
   const btn=document.getElementById('beatScrollBtn');
   if(_beatActive){
     stopBeatScroll();
-    if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     document.getElementById('beatDebugBar')?.remove();
+    if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     return;
   }
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{
+      echoCancellation:false,noiseSuppression:false,autoGainControl:false
+    },video:false});
     _beatStream=stream;
-    _beatCtx=new (window.AudioContext||window.webkitAudioContext)();
+    _beatCtx=new(window.AudioContext||window.webkitAudioContext)();
     const src=_beatCtx.createMediaStreamSource(stream);
     _beatAnalyser=_beatCtx.createAnalyser();
-    _beatAnalyser.fftSize=1024;
-    _beatAnalyser.smoothingTimeConstant=0.85;
+    _beatAnalyser.fftSize=2048;
+    _beatAnalyser.smoothingTimeConstant=0.5;
     src.connect(_beatAnalyser);
     _beatActive=true;
-    _beatEnergyHistory=new Array(60).fill(0);
-    _lastBeatTime=0; _lastScrollBeat=0;
-    window._beatThreshold=1.3;
-    window._beatsPerScroll=1;
+    _beatEnergyHistory=new Array(30).fill(0);
+    _prevSpectrum=null;
+    _lastBeatTime=0;
+
     if(btn){btn.textContent='🎙️ ON';btn.style.background='var(--red)';btn.style.color='#fff';}
-    // Visual debug bar at bottom
+
+    // Build debug bar
     const pm=document.getElementById('performanceMode');
-    let dbg=document.getElementById('beatDebugBar');
-    if(!dbg){
-      dbg=document.createElement('div');
-      dbg.id='beatDebugBar';
-      dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;height:38px;background:rgba(0,0,0,0.88);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:99998;font-family:Roboto Mono,monospace;font-size:11px;color:#fff';
-      dbg.innerHTML='<span style="color:#aaa;white-space:nowrap">🎙️</span>'
-        +'<div style="flex:1;height:12px;background:#1a1a2e;border-radius:6px;overflow:hidden;position:relative">'
-        +'<div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);border-radius:6px;transition:width .04s"></div>'
-        +'<div id="beatThreshLine" style="position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.5)"></div>'
-        +'</div>'
-        +'<span id="beatStatusTxt" style="color:#888;min-width:70px;text-align:center;font-size:10px">duke degjuar...</span>'
-        +'<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">'
-        +'<span style="font-size:10px;color:#aaa">Ndjeshmeria:</span>'
-        +'<input type="range" id="beatSensSlider" min="1.1" max="2.0" step="0.05" value="1.3" style="width:60px;accent-color:#ef4444" oninput="window._beatThreshold=parseFloat(this.value);document.getElementById(\'beatSensVal\').textContent=this.value"/>'
-        +'<span id="beatSensVal" style="font-size:10px;color:#aaa;min-width:24px">1.3</span>'
-        +'</div>'
-        +'<div style="display:flex;align-items:center;gap:4px;white-space:nowrap">'
-        +'<span style="font-size:10px;color:#aaa">Beats/rresht:</span>'
-        +'<select id="beatPerScrollSel" style="background:#222;color:#fff;border:none;border-radius:4px;padding:1px 4px;font-size:11px" onchange="window._beatsPerScroll=parseInt(this.value)">'
-        +'<option value="1">1</option><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option>'
-        +'</select>'
-        +'</div>'
-        +'<button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px;white-space:nowrap">Stop</button>';
-      (pm||document.body).appendChild(dbg);
-    }
+    document.getElementById('beatDebugBar')?.remove();
+    const dbg=document.createElement('div');
+    dbg.id='beatDebugBar';
+    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99998;background:rgba(0,0,0,0.92);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    dbg.innerHTML=
+      '<span style="font-size:12px">🎙️</span>'
+      +'<div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Zeri:</span>'
+      +'<div style="flex:1;height:10px;background:#111;border-radius:5px;overflow:hidden;position:relative">'
+      +'<div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);transition:width .05s;border-radius:5px"></div>'
+      +'</div>'
+      +'<span id="beatStatusTxt" style="font-size:10px;color:#888;min-width:70px;text-align:right">duke degjuar...</span>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Ndjeshmeria:</span>'
+      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:70px;accent-color:#ef4444" oninput="window._onsetThreshold=parseFloat(this.value);document.getElementById('beatSensVal').textContent=this.value"/>'
+      +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
+      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Scroll/akord:</span>'
+      +'<select id="beatPerScrollSel" style="background:#222;color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:11px" onchange="window._onsetScrollLines=parseInt(this.value)">'
+      +'<option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>'
+      +'</select>'
+      +'<span style="font-size:10px;color:#aaa">rreshta</span>'
+      +'</div>'
+      +'</div>'
+      +'<button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;flex-shrink:0">Stop</button>';
+    (pm||document.body).appendChild(dbg);
+
+    window._onsetThreshold=0.5;
+    window._onsetScrollLines=1;
     stopAutoScroll();
     _runBeatDetection();
     showToast('🎙️ Mikrofoni aktiv — luaj muzike!','success');
   }catch(e){
-    showToast('Mikrofoni nuk u lejua','error');
+    showToast('Mikrofoni nuk u lejua — kontrollo lejet','error');
     console.error(e);
   }
 }
@@ -4519,73 +4531,88 @@ function stopBeatScroll(){
   if(_beatAnimFrame){cancelAnimationFrame(_beatAnimFrame);_beatAnimFrame=null;}
   if(_beatStream){_beatStream.getTracks().forEach(t=>t.stop());_beatStream=null;}
   if(_beatCtx){_beatCtx.close();_beatCtx=null;}
-  _beatAnalyser=null;
+  _beatAnalyser=null; _prevSpectrum=null;
   document.getElementById('beatDebugBar')?.remove();
 }
 
 function _runBeatDetection(){
   if(!_beatActive||!_beatAnalyser) return;
-  const data=new Uint8Array(_beatAnalyser.frequencyBinCount);
-  const binHz=(_beatCtx.sampleRate||44100)/_beatAnalyser.fftSize;
-  const bassLo=Math.max(0,Math.floor(60/binHz));
-  const bassHi=Math.min(data.length-1,Math.floor(300/binHz));
-  const midLo=Math.max(0,Math.floor(300/binHz));
-  const midHi=Math.min(data.length-1,Math.floor(2000/binHz));
+  const bufLen=_beatAnalyser.frequencyBinCount;
+  const data=new Uint8Array(bufLen);
   const levelBar=document.getElementById('beatLevelBar');
-  const threshLine=document.getElementById('beatThreshLine');
   const statusTxt=document.getElementById('beatStatusTxt');
   const btn=document.getElementById('beatScrollBtn');
-  const MIN_BEAT_GAP=260;
-
-  // Initialize dynamic controls
-  window._beatThreshold=window._beatThreshold||1.3;
-  window._beatsPerScroll=window._beatsPerScroll||1;
+  const MIN_GAP=400; // ms min between scrolls
 
   const tick=(ts)=>{
     if(!_beatActive) return;
     _beatAnalyser.getByteFrequencyData(data);
-    let bassE=0,bc=0;
-    for(let i=bassLo;i<=bassHi;i++){bassE+=data[i];bc++;}
-    bassE=bc>0?bassE/bc:0;
-    let midE=0,mc=0;
-    for(let i=midLo;i<=midHi;i++){midE+=data[i];mc++;}
-    midE=mc>0?midE/mc:0;
-    const energy=bassE*0.6+midE*0.4;
-    _beatEnergyHistory.push(energy);
-    if(_beatEnergyHistory.length>60) _beatEnergyHistory.shift();
-    const avg=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
-    const threshold=avg*(window._beatThreshold||1.3);
-    if(levelBar) levelBar.style.width=Math.min(100,(energy/150)*100)+'%';
-    if(threshLine) threshLine.style.left=Math.min(97,(threshold/150)*100)+'%';
-    const now=performance.now();
-    const isBeat=energy>threshold&&energy>12&&(now-_lastBeatTime)>MIN_BEAT_GAP;
-    if(isBeat){
-      _lastBeatTime=now;
-      if(statusTxt) statusTxt.textContent='*** BEAT ***';
-      if(btn){btn.style.background='#facc15';btn.style.color='#000';setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},120);}
-      const dot=document.getElementById('metroBeatDot');
-      if(dot){dot.classList.add('on');setTimeout(()=>dot.classList.remove('on'),120);}
-      _lastScrollBeat++;
-      const bps=window._beatsPerScroll||1;
-      if(_lastScrollBeat>=bps){
-        _lastScrollBeat=0;
-        const content=document.getElementById('perfContent');
-        if(content){
-          const lines=content.querySelectorAll('.perf-lyric-line');
-          let avgH=80;
-          if(lines.length>0){let tot=0;lines.forEach(l=>tot+=l.offsetHeight);avgH=tot/lines.length;}
-          content.scrollBy({top:avgH,behavior:'smooth'});
-          highlightCurrentLine();
-        }
+
+    // Overall RMS energy for level bar
+    let rms=0;
+    for(let i=0;i<bufLen;i++) rms+=data[i]*data[i];
+    rms=Math.sqrt(rms/bufLen);
+    if(levelBar) levelBar.style.width=Math.min(100,(rms/100)*100)+'%';
+
+    // ── ONSET DETECTION (spectral flux) ──
+    // Measures how much the spectrum CHANGED since last frame
+    // A chord change = big spectral change = scroll
+    let flux=0;
+    if(_prevSpectrum){
+      for(let i=0;i<bufLen;i++){
+        const diff=data[i]-_prevSpectrum[i];
+        if(diff>0) flux+=diff; // only positive changes (new energy = onset)
       }
-      setTimeout(()=>{if(statusTxt&&_beatActive)statusTxt.textContent='E:'+energy.toFixed(0)+' T:'+threshold.toFixed(0);},400);
-    } else if(statusTxt&&now-_lastBeatTime>500){
-      statusTxt.textContent='E:'+energy.toFixed(0)+' T:'+threshold.toFixed(0);
+      flux/=bufLen;
+    }
+    // Save current spectrum
+    _prevSpectrum=new Uint8Array(data);
+
+    // Update history for adaptive threshold
+    _beatEnergyHistory.push(flux);
+    if(_beatEnergyHistory.length>30) _beatEnergyHistory.shift();
+    const avg=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
+    const threshold=(window._onsetThreshold||0.5)+avg*0.5;
+
+    const now=performance.now();
+    const isOnset=flux>threshold&&rms>8&&(now-_lastBeatTime)>MIN_GAP;
+
+    if(levelBar){
+      // Color shows how close to onset
+      const pct=Math.min(100,(rms/80)*100);
+      const isHot=flux>threshold*0.7;
+      levelBar.style.background=isHot
+        ?'linear-gradient(90deg,#4ade80,#facc15,#ef4444)'
+        :'linear-gradient(90deg,#4ade80,#22c55e)';
+    }
+
+    if(isOnset){
+      _lastBeatTime=now;
+      if(statusTxt) statusTxt.textContent='✦ AKORD';
+      if(btn){btn.style.background='#facc15';btn.style.color='#000';
+        setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},150);}
+      // Flash metro dot
+      const dot=document.getElementById('metroBeatDot');
+      if(dot){dot.classList.add('on');setTimeout(()=>dot.classList.remove('on'),150);}
+      // Scroll N lines
+      const linesToScroll=window._onsetScrollLines||1;
+      const content=document.getElementById('perfContent');
+      if(content){
+        const lines=content.querySelectorAll('.perf-lyric-line');
+        let avgH=80;
+        if(lines.length>0){let t=0;lines.forEach(l=>t+=l.offsetHeight);avgH=t/lines.length;}
+        content.scrollBy({top:avgH*linesToScroll,behavior:'smooth'});
+        highlightCurrentLine();
+      }
+      setTimeout(()=>{if(statusTxt&&_beatActive)statusTxt.textContent='flux:'+flux.toFixed(1)+' thr:'+threshold.toFixed(1);},500);
+    } else if(statusTxt&&now-_lastBeatTime>800){
+      statusTxt.textContent='flux:'+flux.toFixed(1)+' thr:'+threshold.toFixed(1);
     }
     _beatAnimFrame=requestAnimationFrame(tick);
   };
   _beatAnimFrame=requestAnimationFrame(tick);
 }
+
 let _metroCtx=null, _metroInterval=null, _metroBeat=0;
 
 function startMetronome(bpm){
@@ -5679,21 +5706,42 @@ function showPerfSong(){
   pContent.scrollTop=0;
   const nextItem=sl.songs[perfIdx+1];
   const nextSong=nextItem?SONGS.find(x=>Number(x.id)===Number(nextItem.id)):null;
-  pContent.innerHTML=`
-    ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:12px;padding:10px 16px;margin-bottom:16px;font-size:15px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:8px">📝 ${item.note}</div>`:''}
-    <!-- Section arrangement editor (compact) -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;white-space:nowrap">Rend:</span>
-      <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-      <button onclick="perfResetArr('${s.id}')" style="padding:1px 7px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
-      <span style="font-size:10px;color:var(--text3);flex-shrink:0">+</span>
-      ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:1px 8px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
-    </div>
-    <!-- Lyrics -->
-    <div id="perfLyricsContent"></div>
-    <!-- Next song -->
-    ${nextSong?`<div style="margin-top:28px;padding:12px 16px;border:1px dashed var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:14px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}`;
 
+  // Build section repeat state
+  if(!window._perfSectionRepeats) window._perfSectionRepeats={};
+  const repKey=`rep_${s.id}`;
+  if(!window._perfSectionRepeats[repKey]){
+    window._perfSectionRepeats[repKey]={};
+    allSections.forEach(sec=>{ window._perfSectionRepeats[repKey][sec.label]=1; });
+  }
+  const reps=window._perfSectionRepeats[repKey];
+
+  pContent.innerHTML=`
+    <div style="display:flex;gap:0;min-height:100%">
+      <!-- LEFT SIDEBAR: Section jump + repeat -->
+      <div id="perfSectionSidebar" style="width:62px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:4px 6px 4px 0;position:sticky;top:0;align-self:flex-start">
+        ${allSections.map(sec=>`
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <button onclick="perfJumpToSection('${sec.label}')"
+            style="width:52px;padding:5px 0;border-radius:8px;border:none;background:${sec.color||'var(--blue)'};color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
+            ${sec.label}
+          </button>
+          <div style="display:flex;align-items:center;gap:2px">
+            <button onclick="changeSectionRep('${s.id}','${sec.label}',-1)"
+              style="width:16px;height:16px;border-radius:4px;border:none;background:var(--bg3);color:var(--text3);font-size:11px;cursor:pointer;line-height:1;padding:0">-</button>
+            <span id="repCount_${sec.label.replace(/\s/g,'_')}" style="font-size:11px;font-weight:700;color:var(--text2);min-width:14px;text-align:center">${reps[sec.label]||1}x</span>
+            <button onclick="changeSectionRep('${s.id}','${sec.label}',1)"
+              style="width:16px;height:16px;border-radius:4px;border:none;background:var(--bg3);color:var(--text3);font-size:11px;cursor:pointer;line-height:1;padding:0">+</button>
+          </div>
+        </div>`).join('')}
+      </div>
+      <!-- MAIN LYRICS -->
+      <div style="flex:1;min-width:0">
+        ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:10px;padding:8px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:var(--gold)">📝 ${item.note}</div>`:''}
+        <div id="perfLyricsContent"></div>
+        ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
+      </div>
+    </div>`;
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
   setTimeout(addChordInteraction, 80);
   const mbi=document.getElementById('metroBpmInput');
@@ -5713,6 +5761,25 @@ function setPerfScrollSpeed(val){
     stopAutoScroll();
     toggleAutoScroll();
   }
+}
+
+function changeSectionRep(songId, label, delta){
+  if(!window._perfSectionRepeats) window._perfSectionRepeats={};
+  const key=`rep_${songId}`;
+  if(!window._perfSectionRepeats[key]) window._perfSectionRepeats[key]={};
+  const cur=window._perfSectionRepeats[key][label]||1;
+  const newVal=Math.max(1,Math.min(8,cur+delta));
+  window._perfSectionRepeats[key][label]=newVal;
+  const el=document.getElementById('repCount_'+label.replace(/\s/g,'_'));
+  if(el) el.textContent=newVal+'x';
+  // Re-render arrangement to reflect new repeat counts
+  const sl=getSetlist(); const item=sl.songs[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+  const allSections=parseLyricsText(rawText);
+  const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
 function perfJumpToSection(label){
@@ -5814,17 +5881,35 @@ function perfTranspose(songId,dir){
 function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   steps=steps||_perfTranspose?.[songId]||0;
   const fs=_perfFontSize||18;
-  const lang = _perfLang || currentLang; // use perf-specific lang or site lang
+  const lang = _perfLang || currentLang;
   const key=`perf_arr_${songId}`;
   const arrangement=_perfArrangements?.[key]||[];
+  const repKey=`rep_${songId}`;
+  const reps=(window._perfSectionRepeats||{})[repKey]||{};
+
   const chipsEl=document.getElementById('perfArrChips');
   const lyricsEl=document.getElementById('perfLyricsContent');
+
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
     const sec=sectionMap[label];const color=sec?.color||'var(--blue)';
-    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px">x</button></div>`;
+    const rep=reps[label]||1;
+    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px">x</button></div>`;
   }).join('');
-  if(lyricsEl) lyricsEl.innerHTML=(arrangement.length?arrangement:Object.keys(sectionMap)).map(label=>{
+
+  // Build sections list with repeats expanded
+  const sectionLabels=arrangement.length?arrangement:Object.keys(sectionMap);
+  // Expand repeats: CH×2 → [CH, CH]
+  const expandedLabels=[];
+  sectionLabels.forEach(label=>{
+    const rep=reps[label]||1;
+    for(let r=0;r<rep;r++) expandedLabels.push(label);
+  });
+
+  if(lyricsEl) lyricsEl.innerHTML=expandedLabels.map((label,expandIdx)=>{
     const sec=sectionMap[label]; if(!sec) return '';
+    const isRepeat=expandIdx>0&&expandedLabels[expandIdx-1]===label;
+    const rep=reps[label]||1;
+    const repNum=expandedLabels.slice(0,expandIdx).filter(l=>l===label).length+1;
     const lines=sec.lines.map(l=>{
       const tc=l.chords?transposeChordLine(l.chords,steps):'';
       const lyricText = lang==='en' && l.en ? l.en : l.sq;
@@ -5864,7 +5949,8 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
 
       return '<div class="perf-lyric-line" style="margin-bottom:'+fs+'px;transition:opacity .3s,transform .3s">'+chordHtml+'<div style="font-weight:600;font-size:'+fs+'px;line-height:1.85;font-family:\'Roboto Mono\',monospace">'+lyricText+'</div>'+(secondaryText&&secondaryText!==lyricText?'<div style="color:var(--text3);font-style:italic;font-size:'+(fs-3)+'px;font-family:\'Roboto Mono\',monospace;margin-top:2px">'+secondaryText+'</div>':'')+'</div>'+chordDiagramsHtml;
     }).join('');
-    return `<div class="perf-section-block" data-label="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${sec.label}</span><div style="margin-top:14px">${lines}</div></div>`;
+    const secLabelHtml=rep>1?`${label} <span style="font-size:10px;opacity:0.8">(${repNum}/${rep})</span>`:label;
+    return `<div class="perf-section-block" data-label="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${secLabelHtml}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
 }
 
