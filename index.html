@@ -583,23 +583,28 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
 /* ── PERFORMANCE MODE DARK THEME ── */
 #performanceMode[data-dark="1"]{
-  background:#090C14 !important;
-  color:#F0F0FF !important;
+  background:#080B12 !important;
+  color:#EEEEFF !important;
   --chord-color:#ff9999;
-  --text:#F0F0FF;
-  --text2:#9090BB;
-  --text3:#484870;
-  --bg2:#10131C;
-  --bg3:#181C28;
-  --border:#1C2030;
-  --surface:#12151F;
-  --blue-mid:#7090DD;
-  --gold:#F5CF7A;
-  --red:#E06060;
+  --text:#EEEEFF;
+  --text2:#8888BB;
+  --text3:#404060;
+  --bg2:#0D1018;
+  --bg3:#141720;
+  --border:#1A1D28;
+  --surface:#0F1218;
+  --blue-mid:#6080CC;
+  --gold:#F0C860;
+  --red:#CC5555;
 }
-#performanceMode[data-dark="1"] .sec-lbl{opacity:.9}
-#performanceMode[data-dark="1"] input,
-#performanceMode[data-dark="1"] button{border-color:#1C2030 !important;}
+#performanceMode[data-dark="1"] .sec-lbl{opacity:.85}
+#performanceMode[data-dark="1"] input{border-color:#1A1D28 !important;}
+/* Smooth font rendering for lyrics */
+#perfLyricsContent{
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
 
 /* ── PERF LYRIC LINE HIGHLIGHT ── */
 .perf-lyric-line{transition:opacity .25s,transform .25s;}
@@ -958,7 +963,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <!-- Font size -->
       <div style="display:flex;align-items:center;gap:4px">
         <span style="font-size:10px;color:var(--text3)">A</span>
-        <input type="range" min="14" max="28" value="${_perfFontSize}" id="perfFontSlider" oninput="setPerfFont(this.value)" style="width:50px;accent-color:var(--blue-mid)"/>
+        <input type="range" min="14" max="28" value="18" id="perfFontSlider" oninput="setPerfFont(this.value)" style="width:50px;accent-color:var(--blue-mid)"/>
         <span style="font-size:14px;color:var(--text3)">A</span>
         <button onclick="setPerfFont(18);document.getElementById('perfFontSlider').value=18" style="background:var(--bg3);border:none;border-radius:5px;padding:1px 5px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
       </div>
@@ -966,9 +971,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <!-- Scroll speed -->
       <div style="display:flex;align-items:center;gap:4px" title="Scroll speed">
         <span style="font-size:10px">🐢</span>
-        <input type="range" min="25" max="300" value="${_perfScrollSpeed}" id="perfSpeedSlider" oninput="setPerfScrollSpeed(this.value)" style="width:50px;accent-color:var(--gold)"/>
+        <input type="range" min="25" max="300" value="100" id="perfSpeedSlider" oninput="setPerfScrollSpeed(this.value)" style="width:50px;accent-color:var(--gold)"/>
         <span style="font-size:10px">🐇</span>
-        <span id="perfSpeedLabel" style="font-size:9px;color:var(--text3);min-width:24px">${_perfScrollSpeed}%</span>
+        <span id="perfSpeedLabel" style="font-size:9px;color:var(--text3);min-width:24px">100%</span>
         <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" style="background:var(--bg3);border:none;border-radius:5px;padding:1px 5px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
       </div>
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
@@ -4494,7 +4499,7 @@ function _runBeatDetection(){
     const threshold=(window._onsetThreshold||0.5)+avg*0.5;
 
     const now=performance.now();
-    const isOnset=flux>threshold&&rms>20&&flux>3&&(now-_lastBeatTime)>MIN_GAP;
+    const isOnset=flux>threshold&&rms>35&&flux>5&&(now-_lastBeatTime)>MIN_GAP;
 
     if(levelBar){
       // Color shows how close to onset
@@ -5583,6 +5588,14 @@ function showPerfSong(){
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
 
+  // Sync slider values with current state
+  const fontSlider=document.getElementById('perfFontSlider');
+  if(fontSlider) fontSlider.value=_perfFontSize;
+  const speedSlider=document.getElementById('perfSpeedSlider');
+  const speedLabel=document.getElementById('perfSpeedLabel');
+  if(speedSlider) speedSlider.value=_perfScrollSpeed;
+  if(speedLabel) speedLabel.textContent=_perfScrollSpeed+'%';
+
   // ── Row 2 sticky: populate controls ──
   // Instrument buttons
   const instEl=document.getElementById('perfInstBtns');
@@ -5658,6 +5671,14 @@ function showPerfSong(){
       <!-- MAIN LYRICS — full width, sidebar floats over -->
       <div style="flex:1;min-width:0;padding-right:58px">
         ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:10px;padding:8px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:var(--gold)">📝 ${item.note}</div>`:''}
+        <!-- Arrangement row: order chips + add sections -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 12px;margin-bottom:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;white-space:nowrap">Rend:</span>
+          <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+          <button onclick="perfResetArr('${s.id}')" style="padding:1px 7px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
+          <span style="font-size:10px;color:var(--text3)">+</span>
+          ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
+        </div>
         <div id="perfLyricsContent"></div>
         ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
       </div>
@@ -5907,14 +5928,16 @@ function toggleAutoScroll(){
 
   // Measure line heights — wait one more frame for layout
   const doStart=()=>{
-    const lines=content.querySelectorAll('.perf-lyric-line');
-    let avgH=80; // generous fallback
+    // Measure from the actual lyrics element for accuracy
+    const lyricsEl2=document.getElementById('perfLyricsContent')||content;
+    const lines=lyricsEl2.querySelectorAll('.perf-lyric-line');
+    let avgH=90; // fallback
     if(lines.length>0){
       let tot=0; lines.forEach(l=>tot+=l.offsetHeight);
       const m=tot/lines.length;
-      if(m>5) avgH=m;
+      if(m>10) avgH=m;
     }
-    const pxPerSec=(avgH/secPerLine)*(_perfScrollSpeed/100);
+    const pxPerSec=Math.max(5,(avgH/secPerLine)*(_perfScrollSpeed/100));
 
     if(btn){
       btn.textContent=bpm>0?`⏸ ${bpm}BPM`:'⏸ Stop';
