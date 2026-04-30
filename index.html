@@ -4423,6 +4423,7 @@ async function toggleBeatScroll(){
       +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Ndjeshmeria:</span>'
       +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:70px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
       +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
+      +'<button onclick="setPerfSens(0.5);document.getElementById(\'beatSensSlider\').value=0.5" style="background:#333;border:none;color:#aaa;border-radius:5px;padding:1px 6px;cursor:pointer;font-size:11px" title="Reset">↺</button>'
       +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Scroll/akord:</span>'
       +'<select id="beatPerScrollSel" style="background:#222;color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:11px" onchange="window._onsetScrollLines=parseInt(this.value)">'
       +'<option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>'
@@ -5374,7 +5375,7 @@ function startPerformanceMode(){
   startCountdown(()=>{
     showPerfSong();
     startPerfTimer();
-    startLineHighlight();
+    // Line highlight starts ONLY when auto-scroll or audio-scroll is activated
   });
   document.addEventListener('keydown',perfKeyHandler);
 }
@@ -5496,24 +5497,24 @@ function highlightCurrentLine(){
   const lines=content.querySelectorAll('.perf-lyric-line');
   if(!lines.length) return;
   const scrollTop=content.scrollTop;
+  const atTop=scrollTop<40;
+  const atBottom=scrollTop>=content.scrollHeight-content.clientHeight-40;
   const viewMid=scrollTop+content.clientHeight*0.38;
-  const atBottom=content.scrollTop>=content.scrollHeight-content.clientHeight-40;
   let activeFound=false;
   lines.forEach((line,i)=>{
-    const lineTop=line.offsetTop;
-    const lineBot=lineTop+line.offsetHeight;
-    // At bottom of content, highlight last visible line
-    const isActive=atBottom
-      ? i===lines.length-1
-      : (lineTop<=viewMid&&lineBot>viewMid);
+    let isActive=false;
+    if(atTop) isActive=i===0; // at top → first line
+    else if(atBottom) isActive=i===lines.length-1; // at bottom → last line
+    else {
+      const lineTop=line.offsetTop;
+      const lineBot=lineTop+line.offsetHeight;
+      isActive=lineTop<=viewMid&&lineBot>viewMid;
+    }
     if(isActive) activeFound=true;
     line.classList.toggle('active-line',isActive);
     line.classList.toggle('dim-line',!isActive);
   });
-  // If nothing found (between sections), don't dim everything
-  if(!activeFound){
-    lines.forEach(l=>{ l.classList.remove('active-line','dim-line'); });
-  }
+  if(!activeFound) lines.forEach(l=>l.classList.remove('active-line','dim-line'));
 }
 
 function startLineHighlight(){
@@ -5568,7 +5569,10 @@ function perfKeyHandler(e){
 function showPerfSong(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  // Stop scroll and highlight when changing songs
   stopAutoScroll();
+  // Only reset highlight if NOT in auto-scroll mode
+  if(!_autoScrollInterval && !_beatActive) stopLineHighlight();
 
   if(!_perfTranspose) _perfTranspose={};
   if(_perfTranspose[s.id]===undefined) _perfTranspose[s.id]=0;
