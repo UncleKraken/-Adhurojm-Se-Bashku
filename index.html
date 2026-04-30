@@ -620,14 +620,34 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   #performanceMode > div:first-child button{padding:6px 9px;font-size:13px;}
   /* Singer mode: bigger font */
   #perfLyricsContent .perf-lyric-line{padding:4px 0;}
+  /* Floating sidebar smaller on mobile */
+  #perfSectionSidebar{right:4px;padding:4px 3px;gap:4px;}
+  #perfSectionSidebar button:first-child{width:38px;font-size:10px;padding:5px 2px;}
 }
 @media(max-width:480px){
   /* iPhone SE / small screens */
   #perfControlsBar>div{gap:4px;padding:5px 8px;}
   #perfControlsBar input[type=range]{width:40px;}
-  #perfSectionJumpBtns button{padding:2px 7px;font-size:10px;}
   #perfSongList button{padding:4px 10px;font-size:10px;}
+  /* Section sidebar even more compact */
+  #perfSectionSidebar{right:2px;}
+  #perfSectionSidebar>div>button{width:34px;font-size:9px;}
+  /* Hide repeat controls on very small screens */
+  #perfSectionSidebar>div>div{display:none;}
+  /* Lyrics take full width */
+  #perfContent>div>div:last-child{padding-right:42px;}
 }
+/* ── GENERAL MOBILE ── */
+@media(max-width:600px){
+  .song-wrap{padding:14px 12px 40px}
+  .dl-bar{flex-wrap:wrap;gap:6px;}
+  .songs-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .f-select{font-size:13px;padding:7px 8px;}
+  #chordPopup{left:50% !important;transform:translateX(-50%);width:160px;}
+  .similar-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ── CHORD DIAGRAM POPUP ── */
 .chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
 .chord-popup svg{display:block;margin:0 auto}
 .chord-popup-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px}
@@ -962,9 +982,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <!-- PANIC BUTTON — big red, touch-friendly -->
       <button onclick="togglePanic()" id="perfPanicBtn" title="Panic — Blank Screen (P)" style="padding:5px 14px;border-radius:7px;border:none;background:rgba(180,30,30,0.2);color:#E06060;font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:1px solid rgba(180,30,30,0.4)">🚨</button>
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
-      <!-- SECTION JUMP — always visible here -->
-      <span style="font-size:10px;color:var(--text3);font-weight:700;white-space:nowrap">→</span>
-      <div id="perfSectionJumpBtns" style="display:flex;gap:4px"></div>
+      <!-- SECTION JUMP — in sidebar inside lyrics, not here -->
     </div>
   </div>
 
@@ -3071,13 +3089,6 @@ async function filterByCategory(cat){
   renderLibrary();
 }
 
-function filterByTag(tag){
-  showPage('songs');
-  window._categoryFilter = null;
-  const searchInput = document.getElementById('libSearch');
-  if(searchInput){ searchInput.value = tag; }
-  renderLibrary();
-}
 
 function clearFavorites(){
   if(!confirm('Fshi të gjitha të preferuarat?')) return;
@@ -4483,7 +4494,7 @@ function _runBeatDetection(){
     const threshold=(window._onsetThreshold||0.5)+avg*0.5;
 
     const now=performance.now();
-    const isOnset=flux>threshold&&rms>8&&(now-_lastBeatTime)>MIN_GAP;
+    const isOnset=flux>threshold&&rms>20&&flux>3&&(now-_lastBeatTime)>MIN_GAP;
 
     if(levelBar){
       // Color shows how close to onset
@@ -4585,15 +4596,6 @@ function getCompatibleKeys(key){
   };
 }
 
-function renderKeyCompatibility(songKey){
-  const {related,relative,parallel}=getCompatibleKeys(songKey);
-  const relatedSongs=SONGS.filter(s=>
-    s.id!==currentSong?.id && (
-      related.includes(s.key)||s.key===relative||s.key===parallel
-    )
-  ).slice(0,6);
-  return relatedSongs;
-}
 
 // ═══════════════════════════════════════════════════════
 //  CHORD DIAGRAMS — Guitar fingering
@@ -5484,18 +5486,29 @@ function showPerfControls(){
 
 // ── CURRENT LINE HIGHLIGHT ──
 function highlightCurrentLine(){
-  const content = document.getElementById('perfContent');
+  const content=document.getElementById('perfContent');
   if(!content) return;
-  const scrollTop = content.scrollTop;
-  const viewMid = scrollTop + content.clientHeight * 0.35;
-  const lines = content.querySelectorAll('.perf-lyric-line');
-  lines.forEach(line=>{
-    const lineTop = line.offsetTop;
-    const lineBot = lineTop + line.offsetHeight;
-    const isActive = lineTop <= viewMid && lineBot > viewMid;
-    line.classList.toggle('active-line', isActive);
-    line.classList.toggle('dim-line', !isActive);
+  const lines=content.querySelectorAll('.perf-lyric-line');
+  if(!lines.length) return;
+  const scrollTop=content.scrollTop;
+  const viewMid=scrollTop+content.clientHeight*0.38;
+  const atBottom=content.scrollTop>=content.scrollHeight-content.clientHeight-40;
+  let activeFound=false;
+  lines.forEach((line,i)=>{
+    const lineTop=line.offsetTop;
+    const lineBot=lineTop+line.offsetHeight;
+    // At bottom of content, highlight last visible line
+    const isActive=atBottom
+      ? i===lines.length-1
+      : (lineTop<=viewMid&&lineBot>viewMid);
+    if(isActive) activeFound=true;
+    line.classList.toggle('active-line',isActive);
+    line.classList.toggle('dim-line',!isActive);
   });
+  // If nothing found (between sections), don't dim everything
+  if(!activeFound){
+    lines.forEach(l=>{ l.classList.remove('active-line','dim-line'); });
+  }
 }
 
 function startLineHighlight(){
@@ -5594,8 +5607,7 @@ function showPerfSong(){
   if(!_perfArrangements) _perfArrangements={};
   if(!_perfArrangements[arrKey]) _perfArrangements[arrKey]=allSections.map(sec=>sec.label);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  const jumpEl=document.getElementById('perfSectionJumpBtns');
-  if(jumpEl) jumpEl.innerHTML=allSections.map(sec=>`<button onclick="perfJumpToSection('${sec.label}')" style="padding:3px 10px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">${sec.label}</button>`).join('');
+  // Section jump is now in the floating sidebar inside perfContent
 
   // ── Row 3: mini song list ──
   const list=document.getElementById('perfSongList');
@@ -5625,26 +5637,26 @@ function showPerfSong(){
   const reps=window._perfSectionRepeats[repKey];
 
   pContent.innerHTML=`
-    <div style="display:flex;gap:0;min-height:100%">
-      <!-- LEFT SIDEBAR: Section jump + repeat -->
-      <div id="perfSectionSidebar" style="width:62px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:4px 6px 4px 0;position:sticky;top:0;align-self:flex-start">
+    <div style="display:flex;gap:0;min-height:100%;position:relative">
+      <!-- FLOATING SECTION SIDEBAR — right side, always visible -->
+      <div id="perfSectionSidebar" style="position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;padding:6px 4px;background:rgba(0,0,0,0.35);backdrop-filter:blur(8px);border-radius:12px;border:1px solid rgba(255,255,255,0.08)">
         ${allSections.map(sec=>`
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
           <button onclick="perfJumpToSection('${sec.label}')"
-            style="width:52px;padding:5px 0;border-radius:8px;border:none;background:${sec.color||'var(--blue)'};color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
+            style="width:46px;padding:6px 2px;border-radius:8px;border:none;background:${sec.color||'var(--blue)'};color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent">
             ${sec.label}
           </button>
-          <div style="display:flex;align-items:center;gap:2px">
+          <div style="display:flex;align-items:center;gap:1px">
             <button onclick="changeSectionRep('${s.id}','${sec.label}',-1)"
-              style="width:16px;height:16px;border-radius:4px;border:none;background:var(--bg3);color:var(--text3);font-size:11px;cursor:pointer;line-height:1;padding:0">-</button>
-            <span id="repCount_${sec.label.replace(/\s/g,'_')}" style="font-size:11px;font-weight:700;color:var(--text2);min-width:14px;text-align:center">${reps[sec.label]||1}x</span>
+              style="width:18px;height:18px;border-radius:4px;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;line-height:1;padding:0;touch-action:manipulation">-</button>
+            <span id="repCount_${sec.label.replace(/\s/g,'_')}" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);min-width:16px;text-align:center">${reps[sec.label]||1}x</span>
             <button onclick="changeSectionRep('${s.id}','${sec.label}',1)"
-              style="width:16px;height:16px;border-radius:4px;border:none;background:var(--bg3);color:var(--text3);font-size:11px;cursor:pointer;line-height:1;padding:0">+</button>
+              style="width:18px;height:18px;border-radius:4px;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;line-height:1;padding:0;touch-action:manipulation">+</button>
           </div>
         </div>`).join('')}
       </div>
-      <!-- MAIN LYRICS -->
-      <div style="flex:1;min-width:0">
+      <!-- MAIN LYRICS — full width, sidebar floats over -->
+      <div style="flex:1;min-width:0;padding-right:58px">
         ${item.note?`<div style="background:var(--gold-muted);border:1px solid rgba(201,151,58,0.4);border-radius:10px;padding:8px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:var(--gold)">📝 ${item.note}</div>`:''}
         <div id="perfLyricsContent"></div>
         ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
@@ -5780,11 +5792,6 @@ function perfTransposeResetActive(){
   showPerfSong();
 }
 
-function perfTranspose(songId,dir){
-  if(!_perfTranspose) _perfTranspose={};
-  _perfTranspose[songId]=(_perfTranspose[songId]||0)+dir;
-  showPerfSong();
-}
 
 function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   steps=steps||_perfTranspose?.[songId]||0;
@@ -5908,7 +5915,6 @@ function toggleAutoScroll(){
       if(m>5) avgH=m;
     }
     const pxPerSec=(avgH/secPerLine)*(_perfScrollSpeed/100);
-    console.log(`AutoScroll START: bpm=${bpm} secPerLine=${secPerLine.toFixed(1)} avgH=${avgH.toFixed(0)} pxPerSec=${pxPerSec.toFixed(2)}`);
 
     if(btn){
       btn.textContent=bpm>0?`⏸ ${bpm}BPM`:'⏸ Stop';
@@ -5953,8 +5959,7 @@ function toggleAutoScroll(){
   // Two frames to ensure layout is ready
   requestAnimationFrame(()=>requestAnimationFrame(doStart));
 }
-
-function _startScrollEngine(){} // kept for compatibility
+ // kept for compatibility
 
 function stopAutoScroll(){
   if(_autoScrollInterval){
@@ -6076,12 +6081,6 @@ function renderSocialLinks(){
 // ═══════════════════════════════════════════════════════
 //  COPYRIGHT TAB SWITCHER
 // ═══════════════════════════════════════════════════════
-function switchCopyTab(lang,el){
-  document.querySelectorAll('.copy-section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.copy-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('copy-'+lang).classList.add('active');
-  if(el)el.classList.add('active');
-}
 
 // ═══════════════════════════════════════════════════════
 //  PATCH: switchAdminTab to include social
@@ -6383,15 +6382,6 @@ function toggleApiKeyVisibility() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
-function loadAnthropicKeyIntoForm() {
-  const saved = localStorage.getItem('aa-anthropic-key') || '';
-  const inp = document.getElementById('anthropicApiKey');
-  if (inp && saved) {
-    inp.value = saved;
-    const status = document.getElementById('aiKeyStatus');
-    if (status) { status.textContent = '✅ Çelësi është aktiv — PDF imazh lexohen automatikisht.'; status.style.color = 'var(--gold)'; }
-  }
-}
 
 function extractChordsFromPDFItems(items) {
   if (!items || !items.length) return '';
@@ -6531,7 +6521,6 @@ async function saveSong() {
 
   const editId = document.getElementById('editSongId').value;
   const editIdNum = editId ? Number(editId) : null;
-  console.log('saveSong editId:', editId, 'editIdNum:', editIdNum);
   const insts = [];
   if (document.getElementById('fGuitar').checked) insts.push('Guitar');
   if (document.getElementById('fPiano').checked) insts.push('Piano');
