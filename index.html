@@ -5698,13 +5698,15 @@ let _perfTimerInterval = null;
 let _perfTimerStart = null;
 
 function setPerfScrollSpeed(val){
-  _perfScrollSpeed = Number(val);
-  const label = document.getElementById('perfSpeedLabel');
-  if(label) label.textContent = val+'%';
-  // If autoscroll is running, restart with new speed
+  _perfScrollSpeed=Number(val);
+  const label=document.getElementById('perfSpeedLabel');
+  if(label) label.textContent=val+'%';
+  const slider=document.getElementById('perfSpeedSlider');
+  if(slider) slider.value=val;
+  // If running, restart with new speed (cleanly)
   if(_autoScrollInterval){
     stopAutoScroll();
-    toggleAutoScroll();
+    setTimeout(()=>toggleAutoScroll(), 20);
   }
 }
 
@@ -5983,8 +5985,8 @@ function toggleAutoScroll(){
     _autoScrollInterval=requestAnimationFrame(tick);
   };
 
-  // Two frames to ensure layout is ready
-  requestAnimationFrame(()=>requestAnimationFrame(doStart));
+  // Small delay ensures DOM is fully laid out before measuring line heights
+  setTimeout(doStart, 80);
 }
  // kept for compatibility
 
