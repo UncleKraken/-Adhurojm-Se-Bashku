@@ -5037,8 +5037,63 @@ function getSimilarSongs(song, limit=4){
     )
   ).slice(0, limit);
 // ═══════════════════════════════════════════════════════
-//  SONG RATING
+//  YOUTUBE DURATION AUTO-FETCH
 // ═══════════════════════════════════════════════════════
+let _ytDurationCache={};
+
+function extractYTId(url){
+  if(!url) return null;
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m?m[1]:null;
+}
+
+function fetchYTDuration(youtubeUrl, callback){
+  const id=extractYTId(youtubeUrl);
+  if(!id) return callback(0);
+  if(_ytDurationCache[id]) return callback(_ytDurationCache[id]);
+
+  // Use hidden iframe with YouTube IFrame API
+  const existingApi=document.getElementById('ytApiScript');
+  const doLoad=()=>{
+    const iframe=document.createElement('div');
+    iframe.id='ytTempPlayer_'+id;
+    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0';
+    document.body.appendChild(iframe);
+
+    try{
+      const player=new YT.Player('ytTempPlayer_'+id,{
+        videoId:id,
+        events:{
+          onReady:(e)=>{
+            const dur=e.target.getDuration();
+            _ytDurationCache[id]=dur;
+            iframe.remove();
+            callback(dur);
+          },
+          onError:()=>{ iframe.remove(); callback(0); }
+        }
+      });
+    }catch(err){ iframe.remove(); callback(0); }
+  };
+
+  if(window.YT&&window.YT.Player){
+    doLoad();
+  } else if(!existingApi){
+    const script=document.createElement('script');
+    script.id='ytApiScript';
+    script.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(script);
+    window.onYouTubeIframeAPIReady=()=>{ doLoad(); };
+    // Timeout fallback
+    setTimeout(()=>{ if(!window.YT) callback(0); }, 5000);
+  } else {
+    // API loading — wait
+    const check=setInterval(()=>{
+      if(window.YT&&window.YT.Player){ clearInterval(check); doLoad(); }
+    },200);
+    setTimeout(()=>clearInterval(check),5000);
+  }
+}
 function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
 function rateSong(songId, stars){
   try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
@@ -5914,81 +5969,75 @@ function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.lengt
 function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
-    stopAutoScroll();
-    stopLineHighlight();
+    stopAutoScroll(); stopLineHighlight();
     if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     return;
   }
-
-  const sl=getSetlist();
-  const item=sl?.songs?.[perfIdx];
-  if(!item){ console.warn('AutoScroll: no item at perfIdx',perfIdx); return; }
-  const s=SONGS.find(x=>Number(x.id)===Number(item.id));
-  if(!s){ console.warn('AutoScroll: song not found'); return; }
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx]; if(!item) return;
+  const s=SONGS.find(x=>Number(x.id)===Number(item.id)); if(!s) return;
   const bpm=s.bpm||0;
-  const content=document.getElementById('perfContent');
-  if(!content){ console.warn('AutoScroll: perfContent not found'); return; }
+  const content=document.getElementById('perfContent'); if(!content) return;
 
-  const BEATS_PER_LINE=8;
-  const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
-
-  // Measure line heights — wait one more frame for layout
-  const doStart=()=>{
-    // Measure from the actual lyrics element for accuracy
-    const lyricsEl2=document.getElementById('perfLyricsContent')||content;
-    const lines=lyricsEl2.querySelectorAll('.perf-lyric-line');
-    let avgH=90; // fallback
-    if(lines.length>0){
-      let tot=0; lines.forEach(l=>tot+=l.offsetHeight);
-      const m=tot/lines.length;
-      if(m>10) avgH=m;
+  const startWithDuration=(ytDur)=>{
+    const BEATS_PER_LINE=8;
+    if(ytDur>30){
+      const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
+      const pxPerSec=(scrollH/ytDur)*(_perfScrollSpeed/100);
+      const m=Math.floor(ytDur/60), ss=String(Math.floor(ytDur%60)).padStart(2,'0');
+      if(btn){btn.textContent='⏸ YT '+m+':'+ss;btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
+      _launchScroll(content,pxPerSec,btn);
+    } else {
+      const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
+      setTimeout(()=>{
+        const lyricsEl=document.getElementById('perfLyricsContent')||content;
+        const lines=lyricsEl.querySelectorAll('.perf-lyric-line');
+        let avgH=90;
+        if(lines.length>0){let tot=0;lines.forEach(l=>tot+=l.offsetHeight);const m=tot/lines.length;if(m>10)avgH=m;}
+        const pxPerSec=Math.max(5,(avgH/secPerLine)*(_perfScrollSpeed/100));
+        if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
+        _launchScroll(content,pxPerSec,btn);
+      },80);
     }
-    const pxPerSec=Math.max(5,(avgH/secPerLine)*(_perfScrollSpeed/100));
-
-    if(btn){
-      btn.textContent=bpm>0?`⏸ ${bpm}BPM`:'⏸ Stop';
-      btn.style.background='var(--blue-mid)';
-      btn.style.color='#fff';
-    }
-
-    startLineHighlight();
-
-    let last=null;
-    let paused=false;
-    let pauseTimer=null;
-
-    const onTouch=()=>{ paused=true; clearTimeout(pauseTimer); pauseTimer=setTimeout(()=>paused=false,2500); };
-    const onWheel=()=>{ paused=true; clearTimeout(pauseTimer); pauseTimer=setTimeout(()=>paused=false,2500); };
-    content.addEventListener('touchstart',onTouch,{passive:true});
-    content.addEventListener('wheel',onWheel,{passive:true});
-    content._scrollCleanup=()=>{
-      content.removeEventListener('touchstart',onTouch);
-      content.removeEventListener('wheel',onWheel);
-      clearTimeout(pauseTimer);
-    };
-
-    const tick=(ts)=>{
-      if(!last) last=ts;
-      const dt=Math.min((ts-last)/1000,0.1);
-      last=ts;
-      if(!paused){
-        content.scrollTop+=pxPerSec*dt;
-        if(content.scrollTop>=content.scrollHeight-content.clientHeight-2){
-          stopAutoScroll();
-          stopLineHighlight();
-          if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-          return;
-        }
-      }
-      _autoScrollInterval=requestAnimationFrame(tick);
-    };
-    _autoScrollInterval=requestAnimationFrame(tick);
   };
 
-  // Small delay ensures DOM is fully laid out before measuring line heights
-  setTimeout(doStart, 80);
+  if(s.youtube){
+    const ytId=extractYTId(s.youtube);
+    const cached=ytId?_ytDurationCache[ytId]:0;
+    if(cached){
+      startWithDuration(cached);
+    } else {
+      if(btn){btn.textContent='⏳';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
+      fetchYTDuration(s.youtube,(dur)=>startWithDuration(dur));
+    }
+  } else {
+    startWithDuration(0);
+  }
 }
- // kept for compatibility
+
+function _launchScroll(content,pxPerSec,btn){
+  startLineHighlight();
+  let last=null,paused=false,pauseTimer=null;
+  const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
+  const onWheel=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
+  content.addEventListener('touchstart',onTouch,{passive:true});
+  content.addEventListener('wheel',onWheel,{passive:true});
+  content._scrollCleanup=()=>{content.removeEventListener('touchstart',onTouch);content.removeEventListener('wheel',onWheel);clearTimeout(pauseTimer);};
+  const tick=(ts)=>{
+    if(!last) last=ts;
+    const dt=Math.min((ts-last)/1000,0.1); last=ts;
+    if(!paused){
+      content.scrollTop+=pxPerSec*dt;
+      if(content.scrollTop>=content.scrollHeight-content.clientHeight-2){
+        stopAutoScroll(); stopLineHighlight();
+        if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+        return;
+      }
+    }
+    _autoScrollInterval=requestAnimationFrame(tick);
+  };
+  _autoScrollInterval=requestAnimationFrame(tick);
+}
+
 
 function stopAutoScroll(){
   if(_autoScrollInterval){
