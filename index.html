@@ -61,6 +61,65 @@
 <!--
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});</script>
+// ═══════════════════════════════════════════════════════
+//  YOUTUBE DURATION AUTO-FETCH
+// ═══════════════════════════════════════════════════════
+let _ytDurationCache={};
+
+function extractYTId(url){
+  if(!url) return null;
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m?m[1]:null;
+}
+
+function fetchYTDuration(youtubeUrl, callback){
+  const id=extractYTId(youtubeUrl);
+  if(!id) return callback(0);
+  if(_ytDurationCache[id]) return callback(_ytDurationCache[id]);
+
+  // Use hidden iframe with YouTube IFrame API
+  const existingApi=document.getElementById('ytApiScript');
+  const doLoad=()=>{
+    const iframe=document.createElement('div');
+    iframe.id='ytTempPlayer_'+id;
+    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0';
+    document.body.appendChild(iframe);
+
+    try{
+      const player=new YT.Player('ytTempPlayer_'+id,{
+        videoId:id,
+        events:{
+          onReady:(e)=>{
+            const dur=e.target.getDuration();
+            _ytDurationCache[id]=dur;
+            iframe.remove();
+            callback(dur);
+          },
+          onError:()=>{ iframe.remove(); callback(0); }
+        }
+      });
+    }catch(err){ iframe.remove(); callback(0); }
+  };
+
+  if(window.YT&&window.YT.Player){
+    doLoad();
+  } else if(!existingApi){
+    const script=document.createElement('script');
+    script.id='ytApiScript';
+    script.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(script);
+    window.onYouTubeIframeAPIReady=()=>{ doLoad(); };
+    // Timeout fallback
+    setTimeout(()=>{ if(!window.YT) callback(0); }, 5000);
+  } else {
+    // API loading — wait
+    const check=setInterval(()=>{
+      if(window.YT&&window.YT.Player){ clearInterval(check); doLoad(); }
+    },200);
+    setTimeout(()=>clearInterval(check),5000);
+  }
+}
+
 -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
@@ -3398,7 +3457,7 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
     const actDiv=document.createElement('div');
     actDiv.id='songActionsSection';
     actDiv.style.cssText='margin-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
-    const userRating=getUserRating(s.id);
+    const userRating=getSongRating(s.id);
     actDiv.innerHTML=`
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:12px;color:var(--text3);font-weight:600">${currentLang==='sq'?'Vlerëso:':'Rate:'}</span>
@@ -5036,64 +5095,7 @@ function getSimilarSongs(song, limit=4){
       (s.categories||[]).some(c=>(song.categories||[]).includes(c))
     )
   ).slice(0, limit);
-// ═══════════════════════════════════════════════════════
-//  YOUTUBE DURATION AUTO-FETCH
-// ═══════════════════════════════════════════════════════
-let _ytDurationCache={};
 
-function extractYTId(url){
-  if(!url) return null;
-  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
-  return m?m[1]:null;
-}
-
-function fetchYTDuration(youtubeUrl, callback){
-  const id=extractYTId(youtubeUrl);
-  if(!id) return callback(0);
-  if(_ytDurationCache[id]) return callback(_ytDurationCache[id]);
-
-  // Use hidden iframe with YouTube IFrame API
-  const existingApi=document.getElementById('ytApiScript');
-  const doLoad=()=>{
-    const iframe=document.createElement('div');
-    iframe.id='ytTempPlayer_'+id;
-    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0';
-    document.body.appendChild(iframe);
-
-    try{
-      const player=new YT.Player('ytTempPlayer_'+id,{
-        videoId:id,
-        events:{
-          onReady:(e)=>{
-            const dur=e.target.getDuration();
-            _ytDurationCache[id]=dur;
-            iframe.remove();
-            callback(dur);
-          },
-          onError:()=>{ iframe.remove(); callback(0); }
-        }
-      });
-    }catch(err){ iframe.remove(); callback(0); }
-  };
-
-  if(window.YT&&window.YT.Player){
-    doLoad();
-  } else if(!existingApi){
-    const script=document.createElement('script');
-    script.id='ytApiScript';
-    script.src='https://www.youtube.com/iframe_api';
-    document.head.appendChild(script);
-    window.onYouTubeIframeAPIReady=()=>{ doLoad(); };
-    // Timeout fallback
-    setTimeout(()=>{ if(!window.YT) callback(0); }, 5000);
-  } else {
-    // API loading — wait
-    const check=setInterval(()=>{
-      if(window.YT&&window.YT.Player){ clearInterval(check); doLoad(); }
-    },200);
-    setTimeout(()=>clearInterval(check),5000);
-  }
-}
 function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
 function rateSong(songId, stars){
   try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
