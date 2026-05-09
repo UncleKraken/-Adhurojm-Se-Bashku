@@ -4591,83 +4591,81 @@ function _runBeatDetection(){
   const chordEl=document.getElementById('beatChordDetected');
   const confEl=document.getElementById('beatConfidence');
 
-  // Get current song's chords — ONLY match these
+  // Get ONLY the exact chords from this song — strict filter
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
   const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
   const rawText=s?.lyricsRaw?.[perfInst]||s?.lyricsRaw?.Guitar||'';
-  const songChords=[...new Set((rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|7)?/g)||[]))];
-  const validTemplates=songChords.length>0
-    ? Object.fromEntries(Object.entries(CHROMA_TEMPLATES).filter(([k])=>songChords.includes(k)||songChords.some(sc=>resolveChordName(sc)===k)))
+  // Extract exact chord names from song lyrics
+  const songChords=[...new Set(
+    (rawText.match(/\[?([A-G][#b]?m?(?:maj7|sus[24]|dim|aug|7)?)\]?/g)||[])
+    .map(c=>c.replace(/[\[\]]/g,'').split('/')[0].trim())
+    .filter(c=>c.length>0&&CHROMA_TEMPLATES[c])
+  )];
+  // Build template subset — ONLY song chords
+  const validTemplates=songChords.length>2
+    ? Object.fromEntries(songChords.filter(c=>CHROMA_TEMPLATES[c]).map(c=>[c,CHROMA_TEMPLATES[c]]))
     : CHROMA_TEMPLATES;
 
-  // Stability: chord must be detected N consecutive frames before acting
+  if(chordEl) chordEl.title='Song chords: '+songChords.join(', ');
+
+  // Stability: consecutive detections of same chord
   let stableChord=null, stableCount=0;
-  const STABLE_NEEDED=10; // ~10 frames at 60fps = ~167ms of stable detection
-  const MIN_SCROLL_GAP=2200; // 2.2 seconds between scrolls
-  const MIN_CONF=0.62; // minimum confidence to consider valid
+  let currentConfirmedChord=null;
+  const STABLE_NEEDED=12; // ~200ms at 60fps
+  const MIN_SCROLL_GAP=2500;
+  const MIN_CONF=0.60;
+  // Hysteresis: need higher confidence to CHANGE chord than to KEEP it
+  const CHANGE_CONF=0.68; // need this to switch to new chord
+  const KEEP_CONF=0.52;   // only need this to keep current chord
 
   const tick=()=>{
     if(!_beatActive) return;
     _beatAnalyser.getByteFrequencyData(dataUint);
 
-    // RMS energy
     let rms=0; for(let i=0;i<dataUint.length;i++) rms+=dataUint[i]*dataUint[i];
     rms=Math.sqrt(rms/dataUint.length);
     if(levelBar) levelBar.style.width=Math.min(100,(rms/80)*100)+'%';
 
     const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
-    const energyGate=20+threshold*20; // energy gate adapts to sensitivity
-
-    if(rms<energyGate){
-      // Silence — reset stability but keep last chord
-      stableCount=Math.max(0,stableCount-1);
-      _beatAnimFrame=requestAnimationFrame(tick);
-      return;
+    if(rms<15+threshold*15){
+      stableCount=Math.max(0,stableCount-2);
+      _beatAnimFrame=requestAnimationFrame(tick); return;
     }
 
-    // Build chromagram + smooth
     const chroma=buildChromagram(dataUint,sr,fftSize);
     _chromaHistory.push(chroma);
-    if(_chromaHistory.length>8) _chromaHistory.shift();
+    if(_chromaHistory.length>10) _chromaHistory.shift();
     const smoothChroma=new Array(12).fill(0).map((_,i)=>
-      _chromaHistory.reduce((s,c)=>s+c[i],0)/_chromaHistory.length
+      _chromaHistory.reduce((sum,c)=>sum+c[i],0)/_chromaHistory.length
     );
 
-    // Match only against song's chords
+    // Match with hysteresis
     const {chord,confidence}=matchChordSubset(smoothChroma,validTemplates);
 
-    // Update display
-    if(chordEl) chordEl.textContent=confidence>MIN_CONF ? chord : '...';
-    if(confEl) confEl.textContent=confidence>MIN_CONF ? Math.round(confidence*100)+'%' : '';
+    // Apply hysteresis — harder to change, easier to keep
+    const requiredConf=chord===currentConfirmedChord?KEEP_CONF:CHANGE_CONF;
 
-    if(confidence<MIN_CONF){
-      stableCount=0; _beatAnimFrame=requestAnimationFrame(tick); return;
+    if(chordEl) chordEl.textContent=confidence>MIN_CONF?chord:'...';
+    if(confEl) confEl.textContent=confidence>MIN_CONF?Math.round(confidence*100)+'%':'';
+
+    if(confidence<requiredConf){
+      stableCount=Math.max(0,stableCount-1);
+      _beatAnimFrame=requestAnimationFrame(tick); return;
     }
 
-    // Stability check
-    if(chord===stableChord){
-      stableCount++;
-    } else {
-      stableChord=chord;
-      stableCount=1;
-    }
+    if(chord===stableChord){ stableCount++; }
+    else { stableChord=chord; stableCount=1; }
 
     if(stableCount>=STABLE_NEEDED){
+      currentConfirmedChord=chord;
       const now=performance.now();
-      if(chord!==_lastDetectedChord && (now-_lastScrollTime)>MIN_SCROLL_GAP){
-        _lastDetectedChord=chord;
-        _lastScrollTime=now;
-        stableCount=0; // reset after scroll
-
-        // Visual feedback
+      if(chord!==_lastDetectedChord&&(now-_lastScrollTime)>MIN_SCROLL_GAP){
+        _lastDetectedChord=chord; _lastScrollTime=now; stableCount=0;
         const btn=document.getElementById('beatScrollBtn');
-        if(btn){btn.style.background='#facc15';btn.style.color='#000';
-          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},250);}
-        if(chordEl) chordEl.style.color='#4ade80';
-        setTimeout(()=>{if(chordEl) chordEl.style.color='#facc15';},400);
-
-        // Scroll
+        if(btn){btn.style.background='#4ade80';btn.style.color='#000';
+          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},300);}
+        if(chordEl){chordEl.style.color='#4ade80';setTimeout(()=>{if(chordEl)chordEl.style.color='#facc15';},500);}
         const found=tryScrollToChord(chord);
         if(!found) advanceScrollLine();
       }
