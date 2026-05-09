@@ -4584,70 +4584,108 @@ function stopBeatScroll(){
 
 function _runBeatDetection(){
   if(!_beatActive||!_beatAnalyser) return;
-  const data=new Float32Array(_beatAnalyser.frequencyBinCount);
   const dataUint=new Uint8Array(_beatAnalyser.frequencyBinCount);
   const sr=_beatCtx.sampleRate;
   const fftSize=_beatAnalyser.fftSize;
   const levelBar=document.getElementById('beatLevelBar');
   const chordEl=document.getElementById('beatChordDetected');
   const confEl=document.getElementById('beatConfidence');
-  const MIN_SCROLL_GAP=800; // ms between scrolls
 
-  // Get current song's chord list for filtering
+  // Get current song's chords — ONLY match these
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
   const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
-  const rawText=s?.lyricsRaw?.[perfInst]||'';
-  // Extract all unique chords from this song
-  const songChords=new Set();
-  (rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|7)?/g)||[]).forEach(ch=>songChords.add(ch));
+  const rawText=s?.lyricsRaw?.[perfInst]||s?.lyricsRaw?.Guitar||'';
+  const songChords=[...new Set((rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|7)?/g)||[]))];
+  const validTemplates=songChords.length>0
+    ? Object.fromEntries(Object.entries(CHROMA_TEMPLATES).filter(([k])=>songChords.includes(k)||songChords.some(sc=>resolveChordName(sc)===k)))
+    : CHROMA_TEMPLATES;
+
+  // Stability: chord must be detected N consecutive frames before acting
+  let stableChord=null, stableCount=0;
+  const STABLE_NEEDED=10; // ~10 frames at 60fps = ~167ms of stable detection
+  const MIN_SCROLL_GAP=2200; // 2.2 seconds between scrolls
+  const MIN_CONF=0.62; // minimum confidence to consider valid
 
   const tick=()=>{
     if(!_beatActive) return;
     _beatAnalyser.getByteFrequencyData(dataUint);
-    // RMS for level bar
-    let rms=0; dataUint.forEach(v=>rms+=v*v);
+
+    // RMS energy
+    let rms=0; for(let i=0;i<dataUint.length;i++) rms+=dataUint[i]*dataUint[i];
     rms=Math.sqrt(rms/dataUint.length);
     if(levelBar) levelBar.style.width=Math.min(100,(rms/80)*100)+'%';
 
-    if(rms<(window._onsetThreshold||0.5)*30){
-      // Too quiet — no chord
-      _beatAnimFrame=requestAnimationFrame(tick); return;
+    const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
+    const energyGate=20+threshold*20; // energy gate adapts to sensitivity
+
+    if(rms<energyGate){
+      // Silence — reset stability but keep last chord
+      stableCount=Math.max(0,stableCount-1);
+      _beatAnimFrame=requestAnimationFrame(tick);
+      return;
     }
-    // Build chromagram
+
+    // Build chromagram + smooth
     const chroma=buildChromagram(dataUint,sr,fftSize);
-    // Smooth with history
     _chromaHistory.push(chroma);
-    if(_chromaHistory.length>5) _chromaHistory.shift();
+    if(_chromaHistory.length>8) _chromaHistory.shift();
     const smoothChroma=new Array(12).fill(0).map((_,i)=>
       _chromaHistory.reduce((s,c)=>s+c[i],0)/_chromaHistory.length
     );
-    // Match chord — prefer chords from the song
-    let {chord,confidence}=matchChord(smoothChroma);
-    // If song has this chord, boost confidence
-    if(songChords.has(chord)) confidence*=1.15;
-    // Filter: only high confidence
-    const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
-    const minConf=0.55+threshold*0.15;
-    if(chordEl) chordEl.textContent=confidence>minConf?chord:'?';
-    if(confEl) confEl.textContent=confidence>minConf?Math.round(confidence*100)+'%':'';
-    if(confidence>minConf){
+
+    // Match only against song's chords
+    const {chord,confidence}=matchChordSubset(smoothChroma,validTemplates);
+
+    // Update display
+    if(chordEl) chordEl.textContent=confidence>MIN_CONF ? chord : '...';
+    if(confEl) confEl.textContent=confidence>MIN_CONF ? Math.round(confidence*100)+'%' : '';
+
+    if(confidence<MIN_CONF){
+      stableCount=0; _beatAnimFrame=requestAnimationFrame(tick); return;
+    }
+
+    // Stability check
+    if(chord===stableChord){
+      stableCount++;
+    } else {
+      stableChord=chord;
+      stableCount=1;
+    }
+
+    if(stableCount>=STABLE_NEEDED){
       const now=performance.now();
-      if(chord!==_lastDetectedChord&&(now-_lastScrollTime)>MIN_SCROLL_GAP){
+      if(chord!==_lastDetectedChord && (now-_lastScrollTime)>MIN_SCROLL_GAP){
         _lastDetectedChord=chord;
         _lastScrollTime=now;
-        // Flash button
+        stableCount=0; // reset after scroll
+
+        // Visual feedback
         const btn=document.getElementById('beatScrollBtn');
         if(btn){btn.style.background='#facc15';btn.style.color='#000';
-          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},200);}
-        // Scroll to next line with this chord (or just advance if not found)
-        const didFind=tryScrollToChord(chord);
-        if(!didFind) advanceScrollLine(); // fallback: move to next line
+          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},250);}
+        if(chordEl) chordEl.style.color='#4ade80';
+        setTimeout(()=>{if(chordEl) chordEl.style.color='#facc15';},400);
+
+        // Scroll
+        const found=tryScrollToChord(chord);
+        if(!found) advanceScrollLine();
       }
     }
     _beatAnimFrame=requestAnimationFrame(tick);
   };
   _beatAnimFrame=requestAnimationFrame(tick);
+}
+
+function matchChordSubset(chroma,templates){
+  let bestChord=null,bestScore=-1;
+  for(const [name,tmpl] of Object.entries(templates)){
+    let dot=0,normA=0,normB=0;
+    for(let i=0;i<12;i++){dot+=chroma[i]*tmpl[i];normA+=chroma[i]**2;normB+=tmpl[i]**2;}
+    const score=dot/(Math.sqrt(normA)*Math.sqrt(normB)+0.001);
+    if(score>bestScore){bestScore=score;bestChord=name;}
+  }
+  return {chord:bestChord,confidence:bestScore};
 }
 
 function tryScrollToChord(chordName){
