@@ -4433,10 +4433,93 @@ emailjs.init('_nY20miCLwZSC-jow');
 // ═══════════════════════════════════════════════════════
 //  ONSET DETECTION — Audio scroll (chord change detection)
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  CHROMAGRAM CHORD DETECTION — Smart Audio Scroll
+// ═══════════════════════════════════════════════════════
 let _beatCtx=null,_beatAnalyser=null,_beatStream=null;
 let _beatAnimFrame=null,_beatActive=false;
-let _lastBeatTime=0,_beatEnergyHistory=[],_lastScrollBeat=0;
-let _prevSpectrum=null; // for onset (change) detection
+let _lastDetectedChord=null,_chordHoldMs=600;
+let _chromaHistory=[],_lastScrollTime=0;
+
+// Chord templates — chromagram vectors (12 pitch classes: C C# D D# E F F# G G# A A# B)
+const CHROMA_TEMPLATES={
+  'C':  [1,0,0,0,1,0,0,1,0,0,0,0], 'C#': [0,1,0,0,0,1,0,0,1,0,0,0],
+  'D':  [0,0,1,0,0,0,1,0,0,1,0,0], 'D#': [0,0,0,1,0,0,0,1,0,0,1,0],
+  'E':  [0,0,0,0,1,0,0,0,1,0,0,1], 'F':  [1,0,0,0,0,1,0,0,0,1,0,0],
+  'F#': [0,1,0,0,0,0,1,0,0,0,1,0], 'G':  [0,0,1,0,0,0,0,1,0,0,0,1],
+  'G#': [1,0,0,1,0,0,0,0,1,0,0,0], 'A':  [0,1,0,0,1,0,0,0,0,1,0,0],
+  'A#': [0,0,1,0,0,1,0,0,0,0,1,0], 'B':  [0,0,0,1,0,0,1,0,0,0,0,1],
+  'Am': [1,0,0,1,0,0,0,1,0,0,0,0], 'Em': [0,0,0,0,1,0,0,1,0,0,0,1],
+  'Dm': [0,0,1,0,0,1,0,0,0,1,0,0], 'Bm': [0,0,1,0,0,0,1,0,0,0,0,1],
+  'Gm': [0,0,1,0,0,0,0,1,0,0,1,0], 'Fm': [1,0,0,0,0,1,0,0,1,0,0,0],
+  'Cm': [1,0,0,1,0,0,0,1,0,0,0,0], 'F#m':[0,1,0,0,0,0,1,0,0,1,0,0],
+  'C#m':[0,1,0,1,0,0,0,0,1,0,0,0], 'G#m':[0,0,0,0,1,0,0,0,1,0,0,1],
+  'Bb': [0,0,0,0,0,1,0,0,0,1,0,1], 'Eb': [0,0,0,1,0,0,0,1,0,0,1,0],
+  'Ab': [1,0,0,0,1,0,0,0,1,0,0,0], 'Bbm':[0,0,0,0,0,1,0,0,0,1,1,0],
+};
+
+function buildChromagram(freqData, sampleRate, fftSize){
+  const chroma=new Array(12).fill(0);
+  const nyquist=sampleRate/2;
+  const binHz=nyquist/freqData.length;
+  // Map frequency bins to pitch classes
+  for(let bin=1;bin<freqData.length;bin++){
+    const freq=bin*binHz;
+    if(freq<80||freq>4000) continue; // guitar/piano range
+    const energy=freqData[bin]/255;
+    if(energy<0.01) continue;
+    // Convert frequency to MIDI note
+    const midi=Math.round(12*Math.log2(freq/440)+69);
+    const pitchClass=((midi%12)+12)%12;
+    chroma[pitchClass]+=energy*energy; // squared for better resolution
+  }
+  // Normalize
+  const max=Math.max(...chroma,0.001);
+  return chroma.map(v=>v/max);
+}
+
+function matchChord(chroma){
+  let bestChord=null,bestScore=-1;
+  for(const [name,tmpl] of Object.entries(CHROMA_TEMPLATES)){
+    // Cosine similarity
+    let dot=0,normA=0,normB=0;
+    for(let i=0;i<12;i++){dot+=chroma[i]*tmpl[i];normA+=chroma[i]**2;normB+=tmpl[i]**2;}
+    const score=dot/(Math.sqrt(normA)*Math.sqrt(normB)+0.001);
+    if(score>bestScore){bestScore=score;bestChord=name;}
+  }
+  return {chord:bestChord,confidence:bestScore};
+}
+
+function findChordInLyrics(chordName){
+  // Find which lyric line contains this chord and scroll to it
+  const content=document.getElementById('perfContent');
+  if(!content) return;
+  // Get current song chords
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  // Find next line that has this chord
+  const lines=content.querySelectorAll('.perf-lyric-line');
+  const currentTop=content.scrollTop;
+  let targetLine=null;
+  lines.forEach(line=>{
+    if(line.offsetTop<=currentTop+20) return; // skip lines above current
+    const chordEl=line.closest('.perf-section-block')?.previousElementSibling;
+    const lineText=line.innerText||'';
+    // Check chord elements near this line
+    const parent=line.parentElement;
+    const allChordLines=[...parent.querySelectorAll('div[style*="chord-color"]')];
+    for(const cl of allChordLines){
+      if(Math.abs(cl.offsetTop-line.offsetTop)<80&&cl.innerText.includes(chordName)){
+        if(!targetLine||line.offsetTop<targetLine.offsetTop) targetLine=line;
+      }
+    }
+  });
+  if(targetLine){
+    targetLine.scrollIntoView({behavior:'smooth',block:'center'});
+    highlightCurrentLine();
+    _lastScrollTime=performance.now();
+  }
+}
 
 async function toggleBeatScroll(){
   const btn=document.getElementById('beatScrollBtn');
@@ -4447,69 +4530,46 @@ async function toggleBeatScroll(){
     return;
   }
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{
-      echoCancellation:false,noiseSuppression:false,autoGainControl:false
-    },video:false});
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
     _beatStream=stream;
     _beatCtx=new(window.AudioContext||window.webkitAudioContext)();
     const src=_beatCtx.createMediaStreamSource(stream);
     _beatAnalyser=_beatCtx.createAnalyser();
-    _beatAnalyser.fftSize=2048;
-    _beatAnalyser.smoothingTimeConstant=0.5;
+    _beatAnalyser.fftSize=4096; // high resolution for chord detection
+    _beatAnalyser.smoothingTimeConstant=0.7;
     src.connect(_beatAnalyser);
     _beatActive=true;
-    _beatEnergyHistory=new Array(30).fill(0);
-    _prevSpectrum=null;
-    _lastBeatTime=0;
-
+    _lastDetectedChord=null;
+    _chromaHistory=[];
+    _lastScrollTime=0;
     if(btn){btn.textContent='🎙️ ON';btn.style.background='var(--red)';btn.style.color='#fff';}
-
-    // Build debug bar
+    // Debug bar
     const pm=document.getElementById('performanceMode');
     document.getElementById('beatDebugBar')?.remove();
     const dbg=document.createElement('div');
     dbg.id='beatDebugBar';
-    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99998;background:rgba(0,0,0,0.92);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-    dbg.innerHTML=
-      '<span style="font-size:12px">🎙️</span>'
-      +'<div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px">'
-      +'<div style="display:flex;align-items:center;gap:6px">'
-      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Zeri:</span>'
-      +'<div style="flex:1;height:10px;background:#111;border-radius:5px;overflow:hidden;position:relative">'
-      +'<div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);transition:width .05s;border-radius:5px"></div>'
+    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99998;background:rgba(0,0,0,0.92);padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    dbg.innerHTML='<span style="font-size:12px">🎙️</span>'
+      +'<div style="flex:1;min-width:100px">'
+      +'<div style="font-size:11px;color:#aaa">Akord i detektuar: <span id="beatChordDetected" style="color:#facc15;font-weight:700;font-size:14px">--</span> <span id="beatConfidence" style="font-size:10px;color:#666"></span></div>'
+      +'<div style="height:8px;background:#111;border-radius:4px;margin-top:3px;overflow:hidden"><div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);transition:width .05s;border-radius:4px"></div></div>'
       +'</div>'
-      +'<span id="beatStatusTxt" style="font-size:10px;color:#888;min-width:70px;text-align:right">duke degjuar...</span>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Ndjeshmeria:</span>'
-      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:70px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
+      +'<div style="display:flex;align-items:center;gap:6px;white-space:nowrap">'
+      +'<span style="font-size:10px;color:#aaa">Ndjeshmeria:</span>'
+      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:60px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
       +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
-      +'<button onclick="setPerfSens(0.5);document.getElementById(\'beatSensSlider\').value=0.5" style="background:#333;border:none;color:#aaa;border-radius:5px;padding:1px 6px;cursor:pointer;font-size:11px" title="Reset">↺</button>'
-      +'<span style="font-size:10px;color:#aaa;white-space:nowrap">Scroll/akord:</span>'
-      +'<select id="beatPerScrollSel" style="background:#222;color:#fff;border:none;border-radius:4px;padding:1px 6px;font-size:11px" onchange="window._onsetScrollLines=parseInt(this.value)">'
-      +'<option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>'
-      +'</select>'
-      +'<span style="font-size:10px;color:#aaa">rreshta</span>'
-      +'</div>'
+      +'<button onclick="setPerfSens(0.5);document.getElementById(\'beatSensSlider\').value=0.5" style="background:#333;border:none;color:#aaa;border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px">↺</button>'
       +'</div>'
       +'<button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;flex-shrink:0">Stop</button>';
     (pm||document.body).appendChild(dbg);
-
-    window._onsetThreshold=0.5;
-    window._onsetScrollLines=1;
     stopAutoScroll();
+    startLineHighlight();
     _runBeatDetection();
-    showToast('🎙️ Mikrofoni aktiv — luaj muzike!','success');
+    showToast('🎙️ Chromagram aktiv — luaj muzike!','success');
   }catch(e){
-    showToast('Mikrofoni nuk u lejua — kontrollo lejet','error');
+    showToast('Mikrofoni nuk u lejua','error');
     console.error(e);
   }
-}
-
-function setPerfSens(val){
-  window._onsetThreshold=parseFloat(val);
-  const el=document.getElementById('beatSensVal');
-  if(el) el.textContent=parseFloat(val).toFixed(2);
 }
 
 function stopBeatScroll(){
@@ -4517,87 +4577,117 @@ function stopBeatScroll(){
   if(_beatAnimFrame){cancelAnimationFrame(_beatAnimFrame);_beatAnimFrame=null;}
   if(_beatStream){_beatStream.getTracks().forEach(t=>t.stop());_beatStream=null;}
   if(_beatCtx){_beatCtx.close();_beatCtx=null;}
-  _beatAnalyser=null; _prevSpectrum=null;
+  _beatAnalyser=null;
   document.getElementById('beatDebugBar')?.remove();
+  stopLineHighlight();
 }
 
 function _runBeatDetection(){
   if(!_beatActive||!_beatAnalyser) return;
-  const bufLen=_beatAnalyser.frequencyBinCount;
-  const data=new Uint8Array(bufLen);
+  const data=new Float32Array(_beatAnalyser.frequencyBinCount);
+  const dataUint=new Uint8Array(_beatAnalyser.frequencyBinCount);
+  const sr=_beatCtx.sampleRate;
+  const fftSize=_beatAnalyser.fftSize;
   const levelBar=document.getElementById('beatLevelBar');
-  const statusTxt=document.getElementById('beatStatusTxt');
-  const btn=document.getElementById('beatScrollBtn');
-  const MIN_GAP=400; // ms min between scrolls
+  const chordEl=document.getElementById('beatChordDetected');
+  const confEl=document.getElementById('beatConfidence');
+  const MIN_SCROLL_GAP=800; // ms between scrolls
 
-  const tick=(ts)=>{
+  // Get current song's chord list for filtering
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+  const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
+  const rawText=s?.lyricsRaw?.[perfInst]||'';
+  // Extract all unique chords from this song
+  const songChords=new Set();
+  (rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|7)?/g)||[]).forEach(ch=>songChords.add(ch));
+
+  const tick=()=>{
     if(!_beatActive) return;
-    _beatAnalyser.getByteFrequencyData(data);
+    _beatAnalyser.getByteFrequencyData(dataUint);
+    // RMS for level bar
+    let rms=0; dataUint.forEach(v=>rms+=v*v);
+    rms=Math.sqrt(rms/dataUint.length);
+    if(levelBar) levelBar.style.width=Math.min(100,(rms/80)*100)+'%';
 
-    // Overall RMS energy for level bar
-    let rms=0;
-    for(let i=0;i<bufLen;i++) rms+=data[i]*data[i];
-    rms=Math.sqrt(rms/bufLen);
-    if(levelBar) levelBar.style.width=Math.min(100,(rms/100)*100)+'%';
-
-    // ── ONSET DETECTION (spectral flux) ──
-    // Measures how much the spectrum CHANGED since last frame
-    // A chord change = big spectral change = scroll
-    let flux=0;
-    if(_prevSpectrum){
-      for(let i=0;i<bufLen;i++){
-        const diff=data[i]-_prevSpectrum[i];
-        if(diff>0) flux+=diff; // only positive changes (new energy = onset)
-      }
-      flux/=bufLen;
+    if(rms<(window._onsetThreshold||0.5)*30){
+      // Too quiet — no chord
+      _beatAnimFrame=requestAnimationFrame(tick); return;
     }
-    // Save current spectrum
-    _prevSpectrum=new Uint8Array(data);
-
-    // Update history for adaptive threshold
-    _beatEnergyHistory.push(flux);
-    if(_beatEnergyHistory.length>30) _beatEnergyHistory.shift();
-    const avg=_beatEnergyHistory.reduce((a,b)=>a+b,0)/_beatEnergyHistory.length;
-    const threshold=(window._onsetThreshold||0.5)+avg*0.5;
-
-    const now=performance.now();
-    const isOnset=flux>threshold&&rms>35&&flux>5&&(now-_lastBeatTime)>MIN_GAP;
-
-    if(levelBar){
-      // Color shows how close to onset
-      const pct=Math.min(100,(rms/80)*100);
-      const isHot=flux>threshold*0.7;
-      levelBar.style.background=isHot
-        ?'linear-gradient(90deg,#4ade80,#facc15,#ef4444)'
-        :'linear-gradient(90deg,#4ade80,#22c55e)';
-    }
-
-    if(isOnset){
-      _lastBeatTime=now;
-      if(statusTxt) statusTxt.textContent='✦ AKORD';
-      if(btn){btn.style.background='#facc15';btn.style.color='#000';
-        setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},150);}
-      // Flash metro dot
-      const dot=document.getElementById('metroBeatDot');
-      if(dot){dot.classList.add('on');setTimeout(()=>dot.classList.remove('on'),150);}
-      // Scroll N lines
-      const linesToScroll=window._onsetScrollLines||1;
-      const content=document.getElementById('perfContent');
-      if(content){
-        const lines=content.querySelectorAll('.perf-lyric-line');
-        let avgH=80;
-        if(lines.length>0){let t=0;lines.forEach(l=>t+=l.offsetHeight);avgH=t/lines.length;}
-        content.scrollBy({top:avgH*linesToScroll,behavior:'smooth'});
-        highlightCurrentLine();
+    // Build chromagram
+    const chroma=buildChromagram(dataUint,sr,fftSize);
+    // Smooth with history
+    _chromaHistory.push(chroma);
+    if(_chromaHistory.length>5) _chromaHistory.shift();
+    const smoothChroma=new Array(12).fill(0).map((_,i)=>
+      _chromaHistory.reduce((s,c)=>s+c[i],0)/_chromaHistory.length
+    );
+    // Match chord — prefer chords from the song
+    let {chord,confidence}=matchChord(smoothChroma);
+    // If song has this chord, boost confidence
+    if(songChords.has(chord)) confidence*=1.15;
+    // Filter: only high confidence
+    const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
+    const minConf=0.55+threshold*0.15;
+    if(chordEl) chordEl.textContent=confidence>minConf?chord:'?';
+    if(confEl) confEl.textContent=confidence>minConf?Math.round(confidence*100)+'%':'';
+    if(confidence>minConf){
+      const now=performance.now();
+      if(chord!==_lastDetectedChord&&(now-_lastScrollTime)>MIN_SCROLL_GAP){
+        _lastDetectedChord=chord;
+        _lastScrollTime=now;
+        // Flash button
+        const btn=document.getElementById('beatScrollBtn');
+        if(btn){btn.style.background='#facc15';btn.style.color='#000';
+          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},200);}
+        // Scroll to next line with this chord (or just advance if not found)
+        const didFind=tryScrollToChord(chord);
+        if(!didFind) advanceScrollLine(); // fallback: move to next line
       }
-      setTimeout(()=>{if(statusTxt&&_beatActive)statusTxt.textContent='flux:'+flux.toFixed(1)+' thr:'+threshold.toFixed(1);},500);
-    } else if(statusTxt&&now-_lastBeatTime>800){
-      statusTxt.textContent='flux:'+flux.toFixed(1)+' thr:'+threshold.toFixed(1);
     }
     _beatAnimFrame=requestAnimationFrame(tick);
   };
   _beatAnimFrame=requestAnimationFrame(tick);
 }
+
+function tryScrollToChord(chordName){
+  const content=document.getElementById('perfContent');
+  if(!content) return false;
+  const currentTop=content.scrollTop+content.clientHeight*0.3;
+  // Find chord spans after current position
+  const chordSpans=[...content.querySelectorAll('[data-chord]')];
+  for(const span of chordSpans){
+    const resolved=resolveChordName(span.dataset.chord);
+    const match=span.dataset.chord===chordName||resolved===chordName||
+      resolveChordName(chordName)===resolved;
+    if(match&&span.offsetTop>currentTop){
+      // Find parent lyric line
+      const line=span.closest('.perf-lyric-line');
+      if(line){
+        line.scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(highlightCurrentLine,300);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function advanceScrollLine(){
+  const content=document.getElementById('perfContent');
+  if(!content) return;
+  const lines=[...content.querySelectorAll('.perf-lyric-line')];
+  const currentTop=content.scrollTop+content.clientHeight*0.35;
+  for(const line of lines){
+    if(line.offsetTop>currentTop){
+      line.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(highlightCurrentLine,300);
+      return;
+    }
+  }
+}
+
+
 
 let _metroCtx=null, _metroInterval=null, _metroBeat=0;
 
