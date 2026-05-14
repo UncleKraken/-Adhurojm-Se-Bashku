@@ -3319,6 +3319,34 @@ async function checkUrlSong(){
   }
 }
 
+
+function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
+
+function rateSong(songId, stars){
+  try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
+  renderSong(); showToast(''+stars+'/5 — Faleminderit!','success');
+}
+
+function openReportError(songId){
+  const s=SONGS.find(x=>Number(x.id)===Number(songId)); if(!s) return;
+  const modal=document.createElement('div'); modal.id='reportModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--text)">Raporto Gabim</div><button onclick="this.closest('#reportModal').remove()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--text2)">X</button></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px">${s.title}</div><select id="reportType" class="form-select" style="margin-bottom:10px"><option value="chord">Akord i gabuar</option><option value="lyrics">Tekst i gabuar</option><option value="key">Tonalitet i gabuar</option><option value="other">Tjeter</option></select><textarea id="reportNote" class="form-textarea" placeholder="Pershkruaj problemin..." style="min-height:80px;margin-bottom:12px;font-size:13px"></textarea><button onclick="submitReport(${songId})" class="btn btn-primary btn-sm">Dergo</button></div>`;
+  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+async function submitReport(songId){
+  const s=SONGS.find(x=>Number(x.id)===Number(songId));
+  const type=document.getElementById('reportType')?.value;
+  const note=document.getElementById('reportNote')?.value.trim();
+  if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
+  const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
+  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
+  catch(e){ showToast('Gabim ne dergim','error'); }
+  document.getElementById('reportModal')?.remove();
+}
+
 function renderSong(){
   const s=currentSong;
   const rawText=s.lyricsRaw?.[currentInst]||'';
@@ -5224,33 +5252,10 @@ function getSimilarSongs(song, limit=4){
     )
   ).slice(0, limit);
 
-function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
-function rateSong(songId, stars){
-  try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
-  renderSong(); showToast(''+stars+'/5 — Faleminderit!','success');
-}
 
 // ═══════════════════════════════════════════════════════
 //  REPORT ERROR
 // ═══════════════════════════════════════════════════════
-function openReportError(songId){
-  const s=SONGS.find(x=>Number(x.id)===Number(songId)); if(!s) return;
-  const modal=document.createElement('div'); modal.id='reportModal';
-  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
-  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--text)">Raporto Gabim</div><button onclick="this.closest('#reportModal').remove()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--text2)">X</button></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px">${s.title}</div><select id="reportType" class="form-select" style="margin-bottom:10px"><option value="chord">Akord i gabuar</option><option value="lyrics">Tekst i gabuar</option><option value="key">Tonalitet i gabuar</option><option value="other">Tjeter</option></select><textarea id="reportNote" class="form-textarea" placeholder="Pershkruaj problemin..." style="min-height:80px;margin-bottom:12px;font-size:13px"></textarea><button onclick="submitReport(${songId})" class="btn btn-primary btn-sm">Dergo</button></div>`;
-  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
-  document.body.appendChild(modal);
-}
-async function submitReport(songId){
-  const s=SONGS.find(x=>Number(x.id)===Number(songId));
-  const type=document.getElementById('reportType')?.value;
-  const note=document.getElementById('reportNote')?.value.trim();
-  if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
-  const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
-  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
-  catch(e){ showToast('Gabim ne dergim','error'); }
-  document.getElementById('reportModal')?.remove();
-}
 
 // ═══════════════════════════════════════════════════════
 //  INDIVIDUAL SONG URLs
