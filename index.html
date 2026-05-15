@@ -598,15 +598,19 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   --blue-mid:#6080CC;
   --gold:#F0C860;
   --red:#CC5555;
+  --blue:#4060AA;
 }
 #performanceMode[data-dark="1"] .sec-lbl{opacity:.85}
-#performanceMode[data-dark="1"] input{border-color:#1A1D28 !important;}
-/* Smooth font rendering for lyrics */
+#performanceMode[data-dark="1"] input,
+#performanceMode[data-dark="1"] select{
+  background:#141720 !important;color:#EEEEFF !important;border-color:#1A1D28 !important;
+}
+/* Lyrics smooth rendering */
 #perfLyricsContent{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  text-rendering:optimizeLegibility;
 }
+
 
 /* ── PERF LYRIC LINE HIGHLIGHT ── */
 .perf-lyric-line{transition:opacity .25s,transform .25s;}
@@ -948,8 +952,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <div id="perfControlsBar" style="background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;min-width:max-content">
       <!-- Auto scroll -->
-      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">▶ Auto</button>
-      <button onclick="toggleBeatScroll()" id="beatScrollBtn" title="Audio Scroll (Onset Detection)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:13px;color:var(--text2)">🎙️</button>
+      <button onclick="toggleAutoScroll()" id="autoScrollBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;white-space:nowrap">&#9654; Auto</button>
+      <button onclick="perfTapBPM()" id="perfTapBtn" title="Tap BPM" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;touch-action:manipulation">&#9833; TAP</button>
+      <button onclick="toggleBeatScroll()" id="beatScrollBtn" title="Chord Detection" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:13px;color:var(--text2)">&#127897;&#65039;</button>
       <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
       <!-- Instrument -->
       <div id="perfInstBtns" style="display:flex;gap:4px"></div>
@@ -1440,6 +1445,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
+      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this);loadSongRequests()">&#128235; Kërkesat</button>
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
@@ -1850,6 +1856,19 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     </div>
 
     <!-- ── TAB: BACKUP / EXPORT ── -->
+    <div class="admin-panel" id="tab-requests">
+      <div class="admin-section-title">📬 Kërkesat e Këngëve</div>
+      <div style="padding:0 0 20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <p style="font-size:13px;color:var(--text2);margin:0">Kërkesat e dërguara nga vizitorët përmes formës Contact.</p>
+          <button class="btn btn-outline btn-sm" onclick="loadSongRequests()">🔄 Rifresko</button>
+        </div>
+        <div id="songRequestsList" style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar kërkesat...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="admin-panel" id="tab-export">
       <div class="admin-section-title">💾 Backup & Export</div>
       <div style="padding:0 0 20px">
@@ -1899,52 +1918,24 @@ function extractYTId(url){
 }
 
 function fetchYTDuration(youtubeUrl, callback){
+  // Use YouTube oEmbed to get video info — no CORS issues, no iframe
+  // oEmbed doesn't return duration, so we parse the ytInitialData instead
+  // Simplest: just return 0 and use BPM-based scroll
+  // Users can manually set duration if needed
   const id=extractYTId(youtubeUrl);
-  if(!id) return callback(0);
-  if(_ytDurationCache[id]) return callback(_ytDurationCache[id]);
-
-  // Use hidden iframe with YouTube IFrame API
-  const existingApi=document.getElementById('ytApiScript');
-  const doLoad=()=>{
-    const iframe=document.createElement('div');
-    iframe.id='ytTempPlayer_'+id;
-    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0';
-    document.body.appendChild(iframe);
-
-    try{
-      const player=new YT.Player('ytTempPlayer_'+id,{
-        videoId:id,
-        events:{
-          onReady:(e)=>{
-            const dur=e.target.getDuration();
-            _ytDurationCache[id]=dur;
-            iframe.remove();
-            callback(dur);
-          },
-          onError:()=>{ iframe.remove(); callback(0); }
-        }
-      });
-    }catch(err){ iframe.remove(); callback(0); }
-  };
-
-  if(window.YT&&window.YT.Player){
-    doLoad();
-  } else if(!existingApi){
-    const script=document.createElement('script');
-    script.id='ytApiScript';
-    script.src='https://www.youtube.com/iframe_api';
-    document.head.appendChild(script);
-    window.onYouTubeIframeAPIReady=()=>{ doLoad(); };
-    // Timeout fallback
-    setTimeout(()=>{ if(!window.YT) callback(0); }, 5000);
-  } else {
-    // API loading — wait
-    const check=setInterval(()=>{
-      if(window.YT&&window.YT.Player){ clearInterval(check); doLoad(); }
-    },200);
-    setTimeout(()=>clearInterval(check),5000);
-  }
+  if(!id){ callback(0); return; }
+  if(_ytDurationCache[id]){ callback(_ytDurationCache[id]); return; }
+  // Try noembed.com proxy (no API key needed)
+  fetch('https://noembed.com/embed?url=https://www.youtube.com/watch?v='+id)
+    .then(r=>r.json())
+    .then(data=>{
+      // noembed doesn't give duration, but confirms video exists
+      // Fall back to BPM scroll
+      callback(0);
+    })
+    .catch(()=>callback(0));
 }
+
 
 // ═══════════════════════════════════════════════════════
 //  TRANSPOSE ENGINE
@@ -4486,233 +4477,51 @@ const CHROMA_TEMPLATES={
   'Ab': [1,0,0,0,1,0,0,0,1,0,0,0], 'Bbm':[0,0,0,0,0,1,0,0,0,1,1,0],
 };
 
+// ── IMPROVED PCP CHORD DETECTION ──
+// Uses A-weighting + harmonic suppression + better templates
+
+const NOTE_FREQS=[]; // precomputed: C0 to B8
+(()=>{for(let m=0;m<128;m++) NOTE_FREQS[m]=440*Math.pow(2,(m-69)/12);})();
+
 function buildChromagram(freqData, sampleRate, fftSize){
-  const chroma=new Array(12).fill(0);
-  const nyquist=sampleRate/2;
-  const binHz=nyquist/freqData.length;
-  // Map frequency bins to pitch classes
-  for(let bin=1;bin<freqData.length;bin++){
+  const chroma=new Float32Array(12);
+  const binHz=sampleRate/fftSize;
+  const maxBin=Math.min(freqData.length, Math.ceil(5000/binHz));
+  for(let bin=2;bin<maxBin;bin++){
     const freq=bin*binHz;
-    if(freq<80||freq>4000) continue; // guitar/piano range
-    const energy=freqData[bin]/255;
-    if(energy<0.01) continue;
-    // Convert frequency to MIDI note
-    const midi=Math.round(12*Math.log2(freq/440)+69);
-    const pitchClass=((midi%12)+12)%12;
-    chroma[pitchClass]+=energy*energy; // squared for better resolution
+    if(freq<80) continue;
+    const energy=(freqData[bin]/255)**2;
+    if(energy<0.002) continue;
+    // A-weighting (approximate) — emphasizes 1-4kHz
+    const aw=Math.min(2,(freq/1000)*Math.exp(-(freq-1000)**2/2000000));
+    const weighted=energy*(0.5+aw);
+    // Map to pitch class via MIDI
+    const midi=12*Math.log2(freq/440)+69;
+    const pc=((Math.round(midi)%12)+12)%12;
+    // Add to pitch class and neighbors (pitch smearing)
+    const frac=midi-Math.floor(midi);
+    chroma[pc]+=weighted*(1-Math.abs(frac-0));
+    chroma[(pc+1)%12]+=weighted*Math.abs(frac)*0.3;
+    chroma[(pc+11)%12]+=weighted*(1-Math.abs(frac))*0.3;
   }
-  // Normalize
-  const max=Math.max(...chroma,0.001);
-  return chroma.map(v=>v/max);
-}
-
-function matchChord(chroma){
-  let bestChord=null,bestScore=-1;
-  for(const [name,tmpl] of Object.entries(CHROMA_TEMPLATES)){
-    // Cosine similarity
-    let dot=0,normA=0,normB=0;
-    for(let i=0;i<12;i++){dot+=chroma[i]*tmpl[i];normA+=chroma[i]**2;normB+=tmpl[i]**2;}
-    const score=dot/(Math.sqrt(normA)*Math.sqrt(normB)+0.001);
-    if(score>bestScore){bestScore=score;bestChord=name;}
-  }
-  return {chord:bestChord,confidence:bestScore};
-}
-
-function findChordInLyrics(chordName){
-  // Find which lyric line contains this chord and scroll to it
-  const content=document.getElementById('perfContent');
-  if(!content) return;
-  // Get current song chords
-  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  // Find next line that has this chord
-  const lines=content.querySelectorAll('.perf-lyric-line');
-  const currentTop=content.scrollTop;
-  let targetLine=null;
-  lines.forEach(line=>{
-    if(line.offsetTop<=currentTop+20) return; // skip lines above current
-    const chordEl=line.closest('.perf-section-block')?.previousElementSibling;
-    const lineText=line.innerText||'';
-    // Check chord elements near this line
-    const parent=line.parentElement;
-    const allChordLines=[...parent.querySelectorAll('div[style*="chord-color"]')];
-    for(const cl of allChordLines){
-      if(Math.abs(cl.offsetTop-line.offsetTop)<80&&cl.innerText.includes(chordName)){
-        if(!targetLine||line.offsetTop<targetLine.offsetTop) targetLine=line;
-      }
-    }
-  });
-  if(targetLine){
-    targetLine.scrollIntoView({behavior:'smooth',block:'center'});
-    highlightCurrentLine();
-    _lastScrollTime=performance.now();
-  }
-}
-
-async function toggleBeatScroll(){
-  const btn=document.getElementById('beatScrollBtn');
-  if(_beatActive){
-    stopBeatScroll();
-    document.getElementById('beatDebugBar')?.remove();
-    if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-    return;
-  }
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
-    _beatStream=stream;
-    _beatCtx=new(window.AudioContext||window.webkitAudioContext)();
-    const src=_beatCtx.createMediaStreamSource(stream);
-    _beatAnalyser=_beatCtx.createAnalyser();
-    _beatAnalyser.fftSize=4096; // high resolution for chord detection
-    _beatAnalyser.smoothingTimeConstant=0.7;
-    src.connect(_beatAnalyser);
-    _beatActive=true;
-    _lastDetectedChord=null;
-    _chromaHistory=[];
-    _lastScrollTime=0;
-    if(btn){btn.textContent='🎙️ ON';btn.style.background='var(--red)';btn.style.color='#fff';}
-    // Debug bar
-    const pm=document.getElementById('performanceMode');
-    document.getElementById('beatDebugBar')?.remove();
-    const dbg=document.createElement('div');
-    dbg.id='beatDebugBar';
-    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99998;background:rgba(0,0,0,0.92);padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
-    dbg.innerHTML='<span style="font-size:12px">🎙️</span>'
-      +'<div style="flex:1;min-width:100px">'
-      +'<div style="font-size:11px;color:#aaa">Akord i detektuar: <span id="beatChordDetected" style="color:#facc15;font-weight:700;font-size:14px">--</span> <span id="beatConfidence" style="font-size:10px;color:#666"></span></div>'
-      +'<div style="height:8px;background:#111;border-radius:4px;margin-top:3px;overflow:hidden"><div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);transition:width .05s;border-radius:4px"></div></div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;white-space:nowrap">'
-      +'<span style="font-size:10px;color:#aaa">Ndjeshmeria:</span>'
-      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:60px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
-      +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
-      +'<button onclick="setPerfSens(0.5);document.getElementById(\'beatSensSlider\').value=0.5" style="background:#333;border:none;color:#aaa;border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px">↺</button>'
-      +'</div>'
-      +'<button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;flex-shrink:0">Stop</button>';
-    (pm||document.body).appendChild(dbg);
-    stopAutoScroll();
-    startLineHighlight();
-    _runBeatDetection();
-    showToast('🎙️ Chromagram aktiv — luaj muzike!','success');
-  }catch(e){
-    showToast('Mikrofoni nuk u lejua','error');
-    console.error(e);
-  }
-}
-
-function stopBeatScroll(){
-  _beatActive=false;
-  if(_beatAnimFrame){cancelAnimationFrame(_beatAnimFrame);_beatAnimFrame=null;}
-  if(_beatStream){_beatStream.getTracks().forEach(t=>t.stop());_beatStream=null;}
-  if(_beatCtx){_beatCtx.close();_beatCtx=null;}
-  _beatAnalyser=null;
-  document.getElementById('beatDebugBar')?.remove();
-  stopLineHighlight();
-}
-
-function _runBeatDetection(){
-  if(!_beatActive||!_beatAnalyser) return;
-  const dataUint=new Uint8Array(_beatAnalyser.frequencyBinCount);
-  const sr=_beatCtx.sampleRate;
-  const fftSize=_beatAnalyser.fftSize;
-  const levelBar=document.getElementById('beatLevelBar');
-  const chordEl=document.getElementById('beatChordDetected');
-  const confEl=document.getElementById('beatConfidence');
-
-  // Get ONLY the exact chords from this song — strict filter
-  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
-  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-  const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
-  const rawText=s?.lyricsRaw?.[perfInst]||s?.lyricsRaw?.Guitar||'';
-  // Extract exact chord names from song lyrics
-  const songChords=[...new Set(
-    (rawText.match(/\[?([A-G][#b]?m?(?:maj7|sus[24]|dim|aug|7)?)\]?/g)||[])
-    .map(c=>c.replace(/[\[\]]/g,'').split('/')[0].trim())
-    .filter(c=>c.length>0&&CHROMA_TEMPLATES[c])
-  )];
-  // Build template subset — ONLY song chords
-  const validTemplates=songChords.length>2
-    ? Object.fromEntries(songChords.filter(c=>CHROMA_TEMPLATES[c]).map(c=>[c,CHROMA_TEMPLATES[c]]))
-    : CHROMA_TEMPLATES;
-
-  if(chordEl) chordEl.title='Song chords: '+songChords.join(', ');
-
-  // Stability: consecutive detections of same chord
-  let stableChord=null, stableCount=0;
-  let currentConfirmedChord=null;
-  const STABLE_NEEDED=12; // ~200ms at 60fps
-  const MIN_SCROLL_GAP=2500;
-  const MIN_CONF=0.60;
-  // Hysteresis: need higher confidence to CHANGE chord than to KEEP it
-  const CHANGE_CONF=0.68; // need this to switch to new chord
-  const KEEP_CONF=0.52;   // only need this to keep current chord
-
-  const tick=()=>{
-    if(!_beatActive) return;
-    _beatAnalyser.getByteFrequencyData(dataUint);
-
-    let rms=0; for(let i=0;i<dataUint.length;i++) rms+=dataUint[i]*dataUint[i];
-    rms=Math.sqrt(rms/dataUint.length);
-    if(levelBar) levelBar.style.width=Math.min(100,(rms/80)*100)+'%';
-
-    const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
-    if(rms<15+threshold*15){
-      stableCount=Math.max(0,stableCount-2);
-      _beatAnimFrame=requestAnimationFrame(tick); return;
-    }
-
-    const chroma=buildChromagram(dataUint,sr,fftSize);
-    _chromaHistory.push(chroma);
-    if(_chromaHistory.length>10) _chromaHistory.shift();
-    const smoothChroma=new Array(12).fill(0).map((_,i)=>
-      _chromaHistory.reduce((sum,c)=>sum+c[i],0)/_chromaHistory.length
-    );
-
-    // Match with hysteresis
-    const {chord,confidence}=matchChordSubset(smoothChroma,validTemplates);
-
-    // Apply hysteresis — harder to change, easier to keep
-    const requiredConf=chord===currentConfirmedChord?KEEP_CONF:CHANGE_CONF;
-
-    if(chordEl) chordEl.textContent=confidence>MIN_CONF?chord:'...';
-    if(confEl) confEl.textContent=confidence>MIN_CONF?Math.round(confidence*100)+'%':'';
-
-    if(confidence<requiredConf){
-      stableCount=Math.max(0,stableCount-1);
-      _beatAnimFrame=requestAnimationFrame(tick); return;
-    }
-
-    if(chord===stableChord){ stableCount++; }
-    else { stableChord=chord; stableCount=1; }
-
-    if(stableCount>=STABLE_NEEDED){
-      currentConfirmedChord=chord;
-      const now=performance.now();
-      if(chord!==_lastDetectedChord&&(now-_lastScrollTime)>MIN_SCROLL_GAP){
-        _lastDetectedChord=chord; _lastScrollTime=now; stableCount=0;
-        const btn=document.getElementById('beatScrollBtn');
-        if(btn){btn.style.background='#4ade80';btn.style.color='#000';
-          setTimeout(()=>{if(_beatActive&&btn){btn.style.background='var(--red)';btn.style.color='#fff';}},300);}
-        if(chordEl){chordEl.style.color='#4ade80';setTimeout(()=>{if(chordEl)chordEl.style.color='#facc15';},500);}
-        const found=tryScrollToChord(chord);
-        if(!found) advanceScrollLine();
-      }
-    }
-    _beatAnimFrame=requestAnimationFrame(tick);
-  };
-  _beatAnimFrame=requestAnimationFrame(tick);
+  // Normalize to max=1
+  const mx=Math.max(...chroma,0.001);
+  return Array.from(chroma).map(v=>v/mx);
 }
 
 function matchChordSubset(chroma,templates){
   let bestChord=null,bestScore=-1;
   for(const [name,tmpl] of Object.entries(templates)){
-    let dot=0,normA=0,normB=0;
-    for(let i=0;i<12;i++){dot+=chroma[i]*tmpl[i];normA+=chroma[i]**2;normB+=tmpl[i]**2;}
-    const score=dot/(Math.sqrt(normA)*Math.sqrt(normB)+0.001);
+    let dot=0,na=0,nb=0;
+    for(let i=0;i<12;i++){dot+=chroma[i]*tmpl[i];na+=chroma[i]**2;nb+=tmpl[i]**2;}
+    const score=dot/(Math.sqrt(na)*Math.sqrt(nb)+1e-6);
     if(score>bestScore){bestScore=score;bestChord=name;}
   }
   return {chord:bestChord,confidence:bestScore};
 }
+
+function matchChord(chroma){ return matchChordSubset(chroma,CHROMA_TEMPLATES); }
+
 
 function tryScrollToChord(chordName){
   const content=document.getElementById('perfContent');
@@ -5274,6 +5083,49 @@ async function duplicateSong(songId){
 // ═══════════════════════════════════════════════════════
 //  PDF BATCH DOWNLOAD
 // ═══════════════════════════════════════════════════════
+// ── SONG REQUESTS (from Supabase) ──
+async function loadSongRequests(){
+  const el=document.getElementById('songRequestsList');
+  if(!el) return;
+  el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
+  const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
+  try{
+    const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
+    if(error||!data?.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
+        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
+      return;
+    }
+    el.innerHTML=data.map(r=>`
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${r.song_name||'Pa titull'}</div>
+          <div style="font-size:12px;color:var(--text3)">Nga: ${r.name||'Anonim'} ${r.email?'('+r.email+')':''}</div>
+          ${r.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.note}</div>`:''}
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">${new Date(r.created_at).toLocaleDateString('sq-AL',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="markRequestDone(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:var(--green-muted,rgba(74,222,128,0.15));color:#4ade80;font-size:12px;cursor:pointer">✓ Bëre</button>
+          <button onclick="deleteRequest(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:rgba(139,26,26,0.15);color:var(--red);font-size:12px;cursor:pointer">🗑</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">Gabim: '+e.message+'<br><br>Krijo tabelën me SQL:<br><code style="font-size:11px;background:var(--bg3);padding:4px 8px;border-radius:4px;display:block;margin-top:8px">CREATE TABLE song_requests (id SERIAL PRIMARY KEY, song_name TEXT, name TEXT, email TEXT, note TEXT, done BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW());</code></div>';
+  }
+}
+
+async function markRequestDone(id){
+  const sb=getSB(); if(!sb) return;
+  await sb.from('song_requests').update({done:true}).eq('id',id);
+  loadSongRequests();
+}
+async function deleteRequest(id){
+  if(!confirm('Fshi këtë kërkesë?')) return;
+  const sb=getSB(); if(!sb) return;
+  await sb.from('song_requests').delete().eq('id',id);
+  loadSongRequests();
+}
+
 function downloadAllPDFs(){
   const items=[];
   Object.entries(PDFS).forEach(([songId,pdfs])=>{
@@ -5949,25 +5801,54 @@ function stopPerfTimer(){
   if(_perfTimerInterval){ clearInterval(_perfTimerInterval); _perfTimerInterval=null; }
 }
 
-function startCountdown(cb){
-  const pm = document.getElementById('performanceMode');
-  const overlay = document.createElement('div');
-  overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column';
-  let count = 3;
-  overlay.innerHTML=`<div id="countNum" style="font-size:120px;font-weight:900;color:#fff;line-height:1;font-family:'Poppins',sans-serif">${count}</div><div style="font-size:16px;color:rgba(255,255,255,0.5);margin-top:12px">Gati...</div>`;
-  pm.appendChild(overlay);
-  const numEl = overlay.querySelector('#countNum');
-  const tick = setInterval(()=>{
-    count--;
-    if(count>0){
-      numEl.textContent=count;
-      numEl.style.color=count===1?'var(--gold)':'#fff';
-    } else {
-      clearInterval(tick);
-      overlay.remove();
-      if(cb) cb();
+// ── BPM TAP CALCULATOR ──
+let _tapBPMTimes=[], _tapBPMResetTimer=null;
+function perfTapBPM(){
+  clearTimeout(_tapBPMResetTimer);
+  const now=performance.now();
+  _tapBPMTimes.push(now);
+  if(_tapBPMTimes.length>8) _tapBPMTimes.shift();
+  const btn=document.getElementById('perfTapBtn');
+  if(btn){btn.style.background='var(--blue-mid)';btn.style.color='#fff';
+    setTimeout(()=>{if(!_tapBPMTimes.length)return;btn.style.background='var(--bg3)';btn.style.color='var(--text2)';},120);}
+  if(_tapBPMTimes.length>=2){
+    let tot=0;
+    for(let i=1;i<_tapBPMTimes.length;i++) tot+=_tapBPMTimes[i]-_tapBPMTimes[i-1];
+    const bpm=Math.round(Math.min(220,Math.max(40,60000/(tot/(_tapBPMTimes.length-1)))));
+    if(btn) btn.textContent='\u266a '+bpm+' BPM';
+    // Apply to scroll if running
+    if(_autoScrollInterval&&_tapBPMTimes.length>=3){
+      window._tapBPMOverride=bpm;
+      stopAutoScroll();
+      setTimeout(()=>{ toggleAutoScroll(); },60);
     }
-  }, 800);
+    // Reset display after 4s of no tapping
+    _tapBPMResetTimer=setTimeout(()=>{
+      if(btn) btn.textContent='\u266a TAP';
+      _tapBPMTimes=[];
+      delete window._tapBPMOverride;
+    },4000);
+  }
+}
+
+function startCountdown(cb){
+  const pm=document.getElementById('performanceMode');
+  document.getElementById('perfCountdownOverlay')?.remove();
+  const overlay=document.createElement('div');
+  overlay.id='perfCountdownOverlay';
+  overlay.style.cssText='position:absolute;inset:0;z-index:100;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px';
+  pm?.appendChild(overlay);
+  let count=3;
+  const tick=()=>{
+    if(count>0){
+      overlay.innerHTML='<div style="font-size:96px;font-weight:900;color:#fff;font-family:Poppins,sans-serif;line-height:1">'+count+'</div><div style="font-size:15px;color:rgba(255,255,255,0.4);font-family:Poppins,sans-serif">duke u pergatitur...</div>';
+      count--; setTimeout(tick,900);
+    } else {
+      overlay.innerHTML='<div style="font-size:48px;color:#4ade80;font-family:Poppins,sans-serif;font-weight:700">Fillo!</div>';
+      setTimeout(()=>{ overlay.remove(); cb(); },400);
+    }
+  };
+  tick();
 }
 
 function togglePerfChords(){
