@@ -4493,7 +4493,7 @@ function buildChromagram(freqData, sampleRate, fftSize){
     const energy=(freqData[bin]/255)**2;
     if(energy<0.002) continue;
     // A-weighting (approximate) — emphasizes 1-4kHz
-    const aw=Math.min(2,(freq/1000)*Math.exp(-(freq-1000)**2/2000000));
+    const aw=Math.min(2,(freq/1000)*Math.exp(-Math.pow(freq-1000,2)/2000000));
     const weighted=energy*(0.5+aw);
     // Map to pitch class via MIDI
     const midi=12*Math.log2(freq/440)+69;
