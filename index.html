@@ -4522,6 +4522,115 @@ function matchChordSubset(chroma,templates){
 
 function matchChord(chroma){ return matchChordSubset(chroma,CHROMA_TEMPLATES); }
 
+async function toggleBeatScroll(){
+  const btn=document.getElementById('beatScrollBtn');
+  if(_beatActive){
+    stopBeatScroll();
+    document.getElementById('beatDebugBar')?.remove();
+    if(btn){btn.textContent='🎙️';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+    return;
+  }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
+    _beatStream=stream;
+    _beatCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const src=_beatCtx.createMediaStreamSource(stream);
+    _beatAnalyser=_beatCtx.createAnalyser();
+    _beatAnalyser.fftSize=4096;
+    _beatAnalyser.smoothingTimeConstant=0.7;
+    src.connect(_beatAnalyser);
+    _beatActive=true; _lastDetectedChord=null; _chromaHistory=[]; _lastScrollTime=0;
+    if(btn){btn.textContent='🎙️ ON';btn.style.background='var(--red)';btn.style.color='#fff';}
+    // Debug bar
+    const pm=document.getElementById('performanceMode');
+    document.getElementById('beatDebugBar')?.remove();
+    const dbg=document.createElement('div');
+    dbg.id='beatDebugBar';
+    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99998;background:rgba(0,0,0,0.92);padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    dbg.innerHTML='<span style="font-size:12px">🎙️</span>'
+      +'<div style="flex:1;min-width:100px"><div style="font-size:11px;color:#aaa">Akord: <span id="beatChordDetected" style="color:#facc15;font-weight:700;font-size:14px">--</span> <span id="beatConfidence" style="font-size:10px;color:#666"></span></div>'
+      +'<div style="height:8px;background:#111;border-radius:4px;margin-top:3px;overflow:hidden"><div id="beatLevelBar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#facc15,#ef4444);transition:width .05s;border-radius:4px"></div></div></div>'
+      +'<div style="display:flex;align-items:center;gap:5px;white-space:nowrap"><span style="font-size:10px;color:#aaa">Ndjeshmeria:</span>'
+      +'<input type="range" id="beatSensSlider" min="0.1" max="2.0" step="0.05" value="0.5" style="width:60px;accent-color:#ef4444" oninput="setPerfSens(this.value)"/>'
+      +'<span id="beatSensVal" style="font-size:10px;color:#aaa">0.5</span>'
+      +'<button onclick="setPerfSens(0.5);document.getElementById(\'beatSensSlider\').value=0.5" style="background:#333;border:none;color:#aaa;border-radius:4px;padding:1px 6px;cursor:pointer;font-size:11px">↺</button></div>'
+      +'<button onclick="toggleBeatScroll()" style="background:#333;border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;flex-shrink:0">Stop</button>';
+    (pm||document.body).appendChild(dbg);
+    stopAutoScroll();
+    startLineHighlight();
+    _runBeatDetection();
+    showToast('🎙️ Chord detection aktiv!','success');
+  }catch(e){ showToast('Mikrofoni nuk u lejua','error'); console.error(e); }
+}
+
+function stopBeatScroll(){
+  _beatActive=false;
+  if(_beatAnimFrame){cancelAnimationFrame(_beatAnimFrame);_beatAnimFrame=null;}
+  if(_beatStream){_beatStream.getTracks().forEach(t=>t.stop());_beatStream=null;}
+  if(_beatCtx){_beatCtx.close();_beatCtx=null;}
+  _beatAnalyser=null;
+  document.getElementById('beatDebugBar')?.remove();
+  stopLineHighlight();
+}
+
+function setPerfSens(val){
+  window._onsetThreshold=parseFloat(val);
+  const el=document.getElementById('beatSensVal');
+  if(el) el.textContent=parseFloat(val).toFixed(2);
+}
+
+function _runBeatDetection(){
+  if(!_beatActive||!_beatAnalyser) return;
+  const dataUint=new Uint8Array(_beatAnalyser.frequencyBinCount);
+  const sr=_beatCtx.sampleRate, fftSize=_beatAnalyser.fftSize;
+  const levelBar=document.getElementById('beatLevelBar');
+  const chordEl=document.getElementById('beatChordDetected');
+  const confEl=document.getElementById('beatConfidence');
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+  const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
+  const rawText=s?.lyricsRaw?.[perfInst]||s?.lyricsRaw?.Guitar||'';
+  const songChords=[...new Set((rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|aug|7)?/g)||[])
+    .map(c=>c.split('/')[0].trim()).filter(c=>CHROMA_TEMPLATES[c]))];
+  const validTemplates=songChords.length>2
+    ?Object.fromEntries(songChords.filter(c=>CHROMA_TEMPLATES[c]).map(c=>[c,CHROMA_TEMPLATES[c]]))
+    :CHROMA_TEMPLATES;
+  let stableChord=null,stableCount=0,currentConfirmedChord=null;
+  const STABLE_NEEDED=12,MIN_SCROLL_GAP=2500,CHANGE_CONF=0.68,KEEP_CONF=0.52;
+  const tick=()=>{
+    if(!_beatActive) return;
+    _beatAnalyser.getByteFrequencyData(dataUint);
+    let rms=0; for(let i=0;i<dataUint.length;i++) rms+=dataUint[i]*dataUint[i];
+    rms=Math.sqrt(rms/dataUint.length);
+    if(levelBar) levelBar.style.width=Math.min(100,(rms/80)*100)+'%';
+    const threshold=parseFloat(document.getElementById('beatSensSlider')?.value||0.5);
+    if(rms<15+threshold*15){stableCount=Math.max(0,stableCount-2);_beatAnimFrame=requestAnimationFrame(tick);return;}
+    const chroma=buildChromagram(dataUint,sr,fftSize);
+    _chromaHistory.push(chroma);
+    if(_chromaHistory.length>10) _chromaHistory.shift();
+    const smoothChroma=new Array(12).fill(0).map((_,i)=>_chromaHistory.reduce((s,c)=>s+c[i],0)/_chromaHistory.length);
+    const {chord,confidence}=matchChordSubset(smoothChroma,validTemplates);
+    const requiredConf=chord===currentConfirmedChord?KEEP_CONF:CHANGE_CONF;
+    if(chordEl) chordEl.textContent=confidence>0.55?chord:'...';
+    if(confEl) confEl.textContent=confidence>0.55?Math.round(confidence*100)+'%':'';
+    if(confidence<requiredConf){stableCount=Math.max(0,stableCount-1);_beatAnimFrame=requestAnimationFrame(tick);return;}
+    if(chord===stableChord) stableCount++; else{stableChord=chord;stableCount=1;}
+    if(stableCount>=STABLE_NEEDED){
+      currentConfirmedChord=chord;
+      const now=performance.now();
+      if(chord!==_lastDetectedChord&&(now-_lastScrollTime)>MIN_SCROLL_GAP){
+        _lastDetectedChord=chord;_lastScrollTime=now;stableCount=0;
+        const bb=document.getElementById('beatScrollBtn');
+        if(bb){bb.style.background='#4ade80';bb.style.color='#000';setTimeout(()=>{if(_beatActive&&bb){bb.style.background='var(--red)';bb.style.color='#fff';}},300);}
+        if(chordEl){chordEl.style.color='#4ade80';setTimeout(()=>{if(chordEl)chordEl.style.color='#facc15';},500);}
+        if(!tryScrollToChord(chord)) advanceScrollLine();
+      }
+    }
+    _beatAnimFrame=requestAnimationFrame(tick);
+  };
+  _beatAnimFrame=requestAnimationFrame(tick);
+}
+
 
 function tryScrollToChord(chordName){
   const content=document.getElementById('perfContent');
@@ -5536,28 +5645,40 @@ function showPerfControls(){
 function highlightCurrentLine(){
   const content=document.getElementById('perfContent');
   if(!content) return;
-  const lines=content.querySelectorAll('.perf-lyric-line');
-  if(!lines.length) return;
+  const lyricLines=content.querySelectorAll('.perf-lyric-line');
+  if(!lyricLines.length) return;
   const scrollTop=content.scrollTop;
   const atTop=scrollTop<40;
   const atBottom=scrollTop>=content.scrollHeight-content.clientHeight-40;
-  const viewMid=scrollTop+content.clientHeight*0.38;
-  let activeFound=false;
-  lines.forEach((line,i)=>{
-    let isActive=false;
-    if(atTop) isActive=i===0; // at top → first line
-    else if(atBottom) isActive=i===lines.length-1; // at bottom → last line
-    else {
-      const lineTop=line.offsetTop;
-      const lineBot=lineTop+line.offsetHeight;
-      isActive=lineTop<=viewMid&&lineBot>viewMid;
-    }
-    if(isActive) activeFound=true;
-    line.classList.toggle('active-line',isActive);
-    line.classList.toggle('dim-line',!isActive);
+  const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
+  let activeIdx=-1;
+  const rects=[];
+  // Use getBoundingClientRect for accurate positions
+  const containerTop=content.getBoundingClientRect().top;
+  lyricLines.forEach((line,i)=>{
+    const r=line.getBoundingClientRect();
+    const topRel=r.top-containerTop; // position relative to visible viewport
+    rects.push({topRel,height:r.height,i});
   });
-  if(!activeFound) lines.forEach(l=>l.classList.remove('active-line','dim-line'));
+  if(atTop){
+    activeIdx=0;
+  } else if(atBottom){
+    activeIdx=lyricLines.length-1;
+  } else {
+    // Find line closest to viewMid
+    let closest=Infinity;
+    rects.forEach(({topRel,height,i})=>{
+      const lineMid=topRel+height/2;
+      const dist=Math.abs(lineMid-viewMid);
+      if(dist<closest){closest=dist;activeIdx=i;}
+    });
+  }
+  lyricLines.forEach((line,i)=>{
+    line.classList.toggle('active-line',i===activeIdx);
+    line.classList.toggle('dim-line',i!==activeIdx);
+  });
 }
+
 
 function startLineHighlight(){
   stopLineHighlight();
