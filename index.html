@@ -5534,7 +5534,7 @@ function startPerformanceMode(){
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
   document.body.style.overflow='';
-  stopAutoScroll(); stopBeatScroll(); stopTapScroll(); stopTapTempoMode(); stopPerfTimer(); stopMetronome(); stopLineHighlight();
+  stopAutoScroll(); stopBeatScroll(); stopPerfTimer(); stopMetronome(); stopLineHighlight();
   clearTimeout(_perfAutoHideTimer);
   _perfPanic=false; _perfControlsHidden=false;
   if(_wakeLock){_wakeLock.release();_wakeLock=null;}
@@ -5648,8 +5648,9 @@ function highlightCurrentLine(){
   const lyricLines=content.querySelectorAll('.perf-lyric-line');
   if(!lyricLines.length) return;
   const scrollTop=content.scrollTop;
+  const maxScroll=content.scrollHeight-content.clientHeight;
   const atTop=scrollTop<40;
-  const atBottom=scrollTop>=content.scrollHeight-content.clientHeight-40;
+  const atBottom=maxScroll>0&&scrollTop>=maxScroll-60; // last 60px = at bottom
   const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
   let activeIdx=-1;
   const rects=[];
@@ -6152,6 +6153,12 @@ function toggleAutoScroll(){
 }
 
 function _launchScroll(content,pxPerSec,btn){
+  // Instantly jump to first lyric line so pre-lyrics UI doesn't scroll slowly
+  const firstLine=content.querySelector('.perf-lyric-line');
+  if(firstLine&&content.scrollTop<10){
+    const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
+    if(firstLineTop>40) content.scrollTop=Math.max(0,firstLineTop-20);
+  }
   startLineHighlight();
   let last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
@@ -6164,9 +6171,14 @@ function _launchScroll(content,pxPerSec,btn){
     const dt=Math.min((ts-last)/1000,0.1); last=ts;
     if(!paused){
       content.scrollTop+=pxPerSec*dt;
-      if(content.scrollTop>=content.scrollHeight-content.clientHeight-2){
-        stopAutoScroll(); stopLineHighlight();
-        if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+      // Stop only when truly at bottom - add larger buffer for last section
+      const maxScroll=content.scrollHeight-content.clientHeight;
+      if(maxScroll>0&&content.scrollTop>=maxScroll-5){
+        content.scrollTop=maxScroll; // ensure we reach absolute bottom
+        setTimeout(()=>{
+          stopAutoScroll(); stopLineHighlight();
+          if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
+        },800); // small delay so last line stays highlighted
         return;
       }
     }
