@@ -3761,6 +3761,49 @@ function openAdmin(){
   refreshAdminSongs();
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
+async function loadSongRequests(){
+  const el=document.getElementById('songRequestsList');
+  if(!el) return;
+  el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
+  const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
+  try{
+    const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
+    if(error||!data?.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
+        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
+      return;
+    }
+    el.innerHTML=data.map(r=>`
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${r.song_name||'Pa titull'}</div>
+          <div style="font-size:12px;color:var(--text3)">Nga: ${r.name||'Anonim'} ${r.email?'('+r.email+')':''}</div>
+          ${r.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.note}</div>`:''}
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">${new Date(r.created_at).toLocaleDateString('sq-AL',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="markRequestDone(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:var(--green-muted,rgba(74,222,128,0.15));color:#4ade80;font-size:12px;cursor:pointer">✓ Bëre</button>
+          <button onclick="deleteRequest(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:rgba(139,26,26,0.15);color:var(--red);font-size:12px;cursor:pointer">🗑</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">Gabim: '+e.message+'<br><br>Krijo tabelën me SQL:<br><code style="font-size:11px;background:var(--bg3);padding:4px 8px;border-radius:4px;display:block;margin-top:8px">CREATE TABLE song_requests (id SERIAL PRIMARY KEY, song_name TEXT, name TEXT, email TEXT, note TEXT, done BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW());</code></div>';
+  }
+}
+
+async function markRequestDone(id){
+  const sb=getSB(); if(!sb) return;
+  await sb.from('song_requests').update({done:true}).eq('id',id);
+  loadSongRequests();
+}
+
+async function deleteRequest(id){
+  if(!confirm('Fshi këtë kërkesë?')) return;
+  const sb=getSB(); if(!sb) return;
+  await sb.from('song_requests').delete().eq('id',id);
+  loadSongRequests();
+}
+
 function switchAdminTab(tab,el){
   document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
@@ -5203,47 +5246,7 @@ async function duplicateSong(songId){
 //  PDF BATCH DOWNLOAD
 // ═══════════════════════════════════════════════════════
 // ── SONG REQUESTS (from Supabase) ──
-async function loadSongRequests(){
-  const el=document.getElementById('songRequestsList');
-  if(!el) return;
-  el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
-  const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
-  try{
-    const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
-    if(error||!data?.length){
-      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
-        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
-      return;
-    }
-    el.innerHTML=data.map(r=>`
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${r.song_name||'Pa titull'}</div>
-          <div style="font-size:12px;color:var(--text3)">Nga: ${r.name||'Anonim'} ${r.email?'('+r.email+')':''}</div>
-          ${r.note?`<div style="font-size:12px;color:var(--text2);margin-top:4px">${r.note}</div>`:''}
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">${new Date(r.created_at).toLocaleDateString('sq-AL',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="markRequestDone(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:var(--green-muted,rgba(74,222,128,0.15));color:#4ade80;font-size:12px;cursor:pointer">✓ Bëre</button>
-          <button onclick="deleteRequest(${r.id})" style="padding:4px 10px;border-radius:6px;border:none;background:rgba(139,26,26,0.15);color:var(--red);font-size:12px;cursor:pointer">🗑</button>
-        </div>
-      </div>`).join('');
-  }catch(e){
-    el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">Gabim: '+e.message+'<br><br>Krijo tabelën me SQL:<br><code style="font-size:11px;background:var(--bg3);padding:4px 8px;border-radius:4px;display:block;margin-top:8px">CREATE TABLE song_requests (id SERIAL PRIMARY KEY, song_name TEXT, name TEXT, email TEXT, note TEXT, done BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW());</code></div>';
-  }
-}
 
-async function markRequestDone(id){
-  const sb=getSB(); if(!sb) return;
-  await sb.from('song_requests').update({done:true}).eq('id',id);
-  loadSongRequests();
-}
-async function deleteRequest(id){
-  if(!confirm('Fshi këtë kërkesë?')) return;
-  const sb=getSB(); if(!sb) return;
-  await sb.from('song_requests').delete().eq('id',id);
-  loadSongRequests();
-}
 
 function downloadAllPDFs(){
   const items=[];
