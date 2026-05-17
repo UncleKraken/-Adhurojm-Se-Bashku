@@ -1445,7 +1445,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
-      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this);loadSongRequests()">&#128235; Kërkesat</button>
+      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat</button>
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
@@ -2034,8 +2034,17 @@ async function renderStatsDashboard() {
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">⏳ Duke ngarkuar...</div>';
 
+  // Load fresh data from Supabase to ensure created_at is available
+  const sb=getSB();
+  let allSongs=[...SONGS];
+  if(sb){
+    try{
+      const {data}=await sb.from('songs').select('*').order('created_at',{ascending:false});
+      if(data?.length) allSongs=(data||[]).map(mapRow);
+    }catch(e){}
+  }
+
   const STATS = await loadStats();
-  const allSongs = [...SONGS];
 
   // Sort by views
   const byViews = [...allSongs].sort((a,b) => (STATS[b.id]?.views||0) - (STATS[a.id]?.views||0)).slice(0,10);
@@ -3761,7 +3770,8 @@ function switchAdminTab(tab,el){
   if(tab==='pdfs') refreshPDFPanel();
   if(tab==='artists') renderArtistsList();
   if(tab==='songs') refreshAdminSongs();
-  if(tab==='social'){ loadSocialAdminForm(); setTimeout(loadAnthropicKeyIntoForm, 50); }
+  if(tab==='social'){ loadSocialAdminForm(); }
+  if(tab==='requests'){ setTimeout(loadSongRequests,100); }
   if(tab==='stats') renderStatsDashboard();
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
@@ -5480,7 +5490,7 @@ function updateSetlistBadge(){
 let perfIdx = 0;
 let _autoScrollInterval = null;
 let _wakeLock = null;
-let _perfFontSize = 18;
+let _perfFontSize = Number(localStorage.getItem('aa_perf_font')||18);
 let _perfLang = null;
 let _perfTranspose = {};
 let _perfArrangements = {};
@@ -5848,7 +5858,7 @@ function showPerfSong(){
           ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
         </div>
         <div id="perfLyricsContent"></div>
-        ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
+        ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextSong.capo>0?`<span class="tag tag-gold" style="font-size:10px">Capo ${nextSong.capo}</span>`:''} ${nextSong.bpm?`<span style="font-size:10px;color:var(--text3)">🥁${nextSong.bpm}</span>`:''} ${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
       </div>
     </div>`;
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
@@ -5857,12 +5867,13 @@ function showPerfSong(){
   if(mbi&&s.bpm) mbi.value=s.bpm;
 }
 
-let _perfScrollSpeed = 100; // % of base speed
+let _perfScrollSpeed = Number(localStorage.getItem('aa_perf_speed')||100);
 let _perfTimerInterval = null;
 let _perfTimerStart = null;
 
 function setPerfScrollSpeed(val){
   _perfScrollSpeed=Number(val);
+  try{localStorage.setItem('aa_perf_speed',val);}catch(e){}
   const label=document.getElementById('perfSpeedLabel');
   if(label) label.textContent=val+'%';
   const slider=document.getElementById('perfSpeedSlider');
@@ -5989,6 +6000,7 @@ function perfSwitchInst(songId, inst){
 
 function setPerfFont(size){
   _perfFontSize = Number(size);
+  try{localStorage.setItem('aa_perf_font',size);}catch(e){}
   // Re-render lyrics with new size without full reload
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
@@ -6127,11 +6139,10 @@ function toggleAutoScroll(){
     } else {
       const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
       setTimeout(()=>{
-        const lyricsEl=document.getElementById('perfLyricsContent')||content;
-        const lines=lyricsEl.querySelectorAll('.perf-lyric-line');
-        let avgH=90;
-        if(lines.length>0){let tot=0;lines.forEach(l=>tot+=l.offsetHeight);const m=tot/lines.length;if(m>10)avgH=m;}
-        const pxPerSec=Math.max(5,(avgH/secPerLine)*(_perfScrollSpeed/100));
+        // Use fixed line height based on font size — NOT DOM height
+        // DOM height changes when chord diagrams are ON → causes speed inconsistency
+        const baseLineH=(_perfFontSize||18)*2.6; // font × line-height factor
+        const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
       },80);
