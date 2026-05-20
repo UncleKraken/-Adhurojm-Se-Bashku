@@ -3,7 +3,6 @@
 const CACHE_VERSION = 'asb-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
-
 // Files to cache immediately on install
 const STATIC_FILES = [
   './',
@@ -13,7 +12,6 @@ const STATIC_FILES = [
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
 ];
-
 // Install — cache static files
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -24,7 +22,6 @@ self.addEventListener('install', event => {
     }).then(() => self.skipWaiting())
   );
 });
-
 // Activate — clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -36,15 +33,12 @@ self.addEventListener('activate', event => {
     ).then(() => self.clients.claim())
   );
 });
-
 // Fetch — cache-first for static, network-first for Supabase
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-
   // Skip non-GET and chrome-extension requests
   if(event.request.method !== 'GET') return;
   if(url.protocol === 'chrome-extension:') return;
-
   // Supabase API — network first, fallback to cache
   if(url.hostname.includes('supabase.co')){
     event.respondWith(
@@ -58,7 +52,6 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-
   // Static files — cache first
   event.respondWith(
     caches.match(event.request).then(cached => {
@@ -77,4 +70,16 @@ self.addEventListener('fetch', event => {
       });
     })
   );
+});
+
+// Message — handle skip-waiting without leaving async channel open
+// FIX: do NOT return `true` from a sync message handler.
+// Returning `true` signals Chrome that an async response is coming;
+// if the channel closes first it throws:
+// "A listener indicated an asynchronous response by returning true,
+//  but the message channel closed before a response was received"
+self.addEventListener('message', event => {
+  if(event.data && event.data.type === 'SKIP_WAITING'){
+    self.skipWaiting(); // synchronous — no async gap, no return true
+  }
 });
