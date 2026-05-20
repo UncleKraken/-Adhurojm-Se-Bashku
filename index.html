@@ -3770,9 +3770,14 @@ async function loadSongRequests(){
   const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
   try{
     const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
-    if(error||!data?.length){
-      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
-        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
+    if(error){
+      // Separate real DB error from empty table
+      console.warn('[Requests] Supabase error:', error);
+      el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">⚠️ Gabim Supabase: '+error.message+'<br><br>Kontrollo: (1) tabela <code>song_requests</code> ekziston, (2) RLS policy lejon SELECT për admin.</div>';
+      return;
+    }
+    if(!data?.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">📭 Nuk ka kërkesa ende.</div>';
       return;
     }
     el.innerHTML=data.map(r=>`
@@ -5315,12 +5320,45 @@ async function sendSongRequest(){
   const artist = document.getElementById('reqArtist')?.value.trim();
   const youtube = document.getElementById('reqYoutube')?.value.trim();
   if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
+
+  // Build note from optional fields
+  const noteParts = [];
+  if(artist) noteParts.push('Artisti: ' + artist);
+  if(youtube) noteParts.push('YouTube: ' + youtube);
+  const note = noteParts.join(' | ') || null;
+
   const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
+
+  let emailOk = false, supabaseOk = false;
+
+  // 1) EmailJS — try silently, do not block on failure
   try {
     await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
+    emailOk = true;
+  } catch(e){ console.warn('EmailJS failed:', e); }
+
+  // 2) Supabase insert — always save so admin panel shows the request
+  try {
+    const sb = getSB();
+    if(sb){
+      const {error} = await sb.from('song_requests').insert({
+        song_name: title,
+        name: name || null,
+        email: null,
+        note: note,
+        done: false
+      });
+      if(error) console.warn('song_requests insert error:', error);
+      else supabaseOk = true;
+    }
+  } catch(e){ console.warn('song_requests exception:', e); }
+
+  if(emailOk || supabaseOk){
     showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
+  } else {
+    showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
