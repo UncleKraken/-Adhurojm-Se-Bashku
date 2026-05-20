@@ -2039,9 +2039,10 @@ async function renderStatsDashboard() {
   let allSongs=[...SONGS];
   if(sb){
     try{
-      const {data}=await sb.from('songs').select('*').order('created_at',{ascending:false});
+      const {data,error}=await sb.from('songs').select('*').order('created_at',{ascending:false});
+      if(error) console.warn('[Stats] Supabase fetch error:', error);
       if(data?.length) allSongs=(data||[]).map(mapRow);
-    }catch(e){}
+    }catch(e){ console.warn('[Stats] Supabase exception:', e); }
   }
 
   const STATS = await loadStats();
@@ -2140,6 +2141,7 @@ async function renderStatsDashboard() {
         allSongs.forEach(s=>{
           if(!s.created_at) return;
           const d = new Date(s.created_at);
+          if(isNaN(d.getTime())) return; // skip malformed date strings
           const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
           months[key] = (months[key]||0)+1;
         });
@@ -5662,7 +5664,7 @@ function highlightCurrentLine(){
   if(!lyricLines.length) return;
   const scrollTop=content.scrollTop;
   const maxScroll=content.scrollHeight-content.clientHeight;
-  const atTop=scrollTop<40;
+  const atTop=scrollTop<150; // increased from 40 to cover firstLine jump offset
   const atBottom=maxScroll>0&&scrollTop>=maxScroll-60; // last 60px = at bottom
   const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
   let activeIdx=-1;
@@ -5682,6 +5684,7 @@ function highlightCurrentLine(){
     // Find line closest to viewMid
     let closest=Infinity;
     rects.forEach(({topRel,height,i})=>{
+      if(!lyricLines[i].textContent.trim()) return; // skip empty spacer lines between sections
       const lineMid=topRel+height/2;
       const dist=Math.abs(lineMid-viewMid);
       if(dist<closest){closest=dist;activeIdx=i;}
@@ -5701,6 +5704,7 @@ function startLineHighlight(){
     content._manualScrollHL=()=>highlightCurrentLine();
     content.addEventListener('scroll',content._manualScrollHL,{passive:true});
   }
+  highlightCurrentLine(); // call immediately so first line highlights at once
   window._lineHighlightInterval = setInterval(highlightCurrentLine, 250);
 }
 function stopLineHighlight(){
@@ -6173,6 +6177,7 @@ function _launchScroll(content,pxPerSec,btn){
     const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
     if(firstLineTop>40) content.scrollTop=Math.max(0,firstLineTop-20);
   }
+  requestAnimationFrame(()=>highlightCurrentLine()); // fire once after repaint so line 0 is active
   startLineHighlight();
   let last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
