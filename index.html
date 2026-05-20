@@ -1862,6 +1862,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
           <p style="font-size:13px;color:var(--text2);margin:0">Kërkesat e dërguara nga vizitorët përmes formës Contact.</p>
           <button class="btn btn-outline btn-sm" onclick="loadSongRequests()">🔄 Rifresko</button>
+          <button class="btn btn-outline btn-sm" onclick="cleanupDoneRequests()" style="color:var(--red);border-color:var(--red)">🗑 Fshi të kryerat (+30 ditë)</button>
         </div>
         <div id="songRequestsList" style="display:flex;flex-direction:column;gap:8px">
           <div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar kërkesat...</div>
@@ -3763,11 +3764,28 @@ function openAdmin(){
   refreshAdminSongs();
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
+async function cleanupDoneRequests(){
+  const sb=getSB(); if(!sb) return;
+  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString(); // 30 days ago
+  const {error,count}=await sb.from('song_requests')
+    .delete({count:'exact'})
+    .eq('done',true)
+    .lt('created_at',cutoff);
+  if(error){ showToast('Gabim gjatë fshirjes: '+error.message,'error'); return; }
+  showToast(`🗑 U fshinë ${count||0} kërkesa të kryera (>30 ditë)`,'success');
+  loadSongRequests();
+}
+
 async function loadSongRequests(){
   const el=document.getElementById('songRequestsList');
   if(!el) return;
   el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
   const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
+  // Auto-cleanup: silently remove done requests older than 30 days on each load
+  try{
+    const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+    await sb.from('song_requests').delete().eq('done',true).lt('created_at',cutoff);
+  }catch(e){ /* non-critical, ignore */ }
   try{
     const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
     if(error){
