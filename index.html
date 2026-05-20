@@ -5662,34 +5662,35 @@ function highlightCurrentLine(){
   if(!content) return;
   const lyricLines=content.querySelectorAll('.perf-lyric-line');
   if(!lyricLines.length) return;
-  const scrollTop=content.scrollTop;
-  const maxScroll=content.scrollHeight-content.clientHeight;
-  const atTop=scrollTop<150; // increased from 40 to cover firstLine jump offset
-  const atBottom=maxScroll>0&&scrollTop>=maxScroll-60; // last 60px = at bottom
-  const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
-  let activeIdx=-1;
-  const rects=[];
-  // Use getBoundingClientRect for accurate positions
+
+  const viewH=content.clientHeight;
+  // Reading anchor at 20% from top — close enough to catch first lines,
+  // far enough to look ahead while scrolling.
+  const readZone=viewH*0.20;
   const containerTop=content.getBoundingClientRect().top;
+
+  let activeIdx=-1;
+  let closest=Infinity;
+
   lyricLines.forEach((line,i)=>{
+    if(!line.textContent.trim()) return; // skip empty spacer lines between sections
     const r=line.getBoundingClientRect();
-    const topRel=r.top-containerTop; // position relative to visible viewport
-    rects.push({topRel,height:r.height,i});
+    const topRel=r.top-containerTop;
+    const botRel=r.bottom-containerTop;
+    // Only consider lines at least partially visible in the viewport
+    if(botRel<0||topRel>viewH) return;
+    const lineMid=topRel+r.height/2;
+    const dist=Math.abs(lineMid-readZone);
+    if(dist<closest){closest=dist;activeIdx=i;}
   });
-  if(atTop){
-    activeIdx=0;
-  } else if(atBottom){
-    activeIdx=lyricLines.length-1;
-  } else {
-    // Find line closest to viewMid
-    let closest=Infinity;
-    rects.forEach(({topRel,height,i})=>{
-      if(!lyricLines[i].textContent.trim()) return; // skip empty spacer lines between sections
-      const lineMid=topRel+height/2;
-      const dist=Math.abs(lineMid-viewMid);
-      if(dist<closest){closest=dist;activeIdx=i;}
-    });
+
+  // Fallback: if nothing visible (e.g. very fast scroll), pick first or last
+  if(activeIdx===-1){
+    const scrollTop=content.scrollTop;
+    const maxScroll=content.scrollHeight-content.clientHeight;
+    activeIdx=scrollTop<maxScroll/2?0:lyricLines.length-1;
   }
+
   lyricLines.forEach((line,i)=>{
     line.classList.toggle('active-line',i===activeIdx);
     line.classList.toggle('dim-line',i!==activeIdx);
