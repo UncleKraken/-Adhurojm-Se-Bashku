@@ -5720,26 +5720,26 @@ function highlightCurrentLine(){
   if(!lyricLines.length) return;
 
   const viewH=content.clientHeight;
+  // Fixed reading zone at 30% from top — matches ChordU-style teleprompter.
+  // Spacers in _launchScroll ensure line 0 and last line can both reach this zone.
+  const readZone=viewH*0.30;
   const containerTop=content.getBoundingClientRect().top;
 
-  // Teleprompter logic: highlight the TOPMOST non-empty line that is
-  // at least 40% visible. As autoscroll moves text up, each line
-  // becomes topmost in sequence — no jumps, no skips at start or end.
   let activeIdx=-1;
-  let highestTop=Infinity;
+  let closest=Infinity;
 
   lyricLines.forEach((line,i)=>{
-    if(!line.textContent.trim()) return; // skip empty spacer lines
+    if(!line.textContent.trim()) return; // skip empty spacer lines between sections
     const r=line.getBoundingClientRect();
     const topRel=r.top-containerTop;
     const botRel=r.bottom-containerTop;
-    // Must have at least 40% of line height visible from the top edge
-    if(botRel<r.height*0.4) return; // mostly scrolled above viewport
-    if(topRel>viewH) return;         // below viewport entirely
-    if(topRel<highestTop){highestTop=topRel;activeIdx=i;}
+    if(botRel<0||topRel>viewH) return; // off screen entirely
+    const lineMid=topRel+r.height/2;
+    const dist=Math.abs(lineMid-readZone);
+    if(dist<closest){closest=dist;activeIdx=i;}
   });
 
-  // Fallback: very fast scroll or edge case — pick first or last
+  // Fallback: nothing visible (very fast scroll)
   if(activeIdx===-1){
     const scrollTop=content.scrollTop;
     const maxScroll=content.scrollHeight-content.clientHeight;
@@ -6228,14 +6228,26 @@ function toggleAutoScroll(){
 
 function _launchScroll(content,pxPerSec,btn){
   // Instantly jump to first lyric line so pre-lyrics UI doesn't scroll slowly
-  const firstLine=content.querySelector('.perf-lyric-line');
-  if(firstLine&&content.scrollTop<10){
-    const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
-    // Scroll so line 0 sits flush at the top (topRel=0) — topmost-visible
-    // algorithm will then correctly pick it as the first active line
-    if(firstLineTop>5) content.scrollTop=Math.max(0,firstLineTop);
-  }
-  requestAnimationFrame(()=>highlightCurrentLine()); // fire after repaint — line 0 is topmost
+  // ── Spacers for ChordU-style fixed readZone (30%) ──
+  // Top spacer: pushes line 0 down to readZone so it starts highlighted there.
+  // Bottom spacer: lets last line scroll UP to readZone instead of stopping at bottom.
+  const viewH=content.clientHeight;
+  const readZone=Math.round(viewH*0.30);
+  // Remove any old spacers from previous scroll session
+  content.querySelector('.perf-top-spacer')?.remove();
+  content.querySelector('.perf-bot-spacer')?.remove();
+  const lyricsEl=document.getElementById('perfLyricsContent')||content;
+  const topSpacer=document.createElement('div');
+  topSpacer.className='perf-top-spacer';
+  topSpacer.style.cssText='height:'+readZone+'px;pointer-events:none;flex-shrink:0';
+  lyricsEl.insertBefore(topSpacer,lyricsEl.firstChild);
+  const botSpacer=document.createElement('div');
+  botSpacer.className='perf-bot-spacer';
+  botSpacer.style.cssText='height:'+(viewH-readZone)+'px;pointer-events:none;flex-shrink:0';
+  lyricsEl.appendChild(botSpacer);
+  // Start from the very top — spacer positions line 0 at readZone
+  content.scrollTop=0;
+  requestAnimationFrame(()=>highlightCurrentLine()); // fire after repaint
   startLineHighlight();
   let last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
@@ -6273,6 +6285,12 @@ function stopAutoScroll(){
   const content=document.getElementById('perfContent');
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
   if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
+  // Remove spacers added by _launchScroll
+  content?.querySelector('.perf-top-spacer')?.remove();
+  content?.querySelector('.perf-bot-spacer')?.remove();
+  const lyricsEl=document.getElementById('perfLyricsContent');
+  lyricsEl?.querySelector('.perf-top-spacer')?.remove();
+  lyricsEl?.querySelector('.perf-bot-spacer')?.remove();
 }
 
 async function sendContactEmail() {
