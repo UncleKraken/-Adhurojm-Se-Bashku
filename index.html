@@ -5720,27 +5720,26 @@ function highlightCurrentLine(){
   if(!lyricLines.length) return;
 
   const viewH=content.clientHeight;
-  // Reading anchor at 20% from top — close enough to catch first lines,
-  // far enough to look ahead while scrolling.
-  const readZone=viewH*0.20;
   const containerTop=content.getBoundingClientRect().top;
 
+  // Teleprompter logic: highlight the TOPMOST non-empty line that is
+  // at least 40% visible. As autoscroll moves text up, each line
+  // becomes topmost in sequence — no jumps, no skips at start or end.
   let activeIdx=-1;
-  let closest=Infinity;
+  let highestTop=Infinity;
 
   lyricLines.forEach((line,i)=>{
-    if(!line.textContent.trim()) return; // skip empty spacer lines between sections
+    if(!line.textContent.trim()) return; // skip empty spacer lines
     const r=line.getBoundingClientRect();
     const topRel=r.top-containerTop;
     const botRel=r.bottom-containerTop;
-    // Only consider lines at least partially visible in the viewport
-    if(botRel<0||topRel>viewH) return;
-    const lineMid=topRel+r.height/2;
-    const dist=Math.abs(lineMid-readZone);
-    if(dist<closest){closest=dist;activeIdx=i;}
+    // Must have at least 40% of line height visible from the top edge
+    if(botRel<r.height*0.4) return; // mostly scrolled above viewport
+    if(topRel>viewH) return;         // below viewport entirely
+    if(topRel<highestTop){highestTop=topRel;activeIdx=i;}
   });
 
-  // Fallback: if nothing visible (e.g. very fast scroll), pick first or last
+  // Fallback: very fast scroll or edge case — pick first or last
   if(activeIdx===-1){
     const scrollTop=content.scrollTop;
     const maxScroll=content.scrollHeight-content.clientHeight;
@@ -6232,9 +6231,11 @@ function _launchScroll(content,pxPerSec,btn){
   const firstLine=content.querySelector('.perf-lyric-line');
   if(firstLine&&content.scrollTop<10){
     const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
-    if(firstLineTop>40) content.scrollTop=Math.max(0,firstLineTop-20);
+    // Scroll so line 0 sits flush at the top (topRel=0) — topmost-visible
+    // algorithm will then correctly pick it as the first active line
+    if(firstLineTop>5) content.scrollTop=Math.max(0,firstLineTop);
   }
-  requestAnimationFrame(()=>highlightCurrentLine()); // fire once after repaint so line 0 is active
+  requestAnimationFrame(()=>highlightCurrentLine()); // fire after repaint — line 0 is topmost
   startLineHighlight();
   let last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
