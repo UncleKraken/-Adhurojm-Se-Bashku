@@ -6192,7 +6192,7 @@ function toggleAutoScroll(){
   const content=document.getElementById('perfContent'); if(!content) return;
 
   const startWithDuration=(ytDur)=>{
-    const BEATS_PER_LINE=8;
+    const BEATS_PER_LINE=4; // 4 beats/line doubles base speed — natural feel at 100%
     if(ytDur>30){
       const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
       const pxPerSec=(scrollH/ytDur)*(_perfScrollSpeed/100);
@@ -6205,7 +6205,7 @@ function toggleAutoScroll(){
         // Use fixed line height based on font size — NOT DOM height
         // DOM height changes when chord diagrams are ON → causes speed inconsistency
         const baseLineH=(_perfFontSize||18)*2.6; // font × line-height factor
-        const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
+        const pxPerSec=Math.max(15,(baseLineH/secPerLine)*(_perfScrollSpeed/100)); // min 15px/s always visible
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
       },80);
@@ -6237,19 +6237,33 @@ function _launchScroll(content,pxPerSec,btn){
   content.querySelector('.perf-top-spacer')?.remove();
   content.querySelector('.perf-bot-spacer')?.remove();
   const lyricsEl=document.getElementById('perfLyricsContent')||content;
+
+  // ── Top spacer: sized so first lyric line starts AT readZone ──
+  // perfLyricsContent sits below arrangement row (chips etc) — we measure
+  // its actual offset so the spacer compensates exactly for that gap.
+  content.scrollTop=0; // reset before measuring
+  const lyricsOffset=Math.max(0,Math.round(
+    lyricsEl.getBoundingClientRect().top-content.getBoundingClientRect().top
+  ));
+  const topSpacerH=Math.max(0,readZone-lyricsOffset);
   const topSpacer=document.createElement('div');
   topSpacer.className='perf-top-spacer';
-  topSpacer.style.cssText='height:'+readZone+'px;pointer-events:none;flex-shrink:0';
+  topSpacer.style.cssText='height:'+topSpacerH+'px;pointer-events:none;flex-shrink:0';
   lyricsEl.insertBefore(topSpacer,lyricsEl.firstChild);
+
+  // ── Bottom spacer: lets last lyric scroll up to readZone ──
   const botSpacer=document.createElement('div');
   botSpacer.className='perf-bot-spacer';
   botSpacer.style.cssText='height:'+(viewH-readZone)+'px;pointer-events:none;flex-shrink:0';
   lyricsEl.appendChild(botSpacer);
-  // Start from the very top — spacer positions line 0 at readZone
-  content.scrollTop=0;
+
+  // scrollTop stays 0 — first lyric is now exactly at readZone
   requestAnimationFrame(()=>highlightCurrentLine()); // fire after repaint
   startLineHighlight();
-  let last=null,paused=false,pauseTimer=null;
+
+  // Use float accumulator so sub-pixel increments don't get lost
+  // (reading scrollTop back can snap to integer on some browsers)
+  let scrollPos=0,last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   const onWheel=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   content.addEventListener('touchstart',onTouch,{passive:true});
@@ -6259,10 +6273,11 @@ function _launchScroll(content,pxPerSec,btn){
     if(!last) last=ts;
     const dt=Math.min((ts-last)/1000,0.1); last=ts;
     if(!paused){
-      content.scrollTop+=pxPerSec*dt;
-      // Stop only when truly at bottom - add larger buffer for last section
+      scrollPos+=pxPerSec*dt;      // accumulate as float
+      content.scrollTop=scrollPos; // apply (browser may render at integer)
+      // Stop when scrollPos reaches the bottom
       const maxScroll=content.scrollHeight-content.clientHeight;
-      if(maxScroll>0&&content.scrollTop>=maxScroll-5){
+      if(maxScroll>0&&scrollPos>=maxScroll-5){
         content.scrollTop=maxScroll; // ensure we reach absolute bottom
         setTimeout(()=>{
           stopAutoScroll(); stopLineHighlight();
