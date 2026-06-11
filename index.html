@@ -3020,41 +3020,67 @@ function normalizeSearch(str){
     .replace(/ù|ú|û|ü/g,'u');
 }
 
-function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
+// Highlight query in text, works even when ë≈e
+function hilite(t,q){
+  if(!q) return t;
+  const tn=normalizeSearch(t), qn=normalizeSearch(q);
+  const i=tn.indexOf(qn);
+  if(i<0) return t;
+  return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);
+}
+
 function updateAC(inputId,listId){
   const inp=document.getElementById(inputId),list=document.getElementById(listId);
   const q=inp.value.trim();
   const qn=normalizeSearch(q);
   acIdx=-1;
-  if(!q){closeAC(listId);return;}
-  const matches=SONGS.filter(s=>{
-    const qn2 = normalizeSearch(q);
-    // Search title, original, artist AND lyrics
-    const lyricsText = normalizeSearch(
-      (s.lyricsRaw?.Guitar || '') + ' ' + (s.lyricsRaw?.Piano || '')
-    );
-    const titleMatch = normalizeSearch(s.title).includes(qn2);
-    const origMatch = normalizeSearch(s.original||'').includes(qn2);
-    const artistMatch = normalizeSearch(s.artist||'').includes(qn2);
-    const lyricsMatch = qn2.length >= 3 && lyricsText.includes(qn2);
-    return titleMatch || origMatch || artistMatch || lyricsMatch;
-  }).slice(0,6);
-  if(!matches.length){closeAC(listId);return;}
-  list.innerHTML=matches.map(s=>{
+  if(!q||qn.length<1){closeAC(listId);return;}
+
+  // Score each song — higher score = better match
+  const scored = SONGS.map(s=>{
+    const nt=normalizeSearch(s.title);
+    const no=normalizeSearch(s.original||'');
+    const na=normalizeSearch(s.artist||'');
+    const lyricsRaw=(s.lyricsRaw?.Guitar||'')+(s.lyricsRaw?.Piano||'');
+    const nl=normalizeSearch(lyricsRaw);
+    let score=0;
+    if(nt===qn)                       score+=100; // exact title
+    else if(nt.startsWith(qn))        score+=80;  // title starts with
+    else if(nt.includes(qn))          score+=60;  // title contains
+    if(no.includes(qn))               score+=40;  // original name
+    if(na.includes(qn))               score+=30;  // artist
+    if(qn.length>=3&&nl.includes(qn)) score+=15;  // lyrics
+    return { s, score, lyricsRaw };
+  }).filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,10); // show up to 10 results
+
+  if(!scored.length){closeAC(listId);return;}
+
+  list.innerHTML=scored.map(({s,score,lyricsRaw})=>{
     const thumb=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
-    const qn2 = normalizeSearch(q);
-    const lyricsText = (s.lyricsRaw?.Guitar || s.lyricsRaw?.Piano || '');
-    // Find lyrics snippet if match is in lyrics
-    let snippet = '';
-    if(!normalizeSearch(s.title).includes(qn2) && !normalizeSearch(s.artist||'').includes(qn2)){
-      const lines = lyricsText.split('\n').filter(l=>normalizeSearch(l).includes(qn2));
-      if(lines.length) snippet = `<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 "${lines[0].trim().slice(0,50)}..."</div>`;
+    const nt=normalizeSearch(s.title);
+    const na=normalizeSearch(s.artist||'');
+    // Lyrics snippet — only if match is NOT in title/artist
+    let snippet='';
+    if(!nt.includes(qn)&&!na.includes(qn)&&qn.length>=3){
+      const lines=lyricsRaw.split('\n').filter(l=>normalizeSearch(l).includes(qn)&&l.trim()&&!l.trim().startsWith('['));
+      if(lines.length){
+        const line=lines[0].trim().slice(0,55);
+        snippet=`<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 "${hilite(line,q)}..."</div>`;
+      }
     }
+    const keyTag=s.key?`<span style="font-size:9px;background:var(--bg3);border-radius:4px;padding:1px 5px;color:var(--text3);margin-left:4px">${s.key}</span>`:'';
     return `<div class="ac-item" data-id="${s.id}">
       <img class="ac-thumb" src="${thumb}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0" alt=""/>
-      <div style="min-width:0"><div class="ac-name">${hilite(s.title,q)}</div><div class="ac-sub">${s.original?s.original+' · ':''}<em>${s.artist}</em></div>${snippet}</div>
+      <div style="min-width:0">
+        <div class="ac-name">${hilite(s.title,q)}${keyTag}</div>
+        <div class="ac-sub">${s.original?hilite(s.original,q)+' · ':''}<em>${hilite(s.artist||'',q)}</em></div>
+        ${snippet}
+      </div>
     </div>`;
   }).join('');
+
   list.querySelectorAll('.ac-item').forEach(item=>{
     item.onclick=()=>{
       if(listId==='setlistAC') addToSetlist(parseInt(item.dataset.id));
@@ -3475,7 +3501,6 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
         ${dlBtns}${transposedPdfBtn}
         <button onclick="addToSetlist(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">📋 +Setlist</button>
         <button onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
-        <button onclick="openReportError(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer" title="${currentLang==='sq'?'Raporto gabim':'Report error'}">⚠️</button>
       </div>
     </div>
     ${capoBar}
