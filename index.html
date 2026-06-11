@@ -143,9 +143,9 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .page{display:none}.page.active{display:block}
 
 /* HERO */
-.hero{position:relative;padding:90px 24px 72px;text-align:center;overflow:hidden;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center top;background-repeat:no-repeat}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,18,40,0.72) 0%,rgba(10,18,40,0.85) 60%,rgba(10,18,40,0.92) 100%)}
+.hero{position:relative;padding:90px 24px 72px;text-align:center;overflow:visible;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center top;background-repeat:no-repeat;overflow:hidden;border-radius:inherit}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,18,40,0.72) 0%,rgba(10,18,40,0.85) 60%,rgba(10,18,40,0.92) 100%);overflow:hidden}
 .hero-content{position:relative;z-index:2}
 
 .hero-badge{display:inline-block;background:rgba(201,151,58,0.2);border:1px solid rgba(201,151,58,0.45);color:var(--gold-l);font-size:11px;font-weight:600;letter-spacing:.1em;padding:4px 14px;border-radius:100px;margin-bottom:18px;text-transform:uppercase}
@@ -153,14 +153,14 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .hero h1 span{color:var(--gold-l)}
 .hero-tagline{font-size:clamp(.95rem,2.5vw,1.15rem);color:rgba(255,255,255,0.7);margin-bottom:6px}
 .hero-sub{font-size:13.5px;color:rgba(255,255,255,0.45);max-width:500px;margin:0 auto 34px}
-.search-outer{max-width:540px;margin:0 auto;position:relative;width:100%}
+.search-outer{max-width:540px;margin:0 auto;position:relative;width:100%;z-index:10}
 .search-wrap{display:flex;position:relative}
 .search-wrap input{width:100%;padding:14px 54px 14px 22px;border-radius:100px;border:2px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.12);color:#fff;font-family:'Poppins',sans-serif;font-size:14px;outline:none;transition:border-color .2s,background .2s}
 .search-wrap input::placeholder{color:rgba(255,255,255,0.42)}
 .search-wrap input:focus{border-color:var(--gold);background:rgba(255,255,255,0.17)}
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:100px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s}
 .search-btn:hover{background:var(--gold-l)}
-.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:600;display:none}
+.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:480px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
 .ac-drop.open{display:block}
 .ac-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .ac-item:last-child{border-bottom:none}
@@ -260,7 +260,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .f-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
 .f-select{padding:10px 14px;border-radius:100px;border:2px solid var(--border);background:var(--surface);font-family:'Poppins',sans-serif;font-size:13px;outline:none;cursor:pointer;color:var(--text);min-width:130px;transition:border-color .18s}
 .f-select:focus{border-color:var(--blue-mid)}
-.lib-ac{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:600;display:none}
+.lib-ac{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:480px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
 .lib-ac.open{display:block}
 
 /* ABOUT */
@@ -2495,6 +2495,12 @@ function isOnline() { return SUPABASE_URL !== 'YOUR_SUPABASE_URL'; }
 // ═══════════════════════════════════════════════════════
 //  DEFAULT SONG DATA  (used when no DB configured)
 // ═══════════════════════════════════════════════════════
+// ── DEFAULT SONGS (offline fallback) ──────────────────────────────────────
+// 📌 CLEANUP NOTE: Once you have 50+ songs confirmed in Supabase and
+//    localStorage caching is verified working, this block can be safely
+//    deleted. It is only used when BOTH Supabase AND localStorage are empty
+//    (e.g. first visit with no internet). With 280 songs on Supabase this
+//    will never be reached in normal use.
 const DEFAULT_SONGS = [
   {
     id:1,title:"Dua të Lavdëroj, Zotit t'i Këndoj",original:"I Will Celebrate",
@@ -2761,7 +2767,7 @@ async function uploadFileAsync(bucket, path, dataUrl, contentType) {
     const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
     return urlData?.publicUrl || null;
   } catch(e) {
-    console.error('uploadFileAsync error:', e);
+
     return null;
   }
 }
@@ -4316,7 +4322,7 @@ initData();
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => console.log('✅ Service Worker registered'))
+      .then(() => {})
       .catch(err => console.warn('SW registration failed:', err));
   });
 }
@@ -4580,9 +4586,7 @@ emailjs.init('_nY20miCLwZSC-jow');
 // ═══════════════════════════════════════════════════════
 //  BEAT DETECTION — Audio-driven scroll
 // ═══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════
 //  ONSET DETECTION — Audio scroll (chord change detection)
-// ═══════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════
 //  CHROMAGRAM CHORD DETECTION — Smart Audio Scroll
 // ═══════════════════════════════════════════════════════
@@ -4691,7 +4695,7 @@ async function toggleBeatScroll(){
     startLineHighlight();
     _runBeatDetection();
     showToast('🎙️ Chord detection aktiv!','success');
-  }catch(e){ showToast('Mikrofoni nuk u lejua','error'); console.error(e); }
+  }catch(e){ showToast('Mikrofoni nuk u lejua','error'); }
 }
 
 function stopBeatScroll(){
@@ -5308,7 +5312,6 @@ function getSimilarSongs(song, limit=4){
 
 // ═══════════════════════════════════════════════════════
 //  INDIVIDUAL SONG URLs
-// ═══════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════
 //  DUPLICATE SONG
 // ═══════════════════════════════════════════════════════
