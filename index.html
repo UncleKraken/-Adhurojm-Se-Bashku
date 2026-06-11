@@ -56,14 +56,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Adhurojme Bashku"/>
-<!-- Google Analytics — REPLACE G-XXXXXXXXXX with your real Measurement ID from analytics.google.com -->
-<!-- To activate: remove the outer comment tags below -->
-<!--
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});</script>
-
-
--->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6XGMX9PBY6"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6XGMX9PBY6',{anonymize_ip:true});</script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -1961,8 +1956,29 @@ function toggleCapoField() {
 }
 
 // ── STATISTICS TRACKING ──
-async function trackStat(songId, type) {
+async function trackStat(songId, type, extra={}) {
   if(window._adminOpen) return; // don't count admin views
+  // Fire GA4 event
+  if(typeof gtag === 'function') {
+    const song = SONGS.find(s => Number(s.id) === Number(songId));
+    if(type === 'view') {
+      gtag('event', 'song_view', {
+        song_id:    songId,
+        song_title: song?.title || '',
+        song_key:   song?.key   || '',
+        language:   currentLang,
+      });
+    } else if(type === 'download') {
+      gtag('event', 'pdf_download', {
+        song_id:       songId,
+        song_title:    song?.title || '',
+        song_key:      song?.key   || '',
+        instrument:    extra.instrument || '',
+        transposed:    extra.transposed || false,
+        language:      currentLang,
+      });
+    }
+  }
   const sb = getSB();
   if (!sb || !songId) return;
   try {
@@ -2016,10 +2032,10 @@ function toggleFavorite(songId) {
   const isFav = favs.includes(id);
   if (isFav) {
     favs = favs.filter(x => x !== id);
-    showToast('💔 Hoqe nga të preferuarat', '');
+    showToast(currentLang==='sq'?'💔 Hoqe nga të preferuarat':'💔 Removed from favorites', '');
   } else {
     favs.push(id);
-    showToast('❤️ Shtua te të preferuarat!', 'success');
+    showToast(currentLang==='sq'?'❤️ Shtua te të preferuarat!':'❤️ Added to favorites!', 'success');
   }
   saveFavorites(favs);
   updateFavBadge();
@@ -2175,7 +2191,7 @@ function downloadTransposedPDF() {
   if (!s) return;
 
   const rawText = s.lyricsRaw?.[currentInst] || '';
-  if (!rawText.trim()) { showToast('Nuk ka tekst për të gjeneruar PDF!', 'error'); return; }
+  if (!rawText.trim()) { showToast(currentLang==='sq'?'Nuk ka tekst për të gjeneruar PDF!':'No text to generate PDF!', 'error'); return; }
 
   // Build text content with transposed chords
   const sections = parseLyricsText(rawText);
@@ -2241,6 +2257,7 @@ function downloadTransposedPDF() {
     <div class="footer">Adhurojmë Së Bashku — unclekraken.github.io/-Adhurojm-Se-Bashku/</div>
   </body></html>`);
   printWindow.document.close();
+  trackStat(s.id, 'download', { instrument: currentInst, transposed: true });
 }
 
 function noteToIdx(n){const r=FLAT_MAP[n]||n;return CHROMATIC.indexOf(r);}
@@ -2321,13 +2338,13 @@ function toggleQR(){
 
 function downloadQR(){
   const canvas = document.querySelector('#qrCodeContainer canvas');
-  if(!canvas){ showToast('Gjenero QR-in fillimisht!','error'); return; }
+  if(!canvas){ showToast(currentLang==='sq'?'Gjenero QR-in fillimisht!':'Generate the QR code first!','error'); return; }
   const s = currentSong;
   const a = document.createElement('a');
   a.download = `QR_${s?.title||'song'}.png`;
   a.href = canvas.toDataURL('image/png');
   a.click();
-  showToast('✅ QR Code u shkarkua!','success');
+  showToast(currentLang==='sq'?'✅ QR Code u shkarkua!':'✅ QR Code downloaded!','success');
 }
 function closeShareModal(){
   document.getElementById('shareModal').style.display = 'none';
@@ -2349,7 +2366,7 @@ function shareSong(platform){
   } else if(platform === 'instagram'){
     // Instagram doesn't support direct share — copy link instead
     navigator.clipboard?.writeText(url).catch(()=>{});
-    showToast('📸 Instagram: Linku u kopjua — ngjite në story ose bio!', 'success');
+    showToast(currentLang==='sq'?'📸 Instagram: Linku u kopjua — ngjite në story ose bio!':'📸 Instagram: Link copied — paste it in your story or bio!', 'success');
     return;
   } else if(platform === 'x'){
     window.open(`https://twitter.com/intent/tweet?text=${encodedText}`, '_blank');
@@ -2361,12 +2378,12 @@ function shareSong(platform){
     window.open(`viber://forward?text=${encodedText}`, '_blank');
   } else if(platform === 'copy'){
     if(navigator.clipboard){
-      navigator.clipboard.writeText(url).then(()=>showToast('✅ Linku u kopjua!','success'));
+      navigator.clipboard.writeText(url).then(()=>showToast(currentLang==='sq'?'✅ Linku u kopjua!':'✅ Link copied!','success'));
     } else {
       const ta = document.createElement('textarea');
       ta.value = url; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
-      showToast('✅ Linku u kopjua!','success');
+      showToast(currentLang==='sq'?'✅ Linku u kopjua!':'✅ Link copied!','success');
     }
     return;
   }
@@ -3163,7 +3180,7 @@ function clearFavorites(){
   if(!confirm('Fshi të gjitha të preferuarat?')) return;
   saveFavorites([]);
   renderHome();
-  showToast('Të preferuarat u fshinë.','');
+  showToast(currentLang==='sq'?'Të preferuarat u fshinë.':'Favorites cleared.','');
 }
 function doHeroSearch(){
   const q=document.getElementById('heroSearch').value.trim();
@@ -3191,6 +3208,10 @@ function renderLibrary(){
   const catFilter = window._categoryFilter || null;
   const STATS = window._statsForFilter || {};
   const grid=document.getElementById('libraryGrid');grid.innerHTML='';
+  // GA4 search event (debounced — only fire when query is meaningful)
+  if(q.length >= 3 && typeof gtag === 'function'){
+    gtag('event', 'search', { search_term: q, language: currentLang });
+  }
 
   // Category banner
   const heroPEl = document.querySelector('#page-songs .page-hero p');
@@ -3327,14 +3348,15 @@ function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_
 
 function rateSong(songId, stars){
   try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
-  renderSong(); showToast(''+stars+'/5 — Faleminderit!','success');
+  renderSong(); showToast(stars+'/5 — '+(currentLang==='sq'?'Faleminderit!':'Thank you!'),'success');
 }
 
 function openReportError(songId){
   const s=SONGS.find(x=>Number(x.id)===Number(songId)); if(!s) return;
   const modal=document.createElement('div'); modal.id='reportModal';
   modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
-  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--text)">Raporto Gabim</div><button onclick="this.closest('#reportModal').remove()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--text2)">X</button></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px">${s.title}</div><select id="reportType" class="form-select" style="margin-bottom:10px"><option value="chord">Akord i gabuar</option><option value="lyrics">Tekst i gabuar</option><option value="key">Tonalitet i gabuar</option><option value="other">Tjeter</option></select><textarea id="reportNote" class="form-textarea" placeholder="Pershkruaj problemin..." style="min-height:80px;margin-bottom:12px;font-size:13px"></textarea><button onclick="submitReport(${songId})" class="btn btn-primary btn-sm">Dergo</button></div>`;
+  const sq=currentLang==='sq';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--text)">${sq?'Raporto Gabim':'Report an Error'}</div><button onclick="this.closest('#reportModal').remove()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--text2)">✕</button></div><div style="font-size:13px;color:var(--text2);margin-bottom:14px">${s.title}</div><select id="reportType" class="form-select" style="margin-bottom:10px"><option value="chord">${sq?'Akord i gabuar':'Wrong chord'}</option><option value="lyrics">${sq?'Tekst i gabuar':'Wrong lyrics'}</option><option value="key">${sq?'Tonalitet i gabuar':'Wrong key'}</option><option value="other">${sq?'Tjetër':'Other'}</option></select><textarea id="reportNote" class="form-textarea" placeholder="${sq?'Përshkruaj problemin...':'Describe the issue...'}" style="min-height:80px;margin-bottom:12px;font-size:13px"></textarea><button onclick="submitReport(${songId})" class="btn btn-primary btn-sm">${sq?'Dërgo':'Send'}</button></div>`;
   modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
   document.body.appendChild(modal);
 }
@@ -3343,10 +3365,10 @@ async function submitReport(songId){
   const s=SONGS.find(x=>Number(x.id)===Number(songId));
   const type=document.getElementById('reportType')?.value;
   const note=document.getElementById('reportNote')?.value.trim();
-  if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
+  if(!note){ showToast(currentLang==='sq'?'Shkruaj përshkrimin!':'Please describe the issue!','error'); return; }
   const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
-  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
-  catch(e){ showToast('Gabim ne dergim','error'); }
+  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast(currentLang==='sq'?'✅ Raporti u dërgua!':'✅ Report sent!','success'); }
+  catch(e){ showToast(currentLang==='sq'?'❌ Gabim në dërgim':'❌ Error sending report','error'); }
   document.getElementById('reportModal')?.remove();
 }
 
@@ -3379,7 +3401,7 @@ function renderSong(){
 
   const videoHtml=s.youtube
     ?`<iframe src="${toEmbedUrl(s.youtube)}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`
-    :`<div class="video-placeholder"><div style="font-size:44px;margin-bottom:8px">🎵</div><p>Kjo këngë aktualisht nuk ka video zyrtare.</p></div>`;
+    :`<div class="video-placeholder"><div style="font-size:44px;margin-bottom:8px">🎵</div><p>${currentLang==='sq'?'Kjo këngë aktualisht nuk ka video zyrtare.':'This song does not have an official video yet.'}</p></div>`;
 
   const instBtns=s.instruments.map(i=>`<button class="inst-btn ${i===currentInst?'active':''}" onclick="selectInst('${i}')">${i==='Guitar'?'🎸 '+(currentLang==='sq'?'Kitarë':'Guitar'):'🎹 Piano'}</button>`).join('');
 
@@ -3705,7 +3727,7 @@ function downloadPDF(songId, instrument){
     a.href = data.startsWith('data:') ? data : 'data:application/pdf;base64,' + data;
     a.download = filename; a.click();
   }
-  trackStat(songId, 'download');
+  trackStat(songId, 'download', { instrument: instrument, transposed: false });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4409,6 +4431,8 @@ function applyLang(){
   if(libHero){ libHero.querySelector('h1').textContent=t('library-title'); libHero.querySelector('p').textContent=t('library-sub');}
   const libSrch = document.getElementById('libSearch');
   if(libSrch) libSrch.placeholder = t('search-placeholder');
+  const setlistSrch = document.getElementById('setlistSearch');
+  if(setlistSrch) setlistSrch.placeholder = currentLang==='sq'?'🔍 Kërko këngë për të shtuar në setlistë...':'🔍 Search songs to add to setlist...';
   const fArtist = document.getElementById('filterArtist');
   if(fArtist && fArtist.options[0]) fArtist.options[0].textContent = t('all-artists');
   const fKey = document.getElementById('filterKey');
@@ -5346,7 +5370,7 @@ async function sendSongRequest(){
   const title = document.getElementById('reqSongTitle')?.value.trim();
   const artist = document.getElementById('reqArtist')?.value.trim();
   const youtube = document.getElementById('reqYoutube')?.value.trim();
-  if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
+  if(!title){ showToast(currentLang==='sq'?'Shkruaj titullin e këngës!':'Please enter the song title!','error'); return; }
 
   // Build note from optional fields
   const noteParts = [];
@@ -5381,7 +5405,7 @@ async function sendSongRequest(){
   } catch(e){ console.warn('song_requests exception:', e); }
 
   if(emailOk || supabaseOk){
-    showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
+    showToast(currentLang==='sq'?'✅ Kërkesa u dërgua! Faleminderit!':'✅ Request sent! Thank you!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   } else {
     showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error');
@@ -5433,13 +5457,13 @@ function addToSetlist(songId){
   const id=Number(songId); const song=SONGS.find(s=>Number(s.id)===id);
   if(!song) return;
   const sl=getSetlist();
-  if(sl.songs.find(s=>Number(s.id)===id)){ showToast('Kënga është tashmë në setlistë!',''); return; }
+  if(sl.songs.find(s=>Number(s.id)===id)){ showToast(currentLang==='sq'?'Kënga është tashmë në setlistë!':'Song is already in the setlist!',''); return; }
   // Capture current instrument if viewing this song, otherwise first available
   const inst = (typeof currentSong!=='undefined' && Number(currentSong?.id)===id && currentInst)
     ? currentInst : (song.instruments?.[0]||'Guitar');
   sl.songs.push({id,title:song.title,artist:song.artist,key:song.key,note:'',instrument:inst});
   saveSetlist(sl); updateSetlistBadge(); renderSetlist();
-  showToast(`✅ "${song.title}" u shtua! (${inst})`,'success');
+  showToast(`✅ "${song.title}" ${currentLang==='sq'?'u shtua':'added'}! (${inst})`,'success');
   closeAC('setlistAC'); document.getElementById('setlistSearch').value='';
 }
 
@@ -5469,7 +5493,7 @@ function updateSetlistNote(songId,note){
 
 function saveSetlistName(){
   const sl=getSetlist(); const val=document.getElementById('setlistNameInput')?.value.trim();
-  if(val) sl.name=val; saveSetlist(sl); renderSetlistTabs(); showToast('✅ Emri u ruajt!','success');
+  if(val) sl.name=val; saveSetlist(sl); renderSetlistTabs(); showToast(currentLang==='sq'?'✅ Emri u ruajt!':'✅ Name saved!','success');
 }
 
 function clearSetlist(){
@@ -5479,14 +5503,14 @@ function clearSetlist(){
 
 function shareSetlist(){
   const sl=getSetlist();
-  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
+  if(!sl.songs.length){ showToast(currentLang==='sq'?'Setlista është bosh!':'Setlist is empty!','error'); return; }
   const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})${s.note?'\n   📝 '+s.note:''}`).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
-  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success'));
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast(currentLang==='sq'?'✅ Setlista u kopjua!':'✅ Setlist copied!','success'));
 }
 
 function printSetlist(){
   const sl=getSetlist();
-  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
+  if(!sl.songs.length){ showToast(currentLang==='sq'?'Setlista është bosh!':'Setlist is empty!','error'); return; }
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>${sl.name}</title>
   <style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}h1{font-size:22px;margin-bottom:4px}.meta{color:#888;font-size:13px;margin-bottom:24px}.item{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #eee}.num{font-size:20px;font-weight:800;color:#ccc;min-width:32px}.title{font-weight:700;font-size:15px}.sub{font-size:12px;color:#888;margin-top:2px}.note{font-size:12px;color:#555;margin-top:4px;font-style:italic}.key{display:inline-block;background:#1a2a4a;color:#fff;font-size:11px;padding:2px 8px;border-radius:100px;margin-left:6px}.footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}@media print{button{display:none}}</style></head><body>
@@ -6364,9 +6388,9 @@ async function sendContactEmail() {
   const message = document.getElementById('contactMessage').value.trim();
   const btn     = document.getElementById('contactSendBtn');
 
-  if (!name)    { showToast('Shkruaj emrin tënd!', 'error'); return; }
-  if (!email)   { showToast('Shkruaj email-in tënd!', 'error'); return; }
-  if (!message) { showToast('Shkruaj mesazhin!', 'error'); return; }
+  if (!name)    { showToast(currentLang==='sq'?'Shkruaj emrin tënd!':'Please enter your name!', 'error'); return; }
+  if (!email)   { showToast(currentLang==='sq'?'Shkruaj email-in tënd!':'Please enter your email!', 'error'); return; }
+  if (!message) { showToast(currentLang==='sq'?'Shkruaj mesazhin!':'Please write your message!', 'error'); return; }
 
   btn.disabled = true;
   btn.textContent = '⏳ Duke dërguar…';
@@ -6384,7 +6408,7 @@ async function sendContactEmail() {
     document.getElementById('contactMessage').value = '';
   } catch(err) {
     console.error('EmailJS error:', err);
-    showToast('❌ Gabim gjatë dërgimit. Provo sërish!', 'error');
+    showToast(currentLang==='sq'?'❌ Gabim gjatë dërgimit. Provo sërish!':'❌ Error sending. Please try again!','error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>${currentLang === 'sq' ? 'Dërgo →' : 'Send →'}</span>`;
