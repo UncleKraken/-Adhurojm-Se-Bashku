@@ -160,7 +160,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .search-wrap input:focus{border-color:var(--gold);background:rgba(255,255,255,0.17)}
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:100px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s}
 .search-btn:hover{background:var(--gold-l)}
-.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:480px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
+.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:360px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
 .ac-drop.open{display:block}
 .ac-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .ac-item:last-child{border-bottom:none}
@@ -260,7 +260,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .f-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
 .f-select{padding:10px 14px;border-radius:100px;border:2px solid var(--border);background:var(--surface);font-family:'Poppins',sans-serif;font-size:13px;outline:none;cursor:pointer;color:var(--text);min-width:130px;transition:border-color .18s}
 .f-select:focus{border-color:var(--blue-mid)}
-.lib-ac{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:480px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
+.lib-ac{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow-y:auto;max-height:360px;box-shadow:var(--shadow-lg);z-index:2000;display:none}
 .lib-ac.open{display:block}
 
 /* ABOUT */
@@ -620,7 +620,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 @media(max-width:768px){
   #perfContent{padding:12px 10px}
   /* Controls bar — bigger touch targets on mobile */
-  #perfControlsBar button{min-height:36px;min-width:36px;}
+  #perfControlsBar button{min-height:38px;min-width:38px;}
   /* Top bar compact on mobile */
   #performanceMode > div:first-child{padding:6px 8px;min-height:44px;}
   #performanceMode > div:first-child button{padding:6px 9px;font-size:13px;}
@@ -631,10 +631,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   #perfSectionSidebar button:first-child{width:38px;font-size:10px;padding:5px 2px;}
 }
 @media(max-width:480px){
-  /* iPhone SE / small screens */
-  #perfControlsBar>div{gap:4px;padding:5px 8px;}
-  #perfControlsBar input[type=range]{width:40px;}
-  #perfSongList button{padding:4px 10px;font-size:10px;}
+  /* iPhone SE / small screens — controls bar scrolls horizontally */
+  #perfControlsBar{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;scrollbar-width:none;}
+  #perfControlsBar::-webkit-scrollbar{display:none;}
+  #perfControlsBar>div{gap:3px;padding:4px 6px;flex-shrink:0;}
+  #perfControlsBar input[type=range]{width:44px;}
+  #perfSongList{flex-wrap:nowrap;}
+  #perfSongList button{padding:4px 8px;font-size:10px;flex-shrink:0;}
   /* Section sidebar even more compact */
   #perfSectionSidebar{right:2px;}
   #perfSectionSidebar>div>button{width:34px;font-size:9px;}
@@ -645,13 +648,24 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 }
 /* ── GENERAL MOBILE ── */
 @media(max-width:600px){
-  .song-wrap{padding:14px 12px 40px}
+  .song-wrap{padding:14px 12px 80px} /* extra bottom padding for sticky bar */
   .dl-bar{flex-wrap:wrap;gap:6px;}
   .songs-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
   .f-select{font-size:13px;padding:7px 8px;}
   #chordPopup{left:50% !important;transform:translateX(-50%);width:160px;}
   .similar-grid{grid-template-columns:repeat(2,1fr);}
 }
+/* Sticky song action bar — mobile only */
+@media(max-width:600px){
+  #songMobileBar{
+    display:flex !important;
+    position:fixed;bottom:0;left:0;right:0;z-index:400;
+    background:var(--nav-bg);border-top:1px solid var(--border);
+    backdrop-filter:blur(16px);padding:10px 16px;
+    gap:10px;align-items:center;justify-content:space-around;
+  }
+}
+#songMobileBar{display:none;}
 
 /* ── CHORD DIAGRAM POPUP ── */
 .chord-popup{position:absolute;z-index:200;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;min-width:80px;text-align:center}
@@ -737,8 +751,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="search-outer">
         <div class="search-wrap">
           <input type="text" id="heroSearch" placeholder="Kërko këngë..." autocomplete="new-password"
-            oninput="updateAC('heroSearch','heroAC')" onkeydown="acKey(event,'heroAC')"
-            onfocus="updateAC('heroSearch','heroAC')" onblur="setTimeout(()=>closeAC('heroAC'),200)"/>
+            oninput="updateACDebounced('heroSearch','heroAC')" onkeydown="acKey(event,'heroAC')"
+            onfocus="updateACDebounced('heroSearch','heroAC')" onblur="setTimeout(()=>closeAC('heroAC'),200)"/>
           <button class="search-btn" onclick="doHeroSearch()">
             <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="15" y2="15"/></svg>
           </button>
@@ -810,7 +824,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="filters-row">
         <div class="lib-search-wrap">
           <input type="text" class="f-input" id="libSearch" placeholder="Kërko këngë..." autocomplete="off"
-            oninput="updateAC('libSearch','libAC');debouncedRenderLibrary()"
+            oninput="updateACDebounced('libSearch','libAC');debouncedRenderLibrary()"
             onkeydown="acKey(event,'libAC')"
             onfocus="updateAC('libSearch','libAC')" onblur="setTimeout(()=>closeAC('libAC'),200)"/>
           <span class="f-icon">🔍</span>
@@ -919,9 +933,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- ROW 1: Navigation + Song Title + Utility buttons -->
   <div style="display:flex;align-items:center;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;min-height:50px">
     <!-- Prev/Next -->
-    <button onclick="prevPerformanceSong()" id="perfPrevBtn" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">◀</button>
+    <button onclick="prevPerformanceSong()" id="perfPrevBtn" aria-label="Previous song" title="Previous (←)" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">◀</button>
     <span id="perfCounter" style="font-size:11px;color:var(--text3);font-weight:700;flex-shrink:0;min-width:36px;text-align:center"></span>
-    <button onclick="nextPerformanceSong()" id="perfNextBtn" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">▶</button>
+    <button onclick="nextPerformanceSong()" id="perfNextBtn" aria-label="Next song" title="Next (→)" style="background:var(--bg3);border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:15px;font-weight:700;color:var(--text);flex-shrink:0">▶</button>
     <!-- Song title -->
     <div style="flex:1;min-width:0;overflow:hidden">
       <div id="perfSongTitle" style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
@@ -934,12 +948,12 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <button onclick="setPerfLang('sq')" id="perfLangSQ" style="padding:5px 9px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">SQ</button>
         <button onclick="setPerfLang('en')" id="perfLangEN" style="padding:5px 9px;border:none;background:transparent;color:var(--text2);font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">EN</button>
       </div>
-      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🌙</button>
-      <button onclick="togglePerfFullscreen()" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⛶</button>
-      <button onclick="toggleSingerMode()" id="perfModeBtn" title="Singer/Musician Mode (M)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🎤</button>
-      <button onclick="showPerfShortcuts()" title="⌨️" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⌨️</button>
-      <button onclick="togglePanic()" id="perfPanicBtn" title="Panic — Blank Screen (P)" style="background:rgba(139,26,26,0.2);border:1px solid rgba(139,26,26,0.4);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;font-family:'Poppins',sans-serif">⏹</button>
-      <button onclick="exitPerformanceMode()" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700">✕</button>
+      <button onclick="togglePerfDark()" id="perfDarkBtn" aria-label="Toggle dark/light mode" title="Dark/Light (D)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🌙</button>
+      <button onclick="togglePerfFullscreen()" aria-label="Toggle fullscreen" title="Fullscreen (F)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⛶</button>
+      <button onclick="toggleSingerMode()" id="perfModeBtn" aria-label="Toggle singer/musician mode" title="Singer/Musician Mode (M)" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">🎤</button>
+      <button onclick="showPerfShortcuts()" aria-label="Keyboard shortcuts" title="Keyboard shortcuts" style="background:var(--bg3);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:13px;color:var(--text2)">⌨️</button>
+      <button onclick="togglePanic()" id="perfPanicBtn" aria-label="Panic — blank screen" title="Panic — Blank Screen (P)" style="background:rgba(139,26,26,0.2);border:1px solid rgba(139,26,26,0.4);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700;font-family:'Poppins',sans-serif">⏹</button>
+      <button onclick="exitPerformanceMode()" aria-label="Exit performance mode" title="Exit (Escape)" style="background:rgba(139,26,26,0.15);border:1px solid rgba(139,26,26,0.3);color:var(--red);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700">✕</button>
     </div>
   </div>
 
@@ -1263,10 +1277,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div class="g-block-title" data-sq="🎵 Kërko një Këngë" data-en="🎵 Request a Song">🎵 Kërko një Këngë</div>
         <p style="margin-bottom:14px;font-size:13px;color:var(--text2)" data-sq="Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin." data-en="If you'd like us to add a specific song, let us know the title and artist.">Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin.</p>
         <div style="display:flex;flex-direction:column;gap:9px">
-          <input type="text" class="form-input" id="reqName" placeholder="Emri juaj"/>
-          <input type="text" class="form-input" id="reqSongTitle" placeholder="Titulli i këngës (shqip ose anglisht)"/>
-          <input type="text" class="form-input" id="reqArtist" placeholder="Artisti / Banda"/>
-          <input type="text" class="form-input" id="reqYoutube" placeholder="Linku YouTube (opsionale)"/>
+          <input type="text" class="form-input" id="reqName" data-placeholder-sq="Emri juaj" data-placeholder-en="Your name" placeholder="Emri juaj"/>
+          <input type="text" class="form-input" id="reqSongTitle" data-placeholder-sq="Titulli i këngës (shqip ose anglisht)" data-placeholder-en="Song title (Albanian or English)" placeholder="Titulli i këngës (shqip ose anglisht)"/>
+          <input type="text" class="form-input" id="reqArtist" data-placeholder-sq="Artisti / Banda" data-placeholder-en="Artist / Band" placeholder="Artisti / Banda"/>
+          <input type="text" class="form-input" id="reqYoutube" data-placeholder-sq="Linku YouTube (opsionale)" data-placeholder-en="YouTube link (optional)" placeholder="Linku YouTube (opsionale)"/>
           <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="sendSongRequest()">🎵 Dërgo Kërkesën →</button>
         </div>
       </div>
@@ -2968,6 +2982,8 @@ function showPage(page,el){
   if(page==='favorites') renderFavoritesPage();
   if(page==='setlist'){ renderSetlist(); updateSetlistBadge(); }
   if(page !== 'song') resetMetaTags();
+  // Remove mobile sticky bar when leaving song detail
+  if(page !== 'song'){ const mb=document.getElementById('songMobileBar'); if(mb) mb.remove(); }
 }
 
 function renderFavoritesPage(){
@@ -3015,7 +3031,52 @@ function toggleTheme(){
 //  AUTOCOMPLETE
 // ═══════════════════════════════════════════════════════
 let acIdx=-1;
-function normalizeSearch(str){
+// Auto-generate og:image if not already a real file
+function generateOGImage(){
+  try {
+    const c=document.createElement('canvas');
+    c.width=1200;c.height=630;
+    const ctx=c.getContext('2d');
+    // Background gradient
+    const g=ctx.createLinearGradient(0,0,1200,630);
+    g.addColorStop(0,'#0A1228');g.addColorStop(0.5,'#1A2A4A');g.addColorStop(1,'#0D1F3C');
+    ctx.fillStyle=g;ctx.fillRect(0,0,1200,630);
+    // Subtle grid lines
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(let x=0;x<1200;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,630);ctx.stroke();}
+    for(let y=0;y<630;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1200,y);ctx.stroke();}
+    // Gold accent bar
+    const gold=ctx.createLinearGradient(0,0,1200,0);
+    gold.addColorStop(0,'#C9973A');gold.addColorStop(0.5,'#E8C46A');gold.addColorStop(1,'#C9973A');
+    ctx.fillStyle=gold;ctx.fillRect(0,580,1200,6);
+    // Music note icon
+    ctx.fillStyle='rgba(201,151,58,0.15)';
+    ctx.font='bold 200px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('♪',600,295);
+    // Title
+    ctx.fillStyle='#FFFFFF';
+    ctx.font='bold 64px Poppins,Arial,sans-serif';
+    ctx.fillText('Adhurojmë Së Bashku',600,240);
+    // Subtitle
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='28px Poppins,Arial,sans-serif';
+    ctx.fillText('Këngë Krishterë Shqip me Akorde & PDF',600,310);
+    // Tag line
+    ctx.fillStyle='rgba(201,151,58,0.9)';
+    ctx.font='bold 22px Poppins,Arial,sans-serif';
+    ctx.fillText('Albanian Christian Worship Songs — Guitar & Piano Chords',600,370);
+    // Kisha Kanaan
+    ctx.fillStyle='rgba(255,255,255,0.35)';
+    ctx.font='18px Poppins,Arial,sans-serif';
+    ctx.fillText('Kisha Kanaan Media Team',600,540);
+    const dataUrl=c.toDataURL('image/png');
+    // Set og:image and twitter:image meta tags dynamically
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content',dataUrl);
+    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content',dataUrl);
+  } catch(e){}
+}
+generateOGImage();
+function updateACDebounced(inputId, listId){ debouncedUpdateAC(inputId, listId); }
   if(!str) return '';
   return str.toLowerCase()
     .replace(/ë/g,'e').replace(/ç/g,'c')
@@ -3059,7 +3120,7 @@ function updateAC(inputId,listId){
     return { s, score, lyricsRaw };
   }).filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score)
-    .slice(0,10); // show up to 10 results
+    .slice(0,6); // show up to 6 results
 
   if(!scored.length){closeAC(listId);return;}
 
@@ -3468,7 +3529,7 @@ function renderSong(){
           <h1 class="song-htitle">${s.title}</h1>
           <div class="song-horig">${s.original||''} ${s.artist?'– '+s.artist:''}</div>
         </div>
-        <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?'Hiq nga të preferuarat':'Shto te të preferuarat'}">${isFav?'❤️':'🤍'}</button>
+        <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" aria-label="${isFav?(currentLang==='sq'?'Hiq nga të preferuarat':'Remove from favorites'):(currentLang==='sq'?'Shto te të preferuarat':'Add to favorites')}" title="${isFav?(currentLang==='sq'?'Hiq nga të preferuarat':'Remove from favorites'):(currentLang==='sq'?'Shto te të preferuarat':'Add to favorites')}">${isFav?'❤️':'🤍'}</button>
       </div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
@@ -3512,7 +3573,27 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
     ${capoBar}
   `;
 
-  // Song Rating
+  // Mobile sticky bottom bar
+  const existingBar = document.getElementById('songMobileBar');
+  if(existingBar) existingBar.remove();
+  const mobileBar = document.createElement('div');
+  mobileBar.id = 'songMobileBar';
+  const sq = currentLang==='sq';
+  mobileBar.innerHTML = `
+    <button onclick="toggleFavorite(${s.id})" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:11px;font-family:'Poppins',sans-serif" aria-label="${sq?'Preferuar':'Favorite'}">
+      <span style="font-size:20px">${isFav?'❤️':'🤍'}</span>${sq?'Preferuar':'Favorite'}
+    </button>
+    <button onclick="addToSetlist(${s.id})" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:11px;font-family:'Poppins',sans-serif" aria-label="+Setlist">
+      <span style="font-size:20px">📋</span>+Setlist
+    </button>
+    <button onclick="openShareModal()" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:11px;font-family:'Poppins',sans-serif" aria-label="${sq?'Ndaj':'Share'}">
+      <span style="font-size:20px">📤</span>${sq?'Ndaj':'Share'}
+    </button>
+    <button onclick="openReportError(${s.id})" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;font-family:'Poppins',sans-serif" aria-label="${sq?'Raporto':'Report'}">
+      <span style="font-size:20px">⚠️</span>${sq?'Raporto':'Report'}
+    </button>
+  `;
+  document.body.appendChild(mobileBar);
   setTimeout(()=>{
     document.getElementById('ratingSection')?.remove();
     const rDiv=document.createElement('div');
@@ -4462,6 +4543,11 @@ function applyLang(){
   if(libHero){ libHero.querySelector('h1').textContent=t('library-title'); libHero.querySelector('p').textContent=t('library-sub');}
   const libSrch = document.getElementById('libSearch');
   if(libSrch) libSrch.placeholder = t('search-placeholder');
+  // Song request form placeholders
+  ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.placeholder=el.dataset['placeholder'+(currentLang==='sq'?'Sq':'En')]||el.placeholder;
+  });
   const setlistSrch = document.getElementById('setlistSearch');
   if(setlistSrch) setlistSrch.placeholder = currentLang==='sq'?'🔍 Kërko këngë për të shtuar në setlistë...':'🔍 Search songs to add to setlist...';
   const fArtist = document.getElementById('filterArtist');
@@ -5436,7 +5522,7 @@ async function sendSongRequest(){
     showToast(currentLang==='sq'?'✅ Kërkesa u dërgua! Faleminderit!':'✅ Request sent! Thank you!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   } else {
-    showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error');
+    showToast(currentLang==='sq'?'❌ Gabim gjatë dërgimit. Provo sërish!':'❌ Sending failed. Please try again!','error');
   }
 }
 
