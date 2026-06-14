@@ -2929,6 +2929,7 @@ function debounce(fn, ms){
   return (...args) => { clearTimeout(timer); timer = setTimeout(()=>fn(...args), ms); };
 }
 const debouncedRenderLibrary = debounce(renderLibrary, 200);
+const _debouncedAC = debounce((inputId, listId) => updateAC(inputId, listId), 150);
 
 function isNewSong(song){
   // Check if song is in first 5 of SONGS array (newest) and added within 7 days
@@ -3076,7 +3077,7 @@ function generateOGImage(){
   } catch(e){}
 }
 generateOGImage();
-function updateACDebounced(inputId, listId){ debouncedUpdateAC(inputId, listId); }
+function updateACDebounced(inputId, listId){ _debouncedAC(inputId, listId); }
 function normalizeSearch(str){
   if(!str) return '';
   return str.toLowerCase()
