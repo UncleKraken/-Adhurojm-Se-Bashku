@@ -2053,8 +2053,24 @@ function toggleFavorite(songId) {
   }
   saveFavorites(favs);
   updateFavBadge();
-  renderHome();
-  renderSong();
+  // Update all heart buttons for this song on the page — no full re-render needed
+  const nowFav = favs.includes(id);
+  const sq = currentLang==='sq';
+  document.querySelectorAll(`[onclick*="toggleFavorite(${id})"]`).forEach(btn=>{
+    btn.textContent = nowFav ? '❤️' : '🤍';
+    const label = nowFav ? (sq?'Hiq nga të preferuarat':'Remove from favorites') : (sq?'Shto te të preferuarat':'Add to favorites');
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+  });
+  // If song detail is open for this song, re-render it for the header heart
+  if(currentSong && Number(currentSong.id) === id) renderSong();
+  // If favorites section is visible, refresh it
+  const favSec = document.getElementById('favSection');
+  if(favSec && favSec.style.display !== 'none'){
+    const fav = document.getElementById('favGrid');
+    if(fav){ fav.innerHTML=''; getFavorites().map(fid=>SONGS.find(s=>Number(s.id)===fid)).filter(Boolean).forEach(s=>fav.appendChild(buildCard(s))); }
+    if(!getFavorites().length) favSec.style.display='none';
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2595,10 +2611,12 @@ async function loadSongsAsync() {
   const { data, error } = await sb.from('songs').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Supabase loadSongs:', error); return loadData(); }
   const songs = (data||[]).map(mapRow);
-  // Cache for next visit
+  // Cache for next visit — strip generated thumb data URLs to avoid localStorage quota crash
   try {
-    localStorage.setItem('aa_songs_cache', JSON.stringify(songs));
+    const cacheable = songs.map(s => { const {thumb, ...rest} = s; return {...rest, thumb: s.thumb?.startsWith('http') ? s.thumb : null}; });
+    localStorage.setItem('aa_songs_cache', JSON.stringify(cacheable));
     localStorage.setItem('aa_songs_cache_time', Date.now());
+    localStorage.setItem('aa_songs_cache_v', '2'); // schema version
   } catch(e){}
   return songs;
 }
@@ -2822,7 +2840,24 @@ async function getAdminSession() {
 }
 
 // ── LEGACY localStorage FUNCTIONS (used as fallback) ──
-function loadData(){ const r=localStorage.getItem('aa_songs'); return r?JSON.parse(r):JSON.parse(JSON.stringify(DEFAULT_SONGS)); }
+const CACHE_SCHEMA_V = '2'; // bump this when mapRow schema changes
+function loadData(){
+  try {
+    // Check schema version first — stale cache gets discarded
+    const v = localStorage.getItem('aa_songs_cache_v');
+    if(v === CACHE_SCHEMA_V){
+      const cached = localStorage.getItem('aa_songs_cache');
+      if(cached) return JSON.parse(cached);
+    } else if(v && v !== CACHE_SCHEMA_V){
+      // Schema changed — clear stale cache so fresh data loads
+      localStorage.removeItem('aa_songs_cache');
+      localStorage.removeItem('aa_songs_cache_time');
+      localStorage.removeItem('aa_songs_cache_v');
+    }
+    const r = localStorage.getItem('aa_songs');
+    return r ? JSON.parse(r) : JSON.parse(JSON.stringify(DEFAULT_SONGS));
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_SONGS)); }
+}
 function saveData(s){ localStorage.setItem('aa_songs',JSON.stringify(s)); }
 function saveSongLocal(song){ const s=loadData(); const i=s.findIndex(x=>x.id===song.id); if(i>=0)s[i]=song; else s.push(song); saveData(s); }
 function loadArtists(){ const r=localStorage.getItem('aa_artists'); return r?JSON.parse(r):[...DEFAULT_ARTISTS]; }
@@ -2835,20 +2870,24 @@ let ARTISTS = loadArtists();
 let PDFS    = loadPDFs();
 
 // ── INIT: load from Supabase on page load ──
+function generateMissingThumbs(songs){
+  songs.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+}
+
 async function initData() {
   showLoadingState(true);
   try {
     SONGS   = await loadSongsAsync();
     PDFS    = await loadPDFsAsync();
     ARTISTS = await loadArtistsAsync();
-    SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+    generateMissingThumbs(SONGS);
     try { const social = await loadSocialAsync(); localStorage.setItem('aa_social', JSON.stringify(social)); } catch(e){}
   } catch(e) {
     console.warn('initData fallback:', e);
     SONGS   = loadData();
     ARTISTS = loadArtists();
     PDFS    = loadPDFs();
-    SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+    generateMissingThumbs(SONGS);
   }
   showLoadingState(false);
   renderHome();
@@ -2918,7 +2957,7 @@ function makeThumbnail(colors, title){
   lines.forEach((l,i)=>ctx.fillText(l,200,232-(lines.length-1-i)*20));
   return c.toDataURL('image/png');
 }
-SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title)});
+// Thumbnails are generated once after initData() — not here on raw loadData()
 
 // ═══════════════════════════════════════════════════════
 //  CARD BUILDER
@@ -3287,12 +3326,20 @@ function doHeroSearch(){
 // ═══════════════════════════════════════════════════════
 //  LIBRARY
 // ═══════════════════════════════════════════════════════
+let _lastFilterSongCount = -1;
 function populateFilters(){
+  // Only rebuild if song list has changed — prevents rebuilding on every renderLibrary call
+  if(SONGS.length === _lastFilterSongCount) return;
+  _lastFilterSongCount = SONGS.length;
   const aS=document.getElementById('filterArtist'),kS=document.getElementById('filterKey');
-  aS.innerHTML='<option value="">Të gjithë artistët</option>';
-  kS.innerHTML='<option value="">Çdo tonalitet</option>';
-  [...new Set(SONGS.map(s=>s.artist))].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;aS.appendChild(o);});
-  [...new Set(SONGS.map(s=>s.key))].forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;kS.appendChild(o);});
+  const prevArtist=aS.value, prevKey=kS.value;
+  aS.innerHTML='<option value="">'+( currentLang==='sq'?'Të gjithë artistët':'All artists')+'</option>';
+  kS.innerHTML='<option value="">'+( currentLang==='sq'?'Çdo tonalitet':'Any key')+'</option>';
+  [...new Set(SONGS.map(s=>s.artist).filter(Boolean))].sort().forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;aS.appendChild(o);});
+  [...new Set(SONGS.map(s=>s.key).filter(Boolean))].sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;kS.appendChild(o);});
+  // Restore previous selections
+  if(prevArtist) aS.value=prevArtist;
+  if(prevKey) kS.value=prevKey;
 }
 function renderLibrary(){
   const q=document.getElementById('libSearch').value.toLowerCase();
@@ -3423,19 +3470,25 @@ function resetMetaTags(){
 window.addEventListener('popstate', async (e) => {
   const params = new URLSearchParams(window.location.search);
   const songId = params.get('song');
-  if(songId && SONGS.length){
+  if(songId){
+    if(!SONGS.length){
+      // SONGS not ready yet — wait for initData
+      showToast(currentLang==='sq'?'Duke ngarkuar...':'Loading...', '');
+      return;
+    }
     await openSong(Number(songId));
   }
-  // Don't force showPage('home') — let browser handle normally
 });
 
 // On load — check if URL has ?song=
 async function checkUrlSong(){
   const params = new URLSearchParams(window.location.search);
   const songId = params.get('song');
-  if(songId && SONGS.length){
-    await openSong(Number(songId));
-  }
+  if(!songId) return;
+  // SONGS is guaranteed populated here since initData() awaited before calling this
+  const found = SONGS.find(s => Number(s.id) === Number(songId));
+  if(found) await openSong(Number(songId));
+  else showToast(currentLang==='sq'?'Kënga nuk u gjet.':'Song not found.', 'error');
 }
 
 
@@ -3469,6 +3522,7 @@ async function submitReport(songId){
 
 function renderSong(){
   const s=currentSong;
+  if(!s) return; // guard: no song open
   const rawText=s.lyricsRaw?.[currentInst]||'';
   const sections=parseLyricsText(rawText);
 
@@ -3995,7 +4049,7 @@ function switchAdminTab(tab,el){
 async function refreshAdminSongs(){
   if(isOnline()){ SONGS = await loadSongsAsync(); ARTISTS = await loadArtistsAsync(); }
   else { SONGS=loadData(); ARTISTS=loadArtists(); }
-  SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title);});
+  generateMissingThumbs(SONGS);
   PDFS = await loadPDFsAsync();
   const STATS = await loadStats();
   const count = document.getElementById('songCount');
@@ -4305,7 +4359,7 @@ async function refreshSiteData(){
   } else {
     SONGS = loadData();
   }
-  SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title);});
+  generateMissingThumbs(SONGS);
   renderHome(); populateFilters(); updateHeroStats();
 }
 
@@ -4372,7 +4426,7 @@ async function renderArtistsList(){
 //  INIT
 // ═══════════════════════════════════════════════════════
 // Generate thumbnails for default songs then start
-DEFAULT_SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
+generateMissingThumbs(DEFAULT_SONGS);
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 // Load preferences
