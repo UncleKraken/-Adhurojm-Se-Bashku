@@ -2936,7 +2936,10 @@ function showLoadingState(on) {
 // ═══════════════════════════════════════════════════════
 //  THUMBNAIL GENERATOR
 // ═══════════════════════════════════════════════════════
+const _thumbMemCache = {}; // in-memory only — avoids localStorage quota issues with 280+ songs
 function makeThumbnail(colors, title){
+  const cacheKey = title + '|' + colors.join(',');
+  if(_thumbMemCache[cacheKey]) return _thumbMemCache[cacheKey];
   const c = document.createElement('canvas');
   c.width=400;c.height=250;
   const ctx=c.getContext('2d');
@@ -2955,9 +2958,11 @@ function makeThumbnail(colors, title){
   words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>360){lines.push(line);line=w;}else{line=t;}});
   lines.push(line);lines=lines.slice(-2);
   lines.forEach((l,i)=>ctx.fillText(l,200,232-(lines.length-1-i)*20));
-  return c.toDataURL('image/png');
+  const dataUrl = c.toDataURL('image/png');
+  _thumbMemCache[cacheKey] = dataUrl;
+  return dataUrl;
 }
-// Thumbnails are generated once after initData() — not here on raw loadData()
+// Thumbnails cached in-memory per session — NOT in localStorage (avoids quota crash at 280+ songs)
 
 // ═══════════════════════════════════════════════════════
 //  CARD BUILDER
