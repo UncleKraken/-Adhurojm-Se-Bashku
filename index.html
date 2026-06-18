@@ -655,6 +655,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   #chordPopup{left:50% !important;transform:translateX(-50%);width:160px;}
   .similar-grid{grid-template-columns:repeat(2,1fr);}
   #libraryLoadMoreBtn{width:100%;}
+  #scrollTopBtn{bottom:88px;} /* above sticky song bar on mobile */
 }
 /* Sticky song action bar — mobile only */
 @media(max-width:600px){
@@ -3781,8 +3782,8 @@ function renderBulkSongList(){
 async function applyBulkCategory(){
   const cat = document.getElementById('bulkCatSelect')?.value;
   const checked = Array.from(document.querySelectorAll('.bulk-cb:checked')).map(cb=>Number(cb.value));
-  if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
-  showToast(`⏳ Duke aplikuar "${cat}" për ${checked.length} këngë...`,'');
+  if(!checked.length){ showToast(currentLang==='sq'?'Zgjidhni të paktën një këngë!':'Select at least one song!','error'); return; }
+  showToast(`⏳ ${currentLang==='sq'?`Duke aplikuar "${cat}" për ${checked.length} këngë...`:`Applying "${cat}" to ${checked.length} songs...`}`,'');
   const sb = getSB();
   let done = 0;
   for(const id of checked){
@@ -3793,15 +3794,15 @@ async function applyBulkCategory(){
     song.categories = cats; done++;
   }
   localStorage.removeItem('aa_songs_cache');
-  showToast(`✅ Kategoria u aplikua për ${done} këngë!`,'success');
+  showToast(currentLang==='sq'?`✅ Kategoria u aplikua për ${done} këngë!`:`✅ Category applied to ${done} songs!`,'success');
   renderBulkSongList();
 }
 
 async function removeBulkCategory(){
   const cat = document.getElementById('bulkCatSelect')?.value;
   const checked = Array.from(document.querySelectorAll('.bulk-cb:checked')).map(cb=>Number(cb.value));
-  if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
-  showToast(`⏳ Duke hequr "${cat}"...`,'');
+  if(!checked.length){ showToast(currentLang==='sq'?'Zgjidhni të paktën një këngë!':'Select at least one song!','error'); return; }
+  showToast(`⏳ ${currentLang==='sq'?`Duke hequr "${cat}"...`:`Removing "${cat}"...`}`,'');
   const sb = getSB();
   let done = 0;
   for(const id of checked){
@@ -3812,7 +3813,7 @@ async function removeBulkCategory(){
     song.categories = cats; done++;
   }
   localStorage.removeItem('aa_songs_cache');
-  showToast(`✅ Kategoria u hoq nga ${done} këngë!`,'success');
+  showToast(currentLang==='sq'?`✅ Kategoria u hoq nga ${done} këngë!`:`✅ Category removed from ${done} songs!`,'success');
   renderBulkSongList();
 }
 function generateAndDownloadSitemap(){
@@ -4005,7 +4006,7 @@ async function cleanupDoneRequests(){
     .delete({count:'exact'})
     .eq('done',true)
     .lt('created_at',cutoff);
-  if(error){ showToast('Gabim gjatë fshirjes: '+error.message,'error'); return; }
+  if(error){ showToast((currentLang==='sq'?'Gabim gjatë fshirjes: ':'Delete error: ')+error.message,'error'); return; }
   showToast(`🗑 U fshinë ${count||0} kërkesa të kryera (>30 ditë)`,'success');
   loadSongRequests();
 }
@@ -4149,7 +4150,7 @@ function filterAdminSongs(q){
 
 async function deleteSong(id){
   if(!confirm('Jeni i sigurt që doni të fshini këtë këngë?')) return;
-  showToast('Duke fshirë…','');
+  showToast(currentLang==='sq'?'Duke fshirë…':'Deleting…','');
   await deleteSongAsync(id);
   if(!isOnline()){ saveData(loadData().filter(s=>s.id!==id)); }
   SONGS = SONGS.filter(s=>s.id!==id);
@@ -4352,7 +4353,7 @@ async function handlePDFUpload(event, songId, instrument){
 
 async function deletePDF(songId, instrument){
   if(!confirm('Fshi PDF-in për këtë instrument?')) return;
-  showToast('Duke fshirë...','');
+  showToast(currentLang==='sq'?'Duke fshirë...':'Deleting...','');
   if(isOnline()){
     const sb = getSB();
     // Delete from storage
@@ -4877,7 +4878,7 @@ async function toggleBeatScroll(){
     startLineHighlight();
     _runBeatDetection();
     showToast('🎙️ Chord detection aktiv!','success');
-  }catch(e){ showToast('Mikrofoni nuk u lejua','error'); }
+  }catch(e){ showToast(currentLang==='sq'?'Mikrofoni nuk u lejua':'Microphone access denied','error'); }
 }
 
 function stopBeatScroll(){
@@ -6726,7 +6727,7 @@ setTimeout(updateFavBadge, 500);
 function handleThumbUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { showToast('Foto shumë e madhe (max 2MB)', 'error'); return; }
+  if (file.size > 2 * 1024 * 1024) { showToast(currentLang==='sq'?'Foto shumë e madhe (max 2MB)':'Image too large (max 2MB)', 'error'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     formState.thumbData = e.target.result;
@@ -6991,7 +6992,7 @@ async function rereadWithAI(instrument) {
 
 function saveAnthropicKey() {
   const key = document.getElementById('anthropicApiKey').value.trim();
-  if (!key) { showToast('Fut çelësin së pari!', 'error'); return; }
+  if (!key) { showToast(currentLang==='sq'?'Fut çelësin së pari!':'Please select a key first!', 'error'); return; }
   localStorage.setItem('aa-anthropic-key', key);
   document.getElementById('aiKeyStatus').textContent = '✅ Çelësi u ruajt! Tani PDF-et imazh do lexohen automatikisht.';
   document.getElementById('aiKeyStatus').style.color = 'var(--gold)';
@@ -7137,7 +7138,7 @@ function clearInstrPDF(instrument) {
 async function saveSong() {
   const title = document.getElementById('fTitle').value.trim();
   const artist = document.getElementById('fArtist').value.trim();
-  if (!title) { showToast('Titulli është i detyrueshëm!', 'error'); document.getElementById('fTitle').focus(); return; }
+  if (!title) { showToast(currentLang==='sq'?'Titulli është i detyrueshëm!':'Title is required!', 'error'); document.getElementById('fTitle').focus(); return; }
   if (!artist) { showToast('Artisti është i detyrueshëm!', 'error'); document.getElementById('fArtist').focus(); return; }
 
   const editId = document.getElementById('editSongId').value;
@@ -7180,9 +7181,9 @@ async function saveSong() {
     song.thumb = makeThumbnail(song.thumbGrad, song.title);
   }
 
-  showToast('Duke ruajtur…', '');
+  showToast(currentLang==='sq'?'Duke ruajtur…':'Saving…', '');
   const saveBtn = document.getElementById('saveSongBtn');
-  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='⏳ Duke ruajtur…'; }
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent=currentLang==='sq'?'⏳ Duke ruajtur…':'⏳ Saving…'; }
 
   try {
     // ── Upload thumbnail if new ──
@@ -7272,5 +7273,22 @@ function resetSongForm() {
 // saveSong and resetSongForm defined below
 
 </script>
-</body>
-</html>
+<!-- Scroll to top button -->
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll to top" style="display:none;position:fixed;bottom:80px;right:20px;z-index:390;width:44px;height:44px;border-radius:50%;border:none;background:var(--blue-mid);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:opacity .3s,transform .3s;opacity:0;transform:translateY(10px)">↑</button>
+
+<script>
+// Scroll-to-top button logic
+(function(){
+  const btn = document.getElementById('scrollTopBtn');
+  if(!btn) return;
+  window.addEventListener('scroll', ()=>{
+    if(window.scrollY > 400){
+      btn.style.display='block';
+      requestAnimationFrame(()=>{ btn.style.opacity='1'; btn.style.transform='translateY(0)'; });
+    } else {
+      btn.style.opacity='0'; btn.style.transform='translateY(10px)';
+      setTimeout(()=>{ if(window.scrollY<=400) btn.style.display='none'; },300);
+    }
+  }, {passive:true});
+})();
+</script>
