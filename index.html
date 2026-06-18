@@ -654,6 +654,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   .f-select{font-size:13px;padding:7px 8px;}
   #chordPopup{left:50% !important;transform:translateX(-50%);width:160px;}
   .similar-grid{grid-template-columns:repeat(2,1fr);}
+  #libraryLoadMoreBtn{width:100%;}
 }
 /* Sticky song action bar — mobile only */
 @media(max-width:600px){
@@ -846,6 +847,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         </select>
       </div>
       <div class="songs-grid" id="libraryGrid"></div>
+      <div id="libraryLoadMoreWrap" style="display:none;text-align:center;margin-top:28px">
+        <button id="libraryLoadMoreBtn" class="btn btn-outline" style="padding:11px 32px;font-size:13px">⬇ Load More</button>
+        <div id="libraryLoadMoreCount" style="font-size:12px;color:var(--text3);margin-top:8px"></div>
+      </div>
     </div>
   </section>
 </div>
@@ -3411,8 +3416,38 @@ function renderLibrary(){
     return true;
   });
 
-  if(!f.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë.</div>';
-  else f.forEach(s=>grid.appendChild(buildCard(s)));
+  if(!f.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">${currentLang==='sq'?'Nuk u gjet asnjë këngë.':'No songs found.'}</div>`;
+    const lmWrap=document.getElementById('libraryLoadMoreWrap');
+    if(lmWrap) lmWrap.style.display='none';
+    return;
+  }
+
+  // ── PAGINATION: show 30 at a time, "Load More" reveals the next batch ──
+  const PAGE_SIZE = 30;
+  // Reset to first page whenever filters/search change (new filtered set)
+  const filterKeyStr = JSON.stringify({q,artist,key,inst,bpmRange,catFilter});
+  if(window._libFilterKey !== filterKeyStr){
+    window._libFilterKey = filterKeyStr;
+    window._libPage = 1;
+  }
+  const visibleCount = Math.min((window._libPage||1) * PAGE_SIZE, f.length);
+  const visible = f.slice(0, visibleCount);
+  visible.forEach(s=>grid.appendChild(buildCard(s)));
+
+  const lmWrap=document.getElementById('libraryLoadMoreWrap');
+  const lmBtn=document.getElementById('libraryLoadMoreBtn');
+  const lmCount=document.getElementById('libraryLoadMoreCount');
+  const hasMore = visibleCount < f.length;
+  lmWrap.style.display = (hasMore || f.length > PAGE_SIZE) ? 'block' : 'none';
+  lmBtn.style.display = hasMore ? 'inline-block' : 'none';
+  if(hasMore){
+    lmBtn.textContent = currentLang==='sq' ? `⬇ Shfaq më shumë (${f.length - visibleCount})` : `⬇ Load More (${f.length - visibleCount})`;
+    lmBtn.onclick = () => { window._libPage = (window._libPage||1) + 1; renderLibrary(); };
+  }
+  if(lmCount) lmCount.textContent = hasMore
+    ? (currentLang==='sq' ? `Duke shfaqur ${visibleCount} nga ${f.length} këngë` : `Showing ${visibleCount} of ${f.length} songs`)
+    : (f.length > PAGE_SIZE ? (currentLang==='sq' ? `Duke shfaqur të gjitha ${f.length} këngët` : `Showing all ${f.length} songs`) : '');
 }
 
 // ═══════════════════════════════════════════════════════
