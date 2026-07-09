@@ -1,6 +1,6 @@
 // Adhurojmë Së Bashku — Service Worker
 // Version — bump this to force cache refresh
-const CACHE_VERSION = 'asb-v1';
+const CACHE_VERSION = 'asb-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 // Files to cache immediately on install
