@@ -1986,7 +1986,7 @@ async function trackStat(songId, type) {
   if (!sb || !songId) return;
   try {
     await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
-  } catch(e) {}
+  } catch(e) { console.warn('[trackStat]', type, e.message); }
 }
 
 async function loadStats() {
@@ -3020,52 +3020,65 @@ function normalizeSearch(str){
     .replace(/ù|ú|û|ü/g,'u');
 }
 
-function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
+function hilite(t,q){
+  if(!q||!t)return t||'';
+  const tn=normalizeSearch(t),qn=normalizeSearch(q);
+  const i=tn.indexOf(qn);
+  if(i<0)return t;
+  // Map normalized index back to original string
+  return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);
+}
 function updateAC(inputId,listId){
   const inp=document.getElementById(inputId),list=document.getElementById(listId);
   const q=inp.value.trim();
   const qn=normalizeSearch(q);
   acIdx=-1;
   if(!q){closeAC(listId);return;}
-  const matches=SONGS.filter(s=>{
-    const qn2 = normalizeSearch(q);
-    // Search title, original, artist AND lyrics
-    const lyricsText = normalizeSearch(
-      (s.lyricsRaw?.Guitar || '') + ' ' + (s.lyricsRaw?.Piano || '')
-    );
-    const titleMatch = normalizeSearch(s.title).includes(qn2);
-    const origMatch = normalizeSearch(s.original||'').includes(qn2);
-    const artistMatch = normalizeSearch(s.artist||'').includes(qn2);
-    const lyricsMatch = qn2.length >= 3 && lyricsText.includes(qn2);
-    return titleMatch || origMatch || artistMatch || lyricsMatch;
-  }).slice(0,6);
+  const qn2=normalizeSearch(q);
+  const allMatches=SONGS.filter(s=>{
+    const lyricsText=normalizeSearch((s.lyricsRaw?.Guitar||'')+(s.lyricsRaw?.Piano||''));
+    return normalizeSearch(s.title).includes(qn2)
+      ||normalizeSearch(s.original||'').includes(qn2)
+      ||normalizeSearch(s.artist||'').includes(qn2)
+      ||(qn2.length>=3&&lyricsText.includes(qn2));
+  });
+  const matches=allMatches.slice(0,10); // show up to 10 in dropdown
   if(!matches.length){closeAC(listId);return;}
   list.innerHTML=matches.map(s=>{
     const thumb=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
-    const qn2 = normalizeSearch(q);
-    const lyricsText = (s.lyricsRaw?.Guitar || s.lyricsRaw?.Piano || '');
-    // Find lyrics snippet if match is in lyrics
-    let snippet = '';
-    if(!normalizeSearch(s.title).includes(qn2) && !normalizeSearch(s.artist||'').includes(qn2)){
-      const lines = lyricsText.split('\n').filter(l=>normalizeSearch(l).includes(qn2));
-      if(lines.length) snippet = `<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 "${lines[0].trim().slice(0,50)}..."</div>`;
+    const lyricsText=(s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'');
+    let snippet='';
+    if(!normalizeSearch(s.title).includes(qn2)&&!normalizeSearch(s.artist||'').includes(qn2)){
+      const lines=lyricsText.split('\n').filter(l=>normalizeSearch(l).includes(qn2));
+      if(lines.length) snippet=`<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 "${lines[0].trim().slice(0,50)}..."</div>`;
     }
     return `<div class="ac-item" data-id="${s.id}">
       <img class="ac-thumb" src="${thumb}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0" alt=""/>
       <div style="min-width:0"><div class="ac-name">${hilite(s.title,q)}</div><div class="ac-sub">${s.original?s.original+' · ':''}<em>${s.artist}</em></div>${snippet}</div>
     </div>`;
-  }).join('');
-  list.querySelectorAll('.ac-item').forEach(item=>{
+  }).join('')
+  // "See all N results" footer when there are more than 10 or for lib search
+  +(allMatches.length>10&&listId==='heroAC'
+    ?`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:12px;font-weight:600;border-top:1px solid var(--border);padding:10px">🔍 Shfaq të gjitha ${allMatches.length} rezultatet →</div>`
+    :'');
+  list.querySelectorAll('.ac-item:not(.ac-seeall)').forEach(item=>{
     item.onclick=()=>{
       if(listId==='setlistAC') addToSetlist(parseInt(item.dataset.id));
       else { openSong(parseInt(item.dataset.id)); closeAC(listId); }
     };
   });
+  const seeAll=list.querySelector('.ac-seeall');
+  if(seeAll) seeAll.onclick=()=>{ if(listId==='heroAC') doHeroSearch(); closeAC(listId); };
   list.classList.add('open');
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
 function acKey(e,listId){
-  const list=document.getElementById(listId);const items=list?list.querySelectorAll('.ac-item'):[];
+  const list=document.getElementById(listId);const items=list?list.querySelectorAll('.ac-item:not(.ac-seeall)'):[];
+  if(e.key==='Enter'&&(!list||!list.classList.contains('open')||acIdx<0)){
+    // Enter with dropdown closed or no item focused → full search
+    if(listId==='heroAC') doHeroSearch();
+    return;
+  }
   if(!list||!list.classList.contains('open')||!items.length)return;
   if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((it,i)=>it.classList.toggle('focused',i===acIdx));}
   else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,-1);items.forEach((it,i)=>it.classList.toggle('focused',i===acIdx));}
@@ -3103,7 +3116,7 @@ async function renderHome(){
   if(topVGrid) topVGrid.innerHTML='';
 
   // Recently added — TOP, newest 10
-  SONGS.slice(0,10).forEach(s=>r.appendChild(buildCard(s)));
+  SONGS.slice(0,20).forEach(s=>r.appendChild(buildCard(s)));
 
   // Popular songs — max 10
   SONGS.filter(s=>s.popular).slice(0,10).forEach(s=>p.appendChild(buildCard(s)));
@@ -3184,9 +3197,13 @@ function clearFavorites(){
 }
 function doHeroSearch(){
   const q=document.getElementById('heroSearch').value.trim();
+  if(!q) return;
   closeAC('heroAC');
   document.getElementById('libSearch').value=q;
-  showPage('songs');renderLibrary();
+  showPage('songs');
+  renderLibrary();
+  // Scroll to top of library grid
+  setTimeout(()=>document.getElementById('libraryGrid')?.scrollIntoView({behavior:'smooth',block:'start'}),100);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3200,7 +3217,7 @@ function populateFilters(){
   [...new Set(SONGS.map(s=>s.key))].forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;kS.appendChild(o);});
 }
 function renderLibrary(){
-  const q=document.getElementById('libSearch').value.toLowerCase();
+  const q=normalizeSearch(document.getElementById('libSearch').value);
   const artist=document.getElementById('filterArtist').value;
   const key=document.getElementById('filterKey').value;
   const inst=document.getElementById('filterInst').value;
@@ -3243,11 +3260,10 @@ function renderLibrary(){
     }
   }
 
-  // Apply search + other filters
+  // Apply search + other filters (q is already normalizeSearch()'d above)
   const f = filtered.filter(s=>{
-    const qn=normalizeSearch(q);
     const lyricsText = normalizeSearch((s.lyricsRaw?.Guitar||'') + ' ' + (s.lyricsRaw?.Piano||''));
-    if(qn&&!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.original||'').includes(qn)&&!normalizeSearch(s.artist||'').includes(qn)&&!(qn.length>=3&&lyricsText.includes(qn)))return false;
+    if(q&&!normalizeSearch(s.title).includes(q)&&!normalizeSearch(s.original||'').includes(q)&&!normalizeSearch(s.artist||'').includes(q)&&!(q.length>=3&&lyricsText.includes(q)))return false;
     if(artist&&s.artist!==artist)return false;
     if(key&&s.key!==key)return false;
     if(inst&&!s.instruments.includes(inst))return false;
@@ -6487,8 +6503,18 @@ function stopAutoScroll(){
     _autoScrollInterval=null;
   }
   const content=document.getElementById('perfContent');
+  // _scrollCleanup: removes event listeners + spacers (set in _launchScroll)
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
   if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
+  // Belt-and-suspenders: also remove spacers if cleanup missed them
+  const lyricsEl=document.getElementById('perfLyricsContent');
+  lyricsEl?.querySelector('.perf-top-spacer')?.remove();
+  lyricsEl?.querySelector('.perf-bot-spacer')?.remove();
+  // Hide progress bar
+  const pb=document.getElementById('perfProgressBar');
+  if(pb) pb.style.display='none';
+  const pf=document.getElementById('perfProgressFill');
+  if(pf) pf.style.width='0%';
 }
 
 async function sendContactEmail() {
