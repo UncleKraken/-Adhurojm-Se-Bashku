@@ -1882,6 +1882,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
           <p style="font-size:13px;color:var(--text2);margin:0">Kërkesat e dërguara nga vizitorët përmes formës Contact.</p>
           <button class="btn btn-outline btn-sm" onclick="loadSongRequests()">🔄 Rifresko</button>
+          <button class="btn btn-outline btn-sm" onclick="cleanupDoneRequests()" style="color:var(--red);border-color:var(--red)">🗑 Fshi të kryerat (+30 ditë)</button>
         </div>
         <div id="songRequestsList" style="display:flex;flex-direction:column;gap:8px">
           <div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar kërkesat...</div>
@@ -3058,17 +3059,30 @@ function updateAC(inputId,listId){
     </div>`;
   }).join('')
   // "See all N results" footer when there are more than 10 or for lib search
-  +(allMatches.length>10&&listId==='heroAC'
-    ?`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:12px;font-weight:600;border-top:1px solid var(--border);padding:10px">🔍 Shfaq të gjitha ${allMatches.length} rezultatet →</div>`
-    :'');
+  // Always show footer so user can reach full library
+  +(() => {
+    if(listId!=='heroAC') return '';
+    const total=SONGS.length;
+    if(!allMatches.length)
+      return `<div class="ac-item ac-seeall" style="flex-direction:column;gap:4px;padding:12px;cursor:pointer">
+        <span style="color:var(--text3);font-size:12px">Nuk u gjet asnjë këngë për "<strong>${q}</strong>"</span>
+        <span style="color:var(--blue-mid);font-size:12px;font-weight:600">🔍 Kërko në të gjitha ${total} këngët →</span>
+      </div>`;
+    const label = allMatches.length > 8
+      ? `${allMatches.length} këngë — shfaq të gjitha →`
+      : `${allMatches.length} ${allMatches.length===1?'këngë e gjetur':'këngë të gjetura'}`;
+    return `<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:11px;font-weight:600;border-top:1px solid var(--border);padding:8px;cursor:pointer">🔍 ${label}</div>`;
+  })();
   list.querySelectorAll('.ac-item:not(.ac-seeall)').forEach(item=>{
     item.onclick=()=>{
       if(listId==='setlistAC') addToSetlist(parseInt(item.dataset.id));
       else { openSong(parseInt(item.dataset.id)); closeAC(listId); }
     };
   });
-  const seeAll=list.querySelector('.ac-seeall');
-  if(seeAll) seeAll.onclick=()=>{ if(listId==='heroAC') doHeroSearch(); closeAC(listId); };
+  list.querySelector('.ac-seeall')?.addEventListener('click',()=>{
+    if(listId==='heroAC') doHeroSearch();
+    closeAC(listId);
+  });
   list.classList.add('open');
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
@@ -3276,8 +3290,24 @@ function renderLibrary(){
     return true;
   });
 
-  if(!f.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë.</div>';
-  else f.forEach(s=>grid.appendChild(buildCard(s)));
+  if(!f.length){
+    const hasQ=q&&q.length>0;
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">
+      <div style="font-size:36px;margin-bottom:12px">🔍</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">
+        ${hasQ?`Nuk u gjet asnjë këngë për "<em style='color:var(--gold)'>${q}</em>"`:'Nuk u gjet asnjë këngë'}
+      </div>
+      ${hasQ?`<button class="btn btn-outline btn-sm" onclick="document.getElementById('libSearch').value='';renderLibrary()" style="margin-top:8px">✕ Hiq kërkimin</button>`:''}
+    </div>`;
+  } else {
+    f.forEach(s=>grid.appendChild(buildCard(s)));
+    if(q||artist||key||inst||bpmRange){
+      const info=document.createElement('div');
+      info.style.cssText='grid-column:1/-1;font-size:12px;color:var(--text3);padding:0 4px 8px;text-align:right';
+      info.textContent=`${f.length} ${f.length===1?'këngë e gjetur':'këngë të gjetura'} nga ${SONGS.length} gjithsej`;
+      grid.insertBefore(info,grid.firstChild);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3814,16 +3844,37 @@ async function updateRequestsBadge(){
   }catch(e){ /* non-critical */ }
 }
 
+async function cleanupDoneRequests(){
+  const sb=getSB(); if(!sb) return;
+  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+  const {error,count}=await sb.from('song_requests').delete({count:'exact'}).eq('done',true).lt('created_at',cutoff);
+  if(error){ showToast('Gabim gjatë fshirjes: '+error.message,'error'); return; }
+  showToast('🗑 U fshinë '+(count||0)+' kërkesa të kryera (>30 ditë)','success');
+  loadSongRequests();
+}
+
 async function loadSongRequests(){
+  // Auto-cleanup silently: remove done requests older than 30 days
+  try{
+    const sb=getSB();
+    if(sb){
+      const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+      await sb.from('song_requests').delete().eq('done',true).lt('created_at',cutoff);
+    }
+  }catch(e){ /* non-critical */ }
   const el=document.getElementById('songRequestsList');
   if(!el) return;
   el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
   const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
   try{
     const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
-    if(error||!data?.length){
-      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
-        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
+    if(error){
+      console.warn('[Requests] Supabase error:',error);
+      el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">⚠️ Gabim Supabase: '+error.message+'<br><br>Kontrollo: (1) tabela <code>song_requests</code> ekziston, (2) RLS policy lejon SELECT.</div>';
+      return;
+    }
+    if(!data?.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">📭 Nuk ka kërkesa ende.</div>';
       return;
     }
     el.innerHTML=data.map(r=>`
@@ -5437,12 +5488,37 @@ async function sendSongRequest(){
   const artist = document.getElementById('reqArtist')?.value.trim();
   const youtube = document.getElementById('reqYoutube')?.value.trim();
   if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
+
+  const noteParts=[];
+  if(artist) noteParts.push('Artisti: '+artist);
+  if(youtube) noteParts.push('YouTube: '+youtube);
+  const note=noteParts.join(' | ')||null;
   const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
+
+  let emailOk=false, supabaseOk=false;
+
+  // 1) EmailJS
   try {
     await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
+    emailOk=true;
+  } catch(e){ console.warn('EmailJS failed:',e); }
+
+  // 2) Supabase — always save so admin panel shows the request
+  try {
+    const sb=getSB();
+    if(sb){
+      const {error}=await sb.from('song_requests').insert({song_name:title,name:name||null,email:null,note,done:false});
+      if(error) console.warn('song_requests insert error:',error);
+      else supabaseOk=true;
+    }
+  } catch(e){ console.warn('song_requests exception:',e); }
+
+  if(emailOk||supabaseOk){
     showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
+  } else {
+    showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -6359,7 +6435,7 @@ function toggleAutoScroll(){
   const content=document.getElementById('perfContent'); if(!content) return;
 
   const startWithDuration=(ytDur)=>{
-    const BEATS_PER_LINE=8;
+    const BEATS_PER_LINE=4; // 4 beats/line — natural speed at 100%
     if(ytDur>30){
       const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
       const pxPerSec=(scrollH/ytDur)*(_perfScrollSpeed/100);
@@ -6369,10 +6445,8 @@ function toggleAutoScroll(){
     } else {
       const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
       setTimeout(()=>{
-        // Use fixed line height based on font size — NOT DOM height
-        // DOM height changes when chord diagrams are ON → causes speed inconsistency
-        const baseLineH=(_perfFontSize||18)*2.6; // font × line-height factor
-        const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
+        const baseLineH=(_perfFontSize||18)*2.6;
+        const pxPerSec=Math.max(15,(baseLineH/secPerLine)*(_perfScrollSpeed/100)); // min 15px/s always visible
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
       },80);
