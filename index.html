@@ -56,7 +56,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Adhurojmë Së Bashku"/>
-<!-- Google Analytics — REPLACE BOTH instances of G-XXXXXXXXXX below with your real Measurement ID from analytics.google.com/analytics/web/ -->
+<!-- Google Analytics — REPLACE G-XXXXXXXXXX with your real Measurement ID from analytics.google.com -->
 <!-- To activate: remove the outer comment tags below -->
 <!--
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -165,7 +165,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .search-wrap input:focus{border-color:var(--gold);background:rgba(255,255,255,0.17)}
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:100px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s}
 .search-btn:hover{background:var(--gold-l)}
-.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:600;display:none}
+.ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:600;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin}
 .ac-drop.open{display:block}
 .ac-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .ac-item:last-child{border-bottom:none}
@@ -636,11 +636,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   #perfSectionSidebar button:first-child{width:38px;font-size:10px;padding:5px 2px;}
 }
 @media(max-width:480px){
-  /* iPhone SE / small screens — Row 2 horizontal scroll, compact controls */
-  #perfControlsBar>div{gap:3px;padding:4px 6px;}
-  #perfControlsBar input[type=range]{width:36px;}
-  #perfControlsBar button{min-height:32px;min-width:32px;padding:4px 7px !important;font-size:11px !important;}
-  #perfControlsBar span[style*="1px solid"]{display:none} /* hide separators to save space */
+  /* iPhone SE / small screens */
+  #perfControlsBar>div{gap:4px;padding:5px 8px;}
+  #perfControlsBar input[type=range]{width:40px;}
   #perfSongList button{padding:4px 10px;font-size:10px;}
   /* Section sidebar even more compact */
   #perfSectionSidebar{right:2px;}
@@ -744,8 +742,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="search-outer">
         <div class="search-wrap">
           <input type="text" id="heroSearch" placeholder="Kërko këngë..." autocomplete="new-password"
-            oninput="updateAC('heroSearch','heroAC')" onkeydown="acKey(event,'heroAC')"
-            onfocus="updateAC('heroSearch','heroAC')" onblur="setTimeout(()=>closeAC('heroAC'),200)"/>
+            oninput="heroSearchInput(this.value)" onkeydown="heroSearchKey(event)"
+            onfocus="heroSearchInput(this.value)" onblur="setTimeout(()=>closeAC('heroAC'),300)"/>
           <button class="search-btn" onclick="doHeroSearch()">
             <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="15" y2="15"/></svg>
           </button>
@@ -884,8 +882,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <input id="setlistNameInput" class="form-input" placeholder="Emri i setlistës..." style="flex:1;min-width:180px;border-radius:100px"/>
           <button class="btn btn-primary btn-sm" onclick="saveSetlistName()">💾 Ruaj</button>
           <button class="btn btn-outline btn-sm" onclick="printSetlist()">🖨️ Printo</button>
-          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Kopjo Tekst</button>
-          <button class="btn btn-outline btn-sm" onclick="shareSetlistLink()" title="Kopjo link të ndarshëm">🔗 Kopjo Link</button>
+          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Ndaj</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCurrentSetlist()">🗑</button>
         </div>
         <!-- Stats bar -->
@@ -1004,19 +1001,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- ROW 3: Mini song list -->
   <div id="perfSongList" style="display:flex;gap:6px;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
 
-  <!-- PROGRESS BAR — YouTube-style thin bar just above lyrics -->
-  <div id="perfProgressBar" style="width:100%;height:3px;background:rgba(255,255,255,0.08);flex-shrink:0;position:relative;display:none">
-    <div id="perfProgressFill" style="height:100%;width:0%;background:var(--gold,#f0c040);transition:width .25s linear;border-radius:0 2px 2px 0"></div>
-  </div>
-
   <!-- ROW 4: Scrollable content (lyrics only — no controls inside) -->
   <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
-
-  <!-- END OF SONG indicator -->
-  <div id="perfEndIndicator" style="display:none;position:absolute;inset:0;z-index:25;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:8px">
-    <div style="font-size:40px;animation:pulse 1.2s infinite">🙏</div>
-    <div id="perfEndText" style="font-size:15px;font-weight:600;color:var(--text);font-family:'Poppins',sans-serif;opacity:.85">Fund i këngës</div>
-  </div>
 
   <!-- Panic overlay — blank screen -->
   <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:20;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
@@ -1459,7 +1445,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
-      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat<span id="requestsBadge" style="display:none;background:#e53935;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;font-family:'Poppins',sans-serif;vertical-align:middle"></span></button>
+      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat</button>
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
@@ -1484,14 +1470,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           style="width:100%;padding:9px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;outline:none"/>
       </div>
       <div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)">
-        <div id="adminBulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.25);border-radius:8px;margin-bottom:10px">
-          <span id="adminBulkCount" style="font-size:13px;font-weight:600;color:var(--text)">0 të zgjedhura</span>
-          <button class="btn btn-danger btn-sm" onclick="adminBulkDelete()" style="font-size:12px">🗑 Fshi të zgjedhurat</button>
-          <button class="btn btn-outline btn-sm" onclick="adminClearSelection()" style="font-size:12px">✕ Anulo</button>
-        </div>
         <table class="songs-table" id="adminSongsTable">
           <thead><tr>
-            <th style="width:32px"><input type="checkbox" id="adminSelectAll" onchange="adminToggleAll(this.checked)" title="Zgjidh të gjitha" style="cursor:pointer;width:15px;height:15px"></th>
             <th style="width:52px">Cover</th>
             <th>Titulli Shqip</th>
             <th>Titulli Origjinal</th>
@@ -1882,7 +1862,6 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
           <p style="font-size:13px;color:var(--text2);margin:0">Kërkesat e dërguara nga vizitorët përmes formës Contact.</p>
           <button class="btn btn-outline btn-sm" onclick="loadSongRequests()">🔄 Rifresko</button>
-          <button class="btn btn-outline btn-sm" onclick="cleanupDoneRequests()" style="color:var(--red);border-color:var(--red)">🗑 Fshi të kryerat (+30 ditë)</button>
         </div>
         <div id="songRequestsList" style="display:flex;flex-direction:column;gap:8px">
           <div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar kërkesat...</div>
@@ -1987,7 +1966,7 @@ async function trackStat(songId, type) {
   if (!sb || !songId) return;
   try {
     await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
-  } catch(e) { console.warn('[trackStat]', type, e.message); }
+  } catch(e) {}
 }
 
 async function loadStats() {
@@ -3021,30 +3000,37 @@ function normalizeSearch(str){
     .replace(/ù|ú|û|ü/g,'u');
 }
 
-function hilite(t,q){
-  if(!q||!t)return t||'';
-  const tn=normalizeSearch(t),qn=normalizeSearch(q);
-  const i=tn.indexOf(qn);
-  if(i<0)return t;
-  // Map normalized index back to original string
-  return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);
-}
+function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
 function updateAC(inputId,listId){
   const inp=document.getElementById(inputId),list=document.getElementById(listId);
   const q=inp.value.trim();
   const qn=normalizeSearch(q);
   acIdx=-1;
   if(!q){closeAC(listId);return;}
-  const qn2=normalizeSearch(q);
+  // allMatches = full list, no slice — max-height CSS handles scroll
   const allMatches=SONGS.filter(s=>{
-    const lyricsText=normalizeSearch((s.lyricsRaw?.Guitar||'')+(s.lyricsRaw?.Piano||''));
-    return normalizeSearch(s.title).includes(qn2)
-      ||normalizeSearch(s.original||'').includes(qn2)
-      ||normalizeSearch(s.artist||'').includes(qn2)
-      ||(qn2.length>=3&&lyricsText.includes(qn2));
+    const lyricsText=normalizeSearch((s.lyricsRaw?.Guitar||'')+' '+(s.lyricsRaw?.Piano||''));
+    return normalizeSearch(s.title).includes(qn)
+      ||normalizeSearch(s.original||'').includes(qn)
+      ||normalizeSearch(s.artist||'').includes(qn)
+      ||(qn.length>=3&&lyricsText.includes(qn));
   });
-  const matches=allMatches.slice(0,10); // show up to 10 in dropdown
-  if(!matches.length){closeAC(listId);return;}
+  const matches=allMatches;
+  const total=SONGS.length;
+  let footer='';
+  if(listId==='heroAC'||listId==='libAC'){
+    if(!allMatches.length){
+      footer=`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--text3);font-size:12px;padding:12px;flex-direction:column;gap:4px;text-align:center">
+        <span>Nuk u gjet asnjë këngë për "<strong>${q}</strong>"</span>
+      </div>`;
+    } else {
+      const label=allMatches.length===1
+        ?`1 këngë e gjetur`
+        :`${allMatches.length} këngë të gjetura`;
+      footer=`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:11px;font-weight:600;border-top:1px solid var(--border);padding:8px;cursor:pointer">🔍 ${label} — shiko listën e plotë →</div>`;
+    }
+  }
+  if(!matches.length&&!footer){closeAC(listId);return;}
   list.innerHTML=matches.map(s=>{
     const thumb=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
     const lyricsText=(s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'');
@@ -3057,22 +3043,7 @@ function updateAC(inputId,listId){
       <img class="ac-thumb" src="${thumb}" style="width:38px;height:38px;border-radius:7px;object-fit:cover;flex-shrink:0" alt=""/>
       <div style="min-width:0"><div class="ac-name">${hilite(s.title,q)}</div><div class="ac-sub">${s.original?s.original+' · ':''}<em>${s.artist}</em></div>${snippet}</div>
     </div>`;
-  }).join('')
-  // "See all N results" footer when there are more than 10 or for lib search
-  // Always show footer so user can reach full library
-  +(() => {
-    if(listId!=='heroAC') return '';
-    const total=SONGS.length;
-    if(!allMatches.length)
-      return `<div class="ac-item ac-seeall" style="flex-direction:column;gap:4px;padding:12px;cursor:pointer">
-        <span style="color:var(--text3);font-size:12px">Nuk u gjet asnjë këngë për "<strong>${q}</strong>"</span>
-        <span style="color:var(--blue-mid);font-size:12px;font-weight:600">🔍 Kërko në të gjitha ${total} këngët →</span>
-      </div>`;
-    const label = allMatches.length > 8
-      ? `${allMatches.length} këngë — shfaq të gjitha →`
-      : `${allMatches.length} ${allMatches.length===1?'këngë e gjetur':'këngë të gjetura'}`;
-    return `<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:11px;font-weight:600;border-top:1px solid var(--border);padding:8px;cursor:pointer">🔍 ${label}</div>`;
-  })();
+  }).join('')+footer;
   list.querySelectorAll('.ac-item:not(.ac-seeall)').forEach(item=>{
     item.onclick=()=>{
       if(listId==='setlistAC') addToSetlist(parseInt(item.dataset.id));
@@ -3087,12 +3058,7 @@ function updateAC(inputId,listId){
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
 function acKey(e,listId){
-  const list=document.getElementById(listId);const items=list?list.querySelectorAll('.ac-item:not(.ac-seeall)'):[];
-  if(e.key==='Enter'&&(!list||!list.classList.contains('open')||acIdx<0)){
-    // Enter with dropdown closed or no item focused → full search
-    if(listId==='heroAC') doHeroSearch();
-    return;
-  }
+  const list=document.getElementById(listId);const items=list?list.querySelectorAll('.ac-item'):[];
   if(!list||!list.classList.contains('open')||!items.length)return;
   if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((it,i)=>it.classList.toggle('focused',i===acIdx));}
   else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,-1);items.forEach((it,i)=>it.classList.toggle('focused',i===acIdx));}
@@ -3130,7 +3096,7 @@ async function renderHome(){
   if(topVGrid) topVGrid.innerHTML='';
 
   // Recently added — TOP, newest 10
-  SONGS.slice(0,20).forEach(s=>r.appendChild(buildCard(s)));
+  SONGS.slice(0,10).forEach(s=>r.appendChild(buildCard(s)));
 
   // Popular songs — max 10
   SONGS.filter(s=>s.popular).slice(0,10).forEach(s=>p.appendChild(buildCard(s)));
@@ -3209,15 +3175,30 @@ function clearFavorites(){
   renderHome();
   showToast('Të preferuarat u fshinë.','');
 }
+let _heroSearchTimer=null;
+
+function heroSearchKey(e){
+  if(e.key==='Enter'){ clearTimeout(_heroSearchTimer); doHeroSearch(); }
+  else if(e.key==='Escape'){ closeAC('heroAC'); }
+  else { heroSearchInput(document.getElementById('heroSearch').value); }
+}
+
+function heroSearchInput(val){
+  clearTimeout(_heroSearchTimer);
+  // Show full AC dropdown — same as songs section, no auto-navigate
+  updateAC('heroSearch','heroAC');
+}
+
 function doHeroSearch(){
+  clearTimeout(_heroSearchTimer);
   const q=document.getElementById('heroSearch').value.trim();
-  if(!q) return;
   closeAC('heroAC');
   document.getElementById('libSearch').value=q;
   showPage('songs');
   renderLibrary();
-  // Scroll to top of library grid
-  setTimeout(()=>document.getElementById('libraryGrid')?.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  // Scroll to top of library grid smoothly
+  setTimeout(()=>document.querySelector('#page-songs .library-grid, #libraryGrid')
+    ?.scrollIntoView({behavior:'smooth',block:'start'}),120);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3274,10 +3255,11 @@ function renderLibrary(){
     }
   }
 
-  // Apply search + other filters (q is already normalizeSearch()'d above)
+  // Apply search + other filters
   const f = filtered.filter(s=>{
+    const qn=normalizeSearch(q);
     const lyricsText = normalizeSearch((s.lyricsRaw?.Guitar||'') + ' ' + (s.lyricsRaw?.Piano||''));
-    if(q&&!normalizeSearch(s.title).includes(q)&&!normalizeSearch(s.original||'').includes(q)&&!normalizeSearch(s.artist||'').includes(q)&&!(q.length>=3&&lyricsText.includes(q)))return false;
+    if(qn&&!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.original||'').includes(qn)&&!normalizeSearch(s.artist||'').includes(qn)&&!(qn.length>=3&&lyricsText.includes(qn)))return false;
     if(artist&&s.artist!==artist)return false;
     if(key&&s.key!==key)return false;
     if(inst&&!s.instruments.includes(inst))return false;
@@ -3290,24 +3272,8 @@ function renderLibrary(){
     return true;
   });
 
-  if(!f.length){
-    const hasQ=q&&q.length>0;
-    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">
-      <div style="font-size:36px;margin-bottom:12px">🔍</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">
-        ${hasQ?`Nuk u gjet asnjë këngë për "<em style='color:var(--gold)'>${q}</em>"`:'Nuk u gjet asnjë këngë'}
-      </div>
-      ${hasQ?`<button class="btn btn-outline btn-sm" onclick="document.getElementById('libSearch').value='';renderLibrary()" style="margin-top:8px">✕ Hiq kërkimin</button>`:''}
-    </div>`;
-  } else {
-    f.forEach(s=>grid.appendChild(buildCard(s)));
-    if(q||artist||key||inst||bpmRange){
-      const info=document.createElement('div');
-      info.style.cssText='grid-column:1/-1;font-size:12px;color:var(--text3);padding:0 4px 8px;text-align:right';
-      info.textContent=`${f.length} ${f.length===1?'këngë e gjetur':'këngë të gjetura'} nga ${SONGS.length} gjithsej`;
-      grid.insertBefore(info,grid.firstChild);
-    }
-  }
+  if(!f.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë.</div>';
+  else f.forEach(s=>grid.appendChild(buildCard(s)));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3827,54 +3793,16 @@ function openAdmin(){
   refreshAdminSongs();
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
-async function updateRequestsBadge(){
-  const sb=getSB(); if(!sb) return;
-  try{
-    const {count}=await sb.from('song_requests')
-      .select('*',{count:'exact',head:true})
-      .eq('done',false);
-    const badge=document.getElementById('requestsBadge');
-    if(!badge) return;
-    if(count>0){
-      badge.textContent=count>99?'99+':count;
-      badge.style.display='inline-block';
-    } else {
-      badge.style.display='none';
-    }
-  }catch(e){ /* non-critical */ }
-}
-
-async function cleanupDoneRequests(){
-  const sb=getSB(); if(!sb) return;
-  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
-  const {error,count}=await sb.from('song_requests').delete({count:'exact'}).eq('done',true).lt('created_at',cutoff);
-  if(error){ showToast('Gabim gjatë fshirjes: '+error.message,'error'); return; }
-  showToast('🗑 U fshinë '+(count||0)+' kërkesa të kryera (>30 ditë)','success');
-  loadSongRequests();
-}
-
 async function loadSongRequests(){
-  // Auto-cleanup silently: remove done requests older than 30 days
-  try{
-    const sb=getSB();
-    if(sb){
-      const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
-      await sb.from('song_requests').delete().eq('done',true).lt('created_at',cutoff);
-    }
-  }catch(e){ /* non-critical */ }
   const el=document.getElementById('songRequestsList');
   if(!el) return;
   el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar...</div>';
   const sb=getSB(); if(!sb){ el.innerHTML='<div style="padding:20px;color:var(--text3)">Supabase nuk është i lidhur.</div>'; return; }
   try{
     const {data,error}=await sb.from('song_requests').select('*').order('created_at',{ascending:false}).limit(100);
-    if(error){
-      console.warn('[Requests] Supabase error:',error);
-      el.innerHTML='<div style="padding:20px;color:var(--text3);font-size:13px">⚠️ Gabim Supabase: '+error.message+'<br><br>Kontrollo: (1) tabela <code>song_requests</code> ekziston, (2) RLS policy lejon SELECT.</div>';
-      return;
-    }
-    if(!data?.length){
-      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">📭 Nuk ka kërkesa ende.</div>';
+    if(error||!data?.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">'+
+        (error?'Tabela song_requests nuk ekziston — krijo atë në Supabase.':'Nuk ka kërkesa ende.')+'</div>';
       return;
     }
     el.innerHTML=data.map(r=>`
@@ -3909,8 +3837,6 @@ async function deleteRequest(id){
 }
 
 function switchAdminTab(tab,el){
-  // Refresh badge whenever admin panel is active (not just on requests tab)
-  updateRequestsBadge();
   document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   const panel = document.getElementById('tab-'+tab);
@@ -3920,7 +3846,7 @@ function switchAdminTab(tab,el){
   if(tab==='artists') renderArtistsList();
   if(tab==='songs') refreshAdminSongs();
   if(tab==='social'){ loadSocialAdminForm(); }
-  if(tab==='requests'){ setTimeout(loadSongRequests,100); const b=document.getElementById('requestsBadge'); if(b) b.style.display='none'; }
+  if(tab==='requests'){ setTimeout(loadSongRequests,100); }
   if(tab==='stats') renderStatsDashboard();
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
@@ -3958,9 +3884,7 @@ async function refreshAdminSongs(){
     const thumbSrc=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
     const stat = STATS[s.id] || { views: 0, downloads: 0 };
     const tr=document.createElement('tr');
-    tr.dataset.songId=s.id;
     tr.innerHTML=`
-      <td><input type="checkbox" class="admin-song-cb" data-id="${s.id}" onchange="adminUpdateBulkBar()" style="cursor:pointer;width:15px;height:15px"></td>
       <td><img class="thumb-mini" src="${thumbSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover"/></td>
       <td><strong style="color:var(--text)">${s.title}</strong>${s.popular?'<span class="pdf-badge ok" style="margin-left:6px">⭐ Popular</span>':''}</td>
       <td style="color:var(--text3);font-style:italic;font-size:12px">${s.original||'–'}</td>
@@ -3980,51 +3904,6 @@ async function refreshAdminSongs(){
       </td>`;
     tbody.appendChild(tr);
   });
-}
-
-function adminUpdateBulkBar(){
-  const checked=[...document.querySelectorAll('.admin-song-cb:checked')];
-  const bar=document.getElementById('adminBulkBar');
-  const count=document.getElementById('adminBulkCount');
-  const all=document.getElementById('adminSelectAll');
-  const total=document.querySelectorAll('.admin-song-cb').length;
-  if(bar) bar.style.display=checked.length>0?'flex':'none';
-  if(count) count.textContent=checked.length+' të zgjedhura';
-  if(all) all.indeterminate=checked.length>0&&checked.length<total;
-  if(all&&checked.length===total&&total>0) all.checked=true;
-  else if(all&&checked.length===0) all.checked=false;
-}
-
-function adminToggleAll(checked){
-  document.querySelectorAll('.admin-song-cb').forEach(cb=>{ cb.checked=checked; });
-  adminUpdateBulkBar();
-}
-
-function adminClearSelection(){
-  document.querySelectorAll('.admin-song-cb').forEach(cb=>{ cb.checked=false; });
-  const all=document.getElementById('adminSelectAll');
-  if(all){all.checked=false;all.indeterminate=false;}
-  adminUpdateBulkBar();
-}
-
-async function adminBulkDelete(){
-  const checked=[...document.querySelectorAll('.admin-song-cb:checked')];
-  if(!checked.length) return;
-  const ids=checked.map(cb=>Number(cb.dataset.id));
-  if(!confirm(`Fshi ${ids.length} këngë? Ky veprim nuk mund të kthehet.`)) return;
-  const sb=getSB();
-  if(sb){
-    try{
-      const {error}=await sb.from('songs').delete().in('id',ids);
-      if(error){ showToast('Gabim: '+error.message,'error'); return; }
-    }catch(e){ showToast('Gabim: '+e.message,'error'); return; }
-  }
-  // Remove from local SONGS array
-  ids.forEach(id=>{ const i=SONGS.findIndex(s=>Number(s.id)===id); if(i>=0) SONGS.splice(i,1); });
-  showToast(`✅ U fshinë ${ids.length} këngë`,'success');
-  adminClearSelection();
-  renderAdminSongs();
-  renderSongCards();
 }
 
 function filterAdminSongs(q){
@@ -4388,25 +4267,12 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
-// Check for shared setlist in URL hash
-window.addEventListener('load', loadSetlistFromHash);
 
 // ── SERVICE WORKER (Offline Mode) ──
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => {
-        console.log('✅ Service Worker registered');
-        // Tell SW to skip waiting and activate immediately on new deploy
-        if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
-        reg.addEventListener('updatefound',()=>{
-          const nw=reg.installing;
-          nw?.addEventListener('statechange',()=>{
-            if(nw.state==='installed'&&navigator.serviceWorker.controller)
-              nw.postMessage({type:'SKIP_WAITING'});
-          });
-        });
-      })
+      .then(reg => console.log('✅ Service Worker registered'))
       .catch(err => console.warn('SW registration failed:', err));
   });
 }
@@ -4851,31 +4717,24 @@ function _runBeatDetection(){
 }
 
 
-function _scrollLineToReadZone(line,content){
-  // Scroll so the line sits at readZone (30% from top), matching highlightCurrentLine
-  const readZone=content.clientHeight*0.30;
-  const containerTop=content.getBoundingClientRect().top;
-  const lineTop=line.getBoundingClientRect().top-containerTop;
-  const targetScroll=content.scrollTop+(lineTop-readZone);
-  content.scrollTo({top:Math.max(0,targetScroll),behavior:'smooth'});
-  setTimeout(highlightCurrentLine,350);
-}
-
 function tryScrollToChord(chordName){
   const content=document.getElementById('perfContent');
   if(!content) return false;
-  const containerTop=content.getBoundingClientRect().top;
-  const readZoneAbs=containerTop+content.clientHeight*0.30;
-  // Find chord spans that are below the current readZone
+  const currentTop=content.scrollTop+content.clientHeight*0.3;
+  // Find chord spans after current position
   const chordSpans=[...content.querySelectorAll('[data-chord]')];
   for(const span of chordSpans){
     const resolved=resolveChordName(span.dataset.chord);
     const match=span.dataset.chord===chordName||resolved===chordName||
       resolveChordName(chordName)===resolved;
-    const spanTop=span.getBoundingClientRect().top;
-    if(match&&spanTop>readZoneAbs+20){
+    if(match&&span.offsetTop>currentTop){
+      // Find parent lyric line
       const line=span.closest('.perf-lyric-line');
-      if(line){ _scrollLineToReadZone(line,content); return true; }
+      if(line){
+        line.scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(highlightCurrentLine,300);
+        return true;
+      }
     }
   }
   return false;
@@ -4884,14 +4743,12 @@ function tryScrollToChord(chordName){
 function advanceScrollLine(){
   const content=document.getElementById('perfContent');
   if(!content) return;
-  const containerTop=content.getBoundingClientRect().top;
-  const readZoneAbs=containerTop+content.clientHeight*0.30;
   const lines=[...content.querySelectorAll('.perf-lyric-line')];
+  const currentTop=content.scrollTop+content.clientHeight*0.35;
   for(const line of lines){
-    if(!line.textContent.trim()) continue;
-    const lineTop=line.getBoundingClientRect().top;
-    if(lineTop>readZoneAbs+20){
-      _scrollLineToReadZone(line,content);
+    if(line.offsetTop>currentTop){
+      line.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(highlightCurrentLine,300);
       return;
     }
   }
@@ -5097,8 +4954,8 @@ function buildPianoChordSVG(name){
     const isActive=positions.includes(k.idx);
     const x=i*wkW;
     svg+=`<rect x="${x+0.5}" y="0.5" width="${wkW-1}" height="${H-1}" rx="2"
-      fill="${isActive?'var(--blue-mid)':'var(--bg)'}" stroke="var(--border)" stroke-width="1"/>`;
-    if(isActive) svg+=`<circle cx="${x+wkW/2}" cy="${H-9}" r="5.5" fill="var(--bg)"/>`;
+      fill="${isActive?'#6b8de3':'#ffffff'}" stroke="#bbb" stroke-width="1"/>`;
+    if(isActive) svg+=`<circle cx="${x+wkW/2}" cy="${H-9}" r="5.5" fill="white"/>`;
   });
 
   // Draw black keys
@@ -5106,8 +4963,8 @@ function buildPianoChordSVG(name){
     const isActive=positions.includes(k.idx);
     const x=k.wPos*wkW+wkW-bkW/2;
     svg+=`<rect x="${x}" y="0" width="${bkW}" height="${bkH}" rx="2"
-      fill="${isActive?'var(--blue-mid)':'var(--text)'}" stroke="none"/>`;
-    if(isActive) svg+=`<circle cx="${x+bkW/2}" cy="${bkH-6}" r="4" fill="var(--bg)"/>`;
+      fill="${isActive?'#6b8de3':'#1a1a2e'}" stroke="none"/>`;
+    if(isActive) svg+=`<circle cx="${x+bkW/2}" cy="${bkH-6}" r="4" fill="white"/>`;
   });
 
   svg+=`</svg>`;
@@ -5169,7 +5026,7 @@ function buildChordSVG(name){
 
   // Nut (thick line at top) or fret number
   if(startFret===1){
-    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="var(--text2)" rx="1"/>`;
+    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="#888" rx="1"/>`;
   } else {
     svg+=`<text x="${W-pad+3}" y="${pad+22}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
   }
@@ -5488,37 +5345,12 @@ async function sendSongRequest(){
   const artist = document.getElementById('reqArtist')?.value.trim();
   const youtube = document.getElementById('reqYoutube')?.value.trim();
   if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
-
-  const noteParts=[];
-  if(artist) noteParts.push('Artisti: '+artist);
-  if(youtube) noteParts.push('YouTube: '+youtube);
-  const note=noteParts.join(' | ')||null;
   const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
-
-  let emailOk=false, supabaseOk=false;
-
-  // 1) EmailJS
   try {
     await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
-    emailOk=true;
-  } catch(e){ console.warn('EmailJS failed:',e); }
-
-  // 2) Supabase — always save so admin panel shows the request
-  try {
-    const sb=getSB();
-    if(sb){
-      const {error}=await sb.from('song_requests').insert({song_name:title,name:name||null,email:null,note,done:false});
-      if(error) console.warn('song_requests insert error:',error);
-      else supabaseOk=true;
-    }
-  } catch(e){ console.warn('song_requests exception:',e); }
-
-  if(emailOk||supabaseOk){
     showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  } else {
-    showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error');
-  }
+  } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5613,44 +5445,8 @@ function clearSetlist(){
 function shareSetlist(){
   const sl=getSetlist();
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
-  // Option A: plain text copy
   const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})${s.note?'\n   📝 '+s.note:''}`).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
   if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success'));
-}
-
-function shareSetlistLink(){
-  const sl=getSetlist();
-  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
-  // Encode setlist as compact URL hash: base64(JSON)
-  const payload={name:sl.name,songs:sl.songs.map(s=>({id:s.id,note:s.note||'',inst:s.instrument||''}))};
-  try{
-    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    const url=window.location.origin+window.location.pathname+'#setlist='+encoded;
-    if(navigator.clipboard){
-      navigator.clipboard.writeText(url).then(()=>showToast('✅ Link i kopjuar! Ndaje me ekipin.','success'));
-    }
-  }catch(e){ showToast('Gabim gjatë krijimit të link-ut','error'); }
-}
-
-function loadSetlistFromHash(){
-  const hash=window.location.hash;
-  if(!hash.startsWith('#setlist=')) return;
-  try{
-    const encoded=hash.replace('#setlist=','');
-    const payload=JSON.parse(decodeURIComponent(escape(atob(encoded))));
-    if(!payload.songs?.length) return;
-    // Ask user if they want to load it
-    if(confirm(`Ngarko setlistën "${payload.name}" (${payload.songs.length} këngë) nga link-u?`)){
-      const lists=getAllSetlists();
-      const newList={name:payload.name,songs:payload.songs,active:true};
-      lists.forEach(l=>l.active=false);
-      lists.push(newList);
-      saveAllSetlists(lists);
-      renderSetlist();
-      showToast('✅ Setlista u ngarkua!','success');
-      history.replaceState(null,'',window.location.pathname); // clean hash
-    }
-  }catch(e){ console.warn('Invalid setlist hash',e); }
 }
 
 function printSetlist(){
@@ -5745,16 +5541,6 @@ function setPerfLang(lang){
   const en = document.getElementById('perfLangEN');
   if(sq){ sq.style.background=lang==='sq'?'var(--blue-mid)':'transparent'; sq.style.color=lang==='sq'?'#fff':'var(--text2)'; }
   if(en){ en.style.background=lang==='en'?'var(--blue-mid)':'transparent'; en.style.color=lang==='en'?'#fff':'var(--text2)'; }
-  // Update beta notice language live if still visible
-  const betaText=document.getElementById('perfBetaText');
-  if(betaText){
-    const BETA_TEXT={
-      sq:{title:'Performance Mode — Beta',body:'Disa funksione mund të jenë të pasigurta ose jo plotësisht funksionale. Po punojmë vazhdimisht për ta përmirësuar.'},
-      en:{title:'Performance Mode — Beta',body:'Some features may be unstable or not fully functional. We are continuously working to improve it.'}
-    };
-    const t=BETA_TEXT[lang==='sq'?'sq':'en'];
-    betaText.innerHTML=`<strong style="display:block;margin-bottom:2px">${t.title}</strong><span style="color:rgba(255,255,255,0.72)">${t.body}</span>`;
-  }
   // Update perf UI labels
   const autoBtn=document.getElementById('autoScrollBtn');
   if(autoBtn&&!_autoScrollInterval) autoBtn.textContent=lang==='sq'?'▶ Auto':'▶ Auto';
@@ -5788,41 +5574,6 @@ function startPerformanceMode(){
     // Line highlight starts ONLY when auto-scroll or audio-scroll is activated
   });
   document.addEventListener('keydown',perfKeyHandler);
-  // ── Beta notice: shown once per browser session ──
-  if(!sessionStorage.getItem('perf_beta_dismissed')){
-    const isSQ=(_perfLang||currentLang)==='sq';
-    const notice=document.createElement('div');
-    notice.id='perfBetaNotice';
-    notice.style.cssText=[
-      'position:fixed','bottom:24px','left:50%','transform:translateX(-50%)',
-      'z-index:99999','display:flex','align-items:center','gap:10px',
-      'background:rgba(20,20,30,0.93)','backdrop-filter:blur(8px)',
-      'border:1px solid rgba(255,200,0,0.35)','border-radius:12px',
-      'padding:10px 16px 10px 14px','max-width:520px','width:calc(100% - 40px)',
-      'box-shadow:0 4px 24px rgba(0,0,0,0.5)','font-family:Poppins,sans-serif',
-      'transition:opacity .4s'
-    ].join(';');
-    const BETA_TEXT={
-      sq:{title:'Performance Mode — Beta',body:'Disa funksione mund të jenë të pasigurta ose jo plotësisht funksionale. Po punojmë vazhdimisht për ta përmirësuar.'},
-      en:{title:'Performance Mode — Beta',body:'Some features may be unstable or not fully functional. We are continuously working to improve it.'}
-    };
-    const t=BETA_TEXT[isSQ?'sq':'en'];
-    notice.innerHTML=`
-      <span style="font-size:20px;flex-shrink:0">🚧</span>
-      <span id="perfBetaText" style="font-size:12px;color:#e8d87a;line-height:1.5">
-        <strong style="display:block;margin-bottom:2px">${t.title}</strong>
-        <span style="color:rgba(255,255,255,0.72)">${t.body}</span>
-      </span>
-      <button onclick="document.getElementById('perfBetaNotice')?.remove();sessionStorage.setItem('perf_beta_dismissed','1')"
-        style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;line-height:1;padding:2px 0 2px 4px" title="Close">✕</button>
-    `;
-    setTimeout(()=>{
-      const el=document.getElementById('perfBetaNotice');
-      if(el){el.style.opacity='0';setTimeout(()=>el.remove(),400);}
-      sessionStorage.setItem('perf_beta_dismissed','1');
-    },8000);
-    pm.appendChild(notice);
-  }
 }
 
 function exitPerformanceMode(){
@@ -5941,34 +5692,33 @@ function highlightCurrentLine(){
   if(!content) return;
   const lyricLines=content.querySelectorAll('.perf-lyric-line');
   if(!lyricLines.length) return;
-
-  const viewH=content.clientHeight;
-  // Fixed reading zone at 30% — matches spacers in _launchScroll so line 0
-  // starts here and last line ends here. No atTop/atBottom jumps needed.
-  const readZone=viewH*0.30;
-  const containerTop=content.getBoundingClientRect().top;
-
+  const scrollTop=content.scrollTop;
+  const maxScroll=content.scrollHeight-content.clientHeight;
+  const atTop=scrollTop<40;
+  const atBottom=maxScroll>0&&scrollTop>=maxScroll-60; // last 60px = at bottom
+  const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
   let activeIdx=-1;
-  let closest=Infinity;
-
+  const rects=[];
+  // Use getBoundingClientRect for accurate positions
+  const containerTop=content.getBoundingClientRect().top;
   lyricLines.forEach((line,i)=>{
-    if(!line.textContent.trim()) return; // skip empty spacer lines
     const r=line.getBoundingClientRect();
-    const topRel=r.top-containerTop;
-    const botRel=r.bottom-containerTop;
-    if(botRel<0||topRel>viewH) return; // off screen entirely
-    const lineMid=topRel+r.height/2;
-    const dist=Math.abs(lineMid-readZone);
-    if(dist<closest){closest=dist;activeIdx=i;}
+    const topRel=r.top-containerTop; // position relative to visible viewport
+    rects.push({topRel,height:r.height,i});
   });
-
-  // Fallback: very fast scroll — pick first or last
-  if(activeIdx===-1){
-    const scrollTop=content.scrollTop;
-    const maxScroll=content.scrollHeight-content.clientHeight;
-    activeIdx=scrollTop<maxScroll/2?0:lyricLines.length-1;
+  if(atTop){
+    activeIdx=0;
+  } else if(atBottom){
+    activeIdx=lyricLines.length-1;
+  } else {
+    // Find line closest to viewMid
+    let closest=Infinity;
+    rects.forEach(({topRel,height,i})=>{
+      const lineMid=topRel+height/2;
+      const dist=Math.abs(lineMid-viewMid);
+      if(dist<closest){closest=dist;activeIdx=i;}
+    });
   }
-
   lyricLines.forEach((line,i)=>{
     line.classList.toggle('active-line',i===activeIdx);
     line.classList.toggle('dim-line',i!==activeIdx);
@@ -6234,18 +5984,11 @@ function perfTapBPM(){
     for(let i=1;i<_tapBPMTimes.length;i++) tot+=_tapBPMTimes[i]-_tapBPMTimes[i-1];
     const bpm=Math.round(Math.min(220,Math.max(40,60000/(tot/(_tapBPMTimes.length-1)))));
     if(btn) btn.textContent='\u266a '+bpm+' BPM';
-    // Apply to scroll live — update pxPerSec without full restart
-    if(_tapBPMTimes.length>=3){
+    // Apply to scroll if running
+    if(_autoScrollInterval&&_tapBPMTimes.length>=3){
       window._tapBPMOverride=bpm;
-      if(_autoScrollInterval){
-        // Recalculate speed and inject into running scroll
-        const BEATS_PER_LINE=4;
-        const secPerLine=(BEATS_PER_LINE*60)/bpm;
-        const perfFontSize=_perfFontSize||18;
-        const baseLineH=perfFontSize*2.6;
-        const newPxPerSec=Math.max(15,(baseLineH/secPerLine)*((_perfScrollSpeed||100)/100));
-        window._tapPxPerSecOverride=newPxPerSec;
-      }
+      stopAutoScroll();
+      setTimeout(()=>{ toggleAutoScroll(); },60);
     }
     // Reset display after 4s of no tapping
     _tapBPMResetTimer=setTimeout(()=>{
@@ -6332,10 +6075,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
     const sec=sectionMap[label];const color=sec?.color||'var(--blue)';
     const rep=reps[label]||1;
-    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer" onclick="perfCycleRepeat('${songId}','${label}')" title="Klik për repeat">
-      ${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}
-      <button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px;flex-shrink:0">x</button>
-    </div>`;
+    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px">x</button></div>`;
   }).join('');
 
   // Build sections list with repeats expanded
@@ -6401,17 +6141,6 @@ function perfAddSection(songId,label){
   if(!_perfArrangements) _perfArrangements={};
   _perfArrangements[key].push(label); showPerfSong();
 }
-function perfCycleRepeat(songId,label){
-  // Cycle: 1→2→3→1
-  if(!window._perfSectionRepeats) window._perfSectionRepeats={};
-  const key=songId+'_reps';
-  if(!window._perfSectionRepeats[key]) window._perfSectionRepeats[key]={};
-  const cur=window._perfSectionRepeats[key][label]||1;
-  window._perfSectionRepeats[key][label]=cur>=3?1:cur+1;
-  const song=SONGS.find(s=>Number(s.id)===Number(songId));
-  if(song){ const sl=getSetlist(); const item=sl.songs.find(x=>Number(x.id)===Number(songId)); if(item&&song){ const sm=buildSectionMap(song,item.instrument||_perfInstrument); const st=_perfArrangements[songId]||Object.keys(sm); renderPerfArrangement(songId,sm,st,item.instrument||_perfInstrument); }}
-}
-
 function perfRemoveSection(songId,idx){
   _perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
 }
@@ -6435,7 +6164,7 @@ function toggleAutoScroll(){
   const content=document.getElementById('perfContent'); if(!content) return;
 
   const startWithDuration=(ytDur)=>{
-    const BEATS_PER_LINE=4; // 4 beats/line — natural speed at 100%
+    const BEATS_PER_LINE=8;
     if(ytDur>30){
       const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
       const pxPerSec=(scrollH/ytDur)*(_perfScrollSpeed/100);
@@ -6445,8 +6174,10 @@ function toggleAutoScroll(){
     } else {
       const secPerLine=bpm>0?(BEATS_PER_LINE*60)/bpm:5;
       setTimeout(()=>{
-        const baseLineH=(_perfFontSize||18)*2.6;
-        const pxPerSec=Math.max(15,(baseLineH/secPerLine)*(_perfScrollSpeed/100)); // min 15px/s always visible
+        // Use fixed line height based on font size — NOT DOM height
+        // DOM height changes when chord diagrams are ON → causes speed inconsistency
+        const baseLineH=(_perfFontSize||18)*2.6; // font × line-height factor
+        const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
       },80);
@@ -6468,100 +6199,32 @@ function toggleAutoScroll(){
 }
 
 function _launchScroll(content,pxPerSec,btn){
-  const viewH=content.clientHeight;
-  const readZone=Math.round(viewH*0.30);
-
-  // ── Remove stale spacers from any previous scroll session ──
-  content.querySelector('.perf-top-spacer')?.remove();
-  content.querySelector('.perf-bot-spacer')?.remove();
-  const lyricsEl=document.getElementById('perfLyricsContent')||content;
-  lyricsEl.querySelector('.perf-top-spacer')?.remove();
-  lyricsEl.querySelector('.perf-bot-spacer')?.remove();
-
-  // ── Top spacer: positions line 0 exactly at readZone ──
-  // Measure actual offset of lyricsEl inside content so spacer compensates for
-  // the arrangement row (chips) that sits above the lyrics.
-  content.scrollTop=0;
-  const lyricsOffset=Math.max(0,Math.round(
-    lyricsEl.getBoundingClientRect().top - content.getBoundingClientRect().top
-  ));
-  const topSpacerH=Math.max(0,readZone-lyricsOffset);
-  const topSpacer=document.createElement('div');
-  topSpacer.className='perf-top-spacer';
-  topSpacer.style.cssText='height:'+topSpacerH+'px;pointer-events:none;flex-shrink:0';
-  lyricsEl.insertBefore(topSpacer,lyricsEl.firstChild);
-
-  // ── Bottom spacer: lets last lyric scroll up to readZone ──
-  const botSpacer=document.createElement('div');
-  botSpacer.className='perf-bot-spacer';
-  botSpacer.style.cssText='height:'+(viewH-readZone)+'px;pointer-events:none;flex-shrink:0';
-  lyricsEl.appendChild(botSpacer);
-
-  // scrollTop stays 0 — line 0 now sits exactly at readZone
-  requestAnimationFrame(()=>highlightCurrentLine());
+  // Instantly jump to first lyric line so pre-lyrics UI doesn't scroll slowly
+  const firstLine=content.querySelector('.perf-lyric-line');
+  if(firstLine&&content.scrollTop<10){
+    const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
+    if(firstLineTop>40) content.scrollTop=Math.max(0,firstLineTop-20);
+  }
   startLineHighlight();
-
-  // ── Progress bar ──
-  const progressBar=document.getElementById('perfProgressBar');
-  const progressFill=document.getElementById('perfProgressFill');
-  if(progressBar) progressBar.style.display='block';
-
-  // ── Float accumulator: prevents sub-pixel scroll loss ──
-  let scrollPos=0,last=null,paused=false,pauseTimer=null;
+  let last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   const onWheel=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   content.addEventListener('touchstart',onTouch,{passive:true});
   content.addEventListener('wheel',onWheel,{passive:true});
-  content._scrollCleanup=()=>{
-    content.removeEventListener('touchstart',onTouch);
-    content.removeEventListener('wheel',onWheel);
-    clearTimeout(pauseTimer);
-    if(progressBar) progressBar.style.display='none';
-    if(progressFill) progressFill.style.width='0%';
-    lyricsEl.querySelector('.perf-top-spacer')?.remove();
-    lyricsEl.querySelector('.perf-bot-spacer')?.remove();
-  };
-
+  content._scrollCleanup=()=>{content.removeEventListener('touchstart',onTouch);content.removeEventListener('wheel',onWheel);clearTimeout(pauseTimer);};
   const tick=(ts)=>{
     if(!last) last=ts;
     const dt=Math.min((ts-last)/1000,0.1); last=ts;
     if(!paused){
-      // TAP override: singer tapped a new BPM, apply live without restarting
-      if(window._tapPxPerSecOverride){ pxPerSec=window._tapPxPerSecOverride; delete window._tapPxPerSecOverride; }
-      scrollPos+=pxPerSec*dt;
-      content.scrollTop=scrollPos;
-      // Update progress bar
+      content.scrollTop+=pxPerSec*dt;
+      // Stop only when truly at bottom - add larger buffer for last section
       const maxScroll=content.scrollHeight-content.clientHeight;
-      if(maxScroll>0){
-        const pct=Math.min(100,(scrollPos/maxScroll)*100);
-        if(progressFill) progressFill.style.width=pct+'%';
-      }
-      // Stop at bottom
-      if(maxScroll>0&&scrollPos>=maxScroll-5){
-        content.scrollTop=maxScroll;
-        if(progressFill) progressFill.style.width='100%';
-        // ── End of song indicator ──
-        const endEl=document.getElementById('perfEndIndicator');
-        const endTxt=document.getElementById('perfEndText');
-        const isSQ=(_perfLang||currentLang)==='sq';
-        const sl=getSetlist();
-        const hasNext=perfIdx<sl.songs.length-1;
-        if(endTxt) endTxt.textContent=isSQ
-          ?(hasNext?'Fund i këngës — Duke kaluar...':'Fund i këngës')
-          :(hasNext?'End of Song — Advancing...':'End of Song');
-        if(endEl){ endEl.style.display='flex'; setTimeout(()=>endEl.style.display='none',hasNext?1800:3000); }
+      if(maxScroll>0&&content.scrollTop>=maxScroll-5){
+        content.scrollTop=maxScroll; // ensure we reach absolute bottom
         setTimeout(()=>{
           stopAutoScroll(); stopLineHighlight();
           if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-          // Auto-advance: if there is a next song, go to it and restart scroll
-          if(hasNext){
-            setTimeout(()=>{
-              perfIdx++;
-              showPerfSong();
-              setTimeout(()=>toggleAutoScroll(),800); // restart after song renders
-            },1200);
-          }
-        },800);
+        },800); // small delay so last line stays highlighted
         return;
       }
     }
@@ -6577,18 +6240,8 @@ function stopAutoScroll(){
     _autoScrollInterval=null;
   }
   const content=document.getElementById('perfContent');
-  // _scrollCleanup: removes event listeners + spacers (set in _launchScroll)
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
   if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
-  // Belt-and-suspenders: also remove spacers if cleanup missed them
-  const lyricsEl=document.getElementById('perfLyricsContent');
-  lyricsEl?.querySelector('.perf-top-spacer')?.remove();
-  lyricsEl?.querySelector('.perf-bot-spacer')?.remove();
-  // Hide progress bar
-  const pb=document.getElementById('perfProgressBar');
-  if(pb) pb.style.display='none';
-  const pf=document.getElementById('perfProgressFill');
-  if(pf) pf.style.width='0%';
 }
 
 async function sendContactEmail() {
