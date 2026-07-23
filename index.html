@@ -3035,8 +3035,8 @@ function updateAC(inputId,listId){
     const thumb=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
     const lyricsText=(s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'');
     let snippet='';
-    if(!normalizeSearch(s.title).includes(qn2)&&!normalizeSearch(s.artist||'').includes(qn2)){
-      const lines=lyricsText.split('\n').filter(l=>normalizeSearch(l).includes(qn2));
+    if(!normalizeSearch(s.title).includes(qn)&&!normalizeSearch(s.artist||'').includes(qn)){
+      const lines=lyricsText.split('\n').filter(l=>normalizeSearch(l).includes(qn));
       if(lines.length) snippet=`<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 "${lines[0].trim().slice(0,50)}..."</div>`;
     }
     return `<div class="ac-item" data-id="${s.id}">
