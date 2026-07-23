@@ -48,6 +48,9 @@
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://dasodtiicmldczgqsgnr.supabase.co" crossorigin/>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin/>
 <link rel="manifest" href="./manifest.json"/>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon.ico"/>
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png"/>
@@ -65,9 +68,11 @@
 
 -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/></noscript>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" as="script"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
@@ -187,7 +192,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 
 /* SONG CARDS */
 .songs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
-.song-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .25s,transform .25s,border-color .25s;cursor:pointer}
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .25s,transform .25s,border-color .25s;cursor:pointer;contain:layout style}
 .song-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:var(--gold-l)}
 .card-thumb{width:100%;aspect-ratio:16/10;position:relative;overflow:hidden}
 .card-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s;display:block}
@@ -2857,26 +2862,31 @@ function showLoadingState(on) {
 // ═══════════════════════════════════════════════════════
 //  THUMBNAIL GENERATOR
 // ═══════════════════════════════════════════════════════
+const _thumbCache = new Map();
 function makeThumbnail(colors, title){
+  const cacheKey = (colors||[]).join(',')+':'+title;
+  if(_thumbCache.has(cacheKey)) return _thumbCache.get(cacheKey);
   const c = document.createElement('canvas');
-  c.width=400;c.height=250;
+  c.width=200;c.height=125; // reduced 50% — same quality at card size
   const ctx=c.getContext('2d');
-  const g=ctx.createLinearGradient(0,0,400,250);
+  const g=ctx.createLinearGradient(0,0,200,125);
   g.addColorStop(0,colors[0]);g.addColorStop(.55,colors[1]);g.addColorStop(1,colors[2]);
-  ctx.fillStyle=g;ctx.fillRect(0,0,400,250);
+  ctx.fillStyle=g;ctx.fillRect(0,0,200,125);
   ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
-  for(let i=0;i<400;i+=35){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,250);ctx.stroke()}
-  for(let i=0;i<250;i+=35){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(400,i);ctx.stroke()}
+  for(let i=0;i<200;i+=35){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,125);ctx.stroke()}
+  for(let i=0;i<125;i+=35){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(200,i);ctx.stroke()}
   ctx.fillStyle='rgba(255,255,255,0.1)';
-  ctx.font='bold 68px serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('♪',200,110);
+  ctx.font='bold 34px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('♪',100,55);
   ctx.fillStyle='rgba(255,255,255,0.82)';
-  ctx.font='bold 16px Poppins,sans-serif';ctx.textBaseline='bottom';
+  ctx.font='bold 9px sans-serif';ctx.textBaseline='bottom';
   const words=title.split(' ');let line='',lines=[];
-  words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>360){lines.push(line);line=w;}else{line=t;}});
+  words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>180){lines.push(line);line=w;}else{line=t;}});
   lines.push(line);lines=lines.slice(-2);
-  lines.forEach((l,i)=>ctx.fillText(l,200,232-(lines.length-1-i)*20));
-  return c.toDataURL('image/png');
+  lines.forEach((l,i)=>ctx.fillText(l,100,118-(lines.length-1-i)*12));
+  const result=c.toDataURL('image/webp',0.7); // webp smaller than png
+  _thumbCache.set(cacheKey,result);
+  return result;
 }
 SONGS.forEach(s=>{if(!s.thumb&&s.thumbGrad)s.thumb=makeThumbnail(s.thumbGrad,s.title)});
 
@@ -2903,7 +2913,7 @@ function buildCard(song){
   const newBadge = isNewSong(song) ? `<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;font-family:'Poppins',sans-serif;z-index:3;box-shadow:0 2px 8px rgba(34,197,94,0.4)">NEW</span>` : '';
   d.innerHTML=`
     <div class="card-thumb">
-      <img src="${thumbSrc}" alt="${song.title}" loading="lazy"/>
+      <img src="${thumbSrc}" alt="${song.title}" loading="lazy" decoding="async"/>
       <div class="card-overlay"></div>
       <span class="card-key-badge">${song.key}</span>
       ${newBadge}
@@ -3101,8 +3111,9 @@ async function renderHome(){
   // Popular songs — max 10
   SONGS.filter(s=>s.popular).slice(0,10).forEach(s=>p.appendChild(buildCard(s)));
 
-  // Stats-based sections
+  // Stats-based sections — deferred so initial paint isn't blocked
   try {
+    await new Promise(r=>('requestIdleCallback' in window?requestIdleCallback:setTimeout)(r,{timeout:500}));
     const STATS = await loadStats();
     // Clear again after async to prevent duplicates
     if(topGrid) topGrid.innerHTML='';
@@ -3125,7 +3136,7 @@ async function renderHome(){
     if(topVSec) topVSec.style.display='none';
   }
 
-  // Manual categories — max 10 each, only show if songs exist
+  // Manual categories — lazy rendered via IntersectionObserver
   const catContainer = document.getElementById('homeCategorySections');
   if(catContainer){
     catContainer.innerHTML='';
@@ -3135,6 +3146,7 @@ async function renderHome(){
       const bg = i%2===0 ? 'var(--bg)' : 'var(--bg2)';
       const sec = document.createElement('section');
       sec.className='section'; sec.style.background=bg;
+      // Placeholder until section scrolls into view
       sec.innerHTML=`<div class="section-inner">
         <div class="section-hdr"><h2 class="section-title">${cat.label}</h2><span class="see-all" onclick="filterByCategory('${cat.key}')">${currentLang==='sq'?'Shiko të gjitha →':'View all →'}</span></div>
         <div class="songs-grid" id="catGrid_${cat.key}"></div>
