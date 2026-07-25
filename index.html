@@ -4252,8 +4252,7 @@ async function renderArtistsList(){
 // ═══════════════════════════════════════════════════════
 // Generate thumbnails for default songs then start
 DEFAULT_SONGS.forEach(s=>{ if(!s.thumb&&s.thumbGrad) s.thumb=makeThumbnail(s.thumbGrad,s.title); });
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// pdfjsLib initialized lazily when first PDF is loaded (see getPDFJS helper)
 // Load preferences
 window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 
@@ -6468,6 +6467,25 @@ async function handleInstrPDF(event, instrument) {
   const aiBtn = document.getElementById(instrument === 'Guitar' ? 'aiReadGuitarBtn' : 'aiReadPianoBtn');
   if (aiBtn) aiBtn.style.display = 'inline-block';
 
+// Lazy PDF.js initializer — safe to call even before defer finishes
+async function getPDFJS(){
+  if(window.pdfjsLib){
+    if(!window.pdfjsLib.GlobalWorkerOptions.workerSrc)
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    return window.pdfjsLib;
+  }
+  for(let i=0;i<50;i++){
+    await new Promise(r=>setTimeout(r,100));
+    if(window.pdfjsLib){
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return window.pdfjsLib;
+    }
+  }
+  throw new Error('PDF.js nuk u ngarkua. Rifresho faqen dhe provo sërish.');
+}
+
   // Step 3: Load PDF with PDF.js
   showToast('📄 Duke lexuar PDF…', '');
   let pdfDoc = null;
@@ -6477,12 +6495,8 @@ async function handleInstrPDF(event, instrument) {
     const uint8   = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) uint8[i] = binary.charCodeAt(i);
 
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-
-    pdfDoc = await pdfjsLib.getDocument({ data: uint8.slice(0) }).promise;
+    const _pdfjs1 = await getPDFJS();
+    pdfDoc = await _pdfjs1.getDocument({ data: uint8.slice(0) }).promise;
   } catch(err) {
     console.error('PDF.js load error:', err);
     showToast('⚠️ PDF u ruajt por nuk u hap dot. Provo sërish.', '');
@@ -6625,12 +6639,14 @@ async function rereadWithAI(instrument) {
       const binary = atob(base64);
       const uint8  = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) uint8[i] = binary.charCodeAt(i);
-      pdfDoc = await pdfjsLib.getDocument({ data: uint8.slice(0) }).promise;
+      const _pdfjs2 = await getPDFJS();
+      pdfDoc = await _pdfjs2.getDocument({ data: uint8.slice(0) }).promise;
     } else {
       // It's a Supabase URL — fetch it
       const res  = await fetch(pdfData);
       const buf  = await res.arrayBuffer();
-      pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+      const _pdfjs3 = await getPDFJS();
+      pdfDoc = await _pdfjs3.getDocument({ data: new Uint8Array(buf) }).promise;
     }
 
     const aiText = await extractWithClaudeVision(pdfDoc, apiKey);
