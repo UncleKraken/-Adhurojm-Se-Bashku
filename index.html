@@ -3386,7 +3386,7 @@ async function submitReport(songId){
   const note=document.getElementById('reportNote')?.value.trim();
   if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
   const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
-  try{ await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
+  try{ await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
   catch(e){ showToast('Gabim ne dergim','error'); }
   document.getElementById('reportModal')?.remove();
 }
@@ -4537,8 +4537,13 @@ function loadSocialAdminForm(){
   if(container){ container.innerHTML=''; (s.references||[]).forEach(r=>addRefField(r.title,r.url)); }
 }
 
-// ── EMAILJS CONTACT FORM ──
-emailjs.init('_nY20miCLwZSC-jow');
+// ── EMAILJS CONTACT FORM — lazy init after defer loads ──
+function _initEmailJS(){
+  if(window.emailjs){ window.emailjs.init('_nY20miCLwZSC-jow'); return; }
+  // Script not ready yet (defer) — retry after 100ms
+  setTimeout(_initEmailJS, 100);
+}
+_initEmailJS();
 
 
 
@@ -5358,7 +5363,7 @@ async function sendSongRequest(){
   if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
   const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
   try {
-    await emailjs.send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
+    await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
     showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
@@ -6269,7 +6274,7 @@ async function sendContactEmail() {
   btn.textContent = '⏳ Duke dërguar…';
 
   try {
-    await emailjs.send('service_yr0bbyf', 'template_0sm4ndf', {
+    await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf', 'template_0sm4ndf', {
       name:    name,
       email:   email,
       message: message,
