@@ -5144,22 +5144,54 @@ function showChordDiagram(name, el){
     popup.addEventListener('mouseleave',()=>hideChordDiagram());
     document.body.appendChild(popup);
   }
-  const resolved = resolveChordName(name)||name;
-  const displayName = name !== resolved ? name+' <span style="font-size:10px;opacity:.6">('+resolved+')</span>' : name;
-  popup.innerHTML=`
-    <div style="display:flex;gap:4px;justify-content:center;margin-bottom:8px">
-      <button onclick="setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎸</button>
-      <button onclick="setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎹</button>
-    </div>
-    <div class="chord-popup-name">${displayName}</div>
-    <div id="chordDiagramContent">${buildChordDiagram(name)}</div>`;
+  // Detect sibling chords on the same lyric line for navigation
+  const parentLine = el.closest('.chord-line,.perf-lyric-line,.lyric-line,p') || el.parentNode;
+  const siblings = [...parentLine.querySelectorAll('.chord-clickable')];
+  const sibIdx = siblings.indexOf(el);
+  const total = siblings.length;
+
+  function _renderPopupContent(chord, idx){
+    const res = resolveChordName(chord)||chord;
+    const disp = chord !== res ? chord+' <span style="font-size:10px;opacity:.6">('+res+')</span>' : chord;
+    const navHTML = total > 1 ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px">
+        <button onclick="navigateChordPopup(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--text);font-size:13px" ${idx===0?'disabled style="opacity:.35;cursor:default"':''}>‹</button>
+        <span style="font-size:10px;color:var(--text3)">${idx+1} / ${total}</span>
+        <button onclick="navigateChordPopup(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--text);font-size:13px" ${idx===total-1?'disabled style="opacity:.35;cursor:default"':''}>›</button>
+      </div>` : '';
+    return `
+      ${navHTML}
+      <div style="display:flex;gap:4px;justify-content:center;margin-bottom:8px">
+        <button onclick="setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎸</button>
+        <button onclick="setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎹</button>
+      </div>
+      <div class="chord-popup-name">${disp}</div>
+      <div id="chordDiagramContent">${buildChordDiagram(chord)}</div>`;
+  }
+
   popup._chord = name;
+  popup._siblings = siblings;
+  popup._sibIdx = sibIdx;
+  popup.innerHTML = _renderPopupContent(name, sibIdx);
+  popup._renderContent = _renderPopupContent;
+
   const rect=el.getBoundingClientRect();
   popup.style.display='block';
   const left=Math.min(rect.left+rect.width/2-70, window.innerWidth-160);
   const top=rect.bottom+4;
   popup.style.left=Math.max(8,left)+'px';
   popup.style.top=top+'px';
+}
+
+function navigateChordPopup(dir){
+  const popup=document.getElementById('chordPopup');
+  if(!popup||!popup._siblings) return;
+  const newIdx=Math.max(0,Math.min(popup._siblings.length-1, popup._sibIdx+dir));
+  if(newIdx===popup._sibIdx) return;
+  popup._sibIdx=newIdx;
+  const newChord=popup._siblings[newIdx].dataset.chord;
+  popup._chord=newChord;
+  popup.innerHTML=popup._renderContent(newChord, newIdx);
 }
 
 function addChordInteraction(){
