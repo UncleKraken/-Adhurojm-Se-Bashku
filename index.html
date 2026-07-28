@@ -18,6 +18,9 @@
 <meta property="og:title" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF"/>
 <meta property="og:description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF për shkarkim. Ideal për muzikantët dhe ekipet e adhurimit shqipfolëse."/>
 <meta property="og:image" content="https://unclekraken.github.io/-Adhurojm-Se-Bashku/og-image.jpg"/>
+<meta property="og:image:alt" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
 <meta property="og:locale" content="sq_AL"/>
 <meta property="og:site_name" content="Adhurojmë Së Bashku"/>
 
@@ -26,6 +29,7 @@
 <meta name="twitter:title" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF"/>
 <meta name="twitter:description" content="Bibliotekë falas e këngëve të adhurimit në shqip me akorde dhe PDF për shkarkim."/>
 <meta name="twitter:image" content="https://unclekraken.github.io/-Adhurojm-Se-Bashku/og-image.jpg"/>
+<meta name="twitter:image:alt" content="Adhurojmë Së Bashku — Këngë Adhurimi Shqip"/>
 
 <!-- ── STRUCTURED DATA (Google) ── -->
 <script type="application/ld+json">
@@ -110,6 +114,7 @@
 .skeleton-body{padding:13px 15px 15px;display:flex;flex-direction:column;gap:8px}
 
 /* ── CARD FADE-IN ANIMATION ── */
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .song-card{animation:fadeInUp .25s cubic-bezier(.22,.61,.36,1) both}
 .song-card:nth-child(1){animation-delay:0s}
@@ -2027,7 +2032,7 @@ function toggleFavorite(songId) {
   }
   saveFavorites(favs);
   updateFavBadge();
-  renderHome();
+  renderFavorites(); // only re-render fav section, not full home
   renderSong();
 }
 
@@ -3091,7 +3096,9 @@ const HOME_CATEGORIES = [
 ];
 
 let _renderingHome = false;
-async function renderHome(){
+let _renderHomeTimer=null;
+function renderHome(){ clearTimeout(_renderHomeTimer); _renderHomeTimer=setTimeout(_renderHomeImpl,50); }
+async function _renderHomeImpl(){
   if(_renderingHome) return; // prevent concurrent renders
   _renderingHome = true;
   try {
@@ -3106,7 +3113,7 @@ async function renderHome(){
   if(topVGrid) topVGrid.innerHTML='';
 
   // Recently added — TOP, newest 10
-  SONGS.slice(0,10).forEach(s=>r.appendChild(buildCard(s)));
+  SONGS.slice(0,20).forEach(s=>r.appendChild(buildCard(s)));
 
   // Popular songs — max 10
   SONGS.filter(s=>s.popular).slice(0,10).forEach(s=>p.appendChild(buildCard(s)));
@@ -3181,10 +3188,26 @@ async function filterByCategory(cat){
 }
 
 
+function renderFavorites(){
+  // Re-render only the favorites section without rebuilding entire home
+  const favGrid=document.getElementById('favGrid');
+  const favSec=document.getElementById('favSection');
+  if(!favGrid||!favSec) return;
+  const favs=getFavorites();
+  const favSongs=SONGS.filter(s=>favs.includes(Number(s.id)));
+  favGrid.innerHTML='';
+  if(favSongs.length){
+    favSec.style.display='';
+    favSongs.forEach(s=>favGrid.appendChild(buildCard(s)));
+  } else {
+    favSec.style.display='none';
+  }
+}
+
 function clearFavorites(){
   if(!confirm('Fshi të gjitha të preferuarat?')) return;
   saveFavorites([]);
-  renderHome();
+  renderFavorites();
   showToast('Të preferuarat u fshinë.','');
 }
 let _heroSearchTimer=null;
@@ -3365,6 +3388,7 @@ async function checkUrlSong(){
 
 
 function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_ratings')||'{}')[songId]||0; }catch(e){ return 0; } }
+// Note: ratings stored in localStorage — personal to this device/browser
 
 function rateSong(songId, stars){
   try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
@@ -4191,11 +4215,19 @@ async function refreshSiteData(){
 // ═══════════════════════════════════════════════════════
 //  TOAST
 // ═══════════════════════════════════════════════════════
+const _toastQueue=[];let _toastRunning=false;
 function showToast(msg,type=''){
+  _toastQueue.push({msg,type});
+  if(!_toastRunning) _runToast();
+}
+function _runToast(){
+  if(!_toastQueue.length){_toastRunning=false;return;}
+  _toastRunning=true;
+  const {msg,type}=_toastQueue.shift();
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast'+(type?' '+type:'');
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(_runToast,300);},2800);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4278,6 +4310,19 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
+
+// ── GLOBAL ERROR HANDLER ──
+window.addEventListener('unhandledrejection', e => {
+  console.warn('[Unhandled Promise]', e.reason);
+  // Suppress SW extension noise
+  if(e.reason?.message?.includes('message channel closed')) { e.preventDefault(); return; }
+});
+window.onerror = (msg, src, line, col, err) => {
+  // Don't surface errors from browser extensions
+  if(src && !src.includes(location.hostname)) return false;
+  console.warn('[onerror]', msg, 'at', src, line);
+  return false;
+};
 
 // ── SERVICE WORKER (Offline Mode) ──
 if('serviceWorker' in navigator){
@@ -6268,7 +6313,9 @@ async function sendContactEmail() {
 
   if (!name)    { showToast('Shkruaj emrin tënd!', 'error'); return; }
   if (!email)   { showToast('Shkruaj email-in tënd!', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showToast('Email-i nuk është i vlefshëm!', 'error'); return; }
   if (!message) { showToast('Shkruaj mesazhin!', 'error'); return; }
+  if (message.length < 10) { showToast('Mesazhi është shumë i shkurtër!', 'error'); return; }
 
   btn.disabled = true;
   btn.textContent = '⏳ Duke dërguar…';
