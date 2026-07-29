@@ -3323,6 +3323,10 @@ function updateSongUrl(song){
   history.replaceState(null,'',url);
   document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
 }
+// Recently viewed constants — declared here so all functions can access them
+var RV_KEY = 'aa_recently_viewed';
+var RV_MAX = 10;
+
 async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
@@ -5394,9 +5398,6 @@ function downloadAllPDFs(){
 }
 
 }
-const RV_KEY = 'aa_recently_viewed';
-const RV_MAX = 10;
-
 function addRecentlyViewed(songId){
   const id = Number(songId);
   let rv = getRecentlyViewed().filter(x => x !== id);
