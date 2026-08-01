@@ -63,11 +63,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Adhurojmë Së Bashku"/>
-<!-- Google Analytics — REPLACE G-XXXXXXXXXX with your real Measurement ID from analytics.google.com -->
+<!-- Google Analytics — REPLACE G-6XGMX9PBY6 with your real Measurement ID from analytics.google.com -->
 <!-- To activate: remove the outer comment tags below -->
 <!--
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX',{anonymize_ip:true});</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6XGMX9PBY6"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6XGMX9PBY6',{anonymize_ip:true});</script>
 
 
 -->
@@ -1448,7 +1448,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <span>Admin · Adhurojmë <span>Së Bashku</span></span>
     </div>
     <div class="admin-tabs">
-      <button class="admin-tab active" id="atab-songs" onclick="switchAdminTab('songs',this)">🎵 Këngët</button>
+      <button class="admin-tab active" id="atab-songs" onclick="switchAdminTab('songs',this)">🎵 Këngët<span id="adminSongCountBadge" style="background:var(--blue-mid);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;vertical-align:middle"></span></button>
       <button class="admin-tab" id="atab-addSong" onclick="switchAdminTab('addSong',this)">➕ Shto / Edito</button>
       <button class="admin-tab" id="atab-pdfs" onclick="switchAdminTab('pdfs',this)">📄 PDF Files</button>
       <button class="admin-tab" id="atab-bulk" onclick="switchAdminTab('bulk',this)">🏷️ Kategori</button>
@@ -3907,6 +3907,9 @@ async function refreshAdminSongs(){
   const STATS = await loadStats();
   const count = document.getElementById('songCount');
   if(count) count.textContent = `(${SONGS.length} këngë)`;
+  // Update tab badge with song count
+  const badge=document.getElementById('adminSongCountBadge');
+  if(badge) badge.textContent=SONGS.length||'';
   // Clear search
   const searchInput = document.getElementById('adminSearchInput');
   if(searchInput) searchInput.value = '';
@@ -4314,6 +4317,68 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
+
+// ── ONLINE/OFFLINE detection ──
+function _showOfflineBanner(){
+  if(document.getElementById('offlineBanner')) return;
+  const b=document.createElement('div');
+  b.id='offlineBanner';
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99997;background:#c62828;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-family:Poppins,sans-serif;font-weight:500';
+  b.textContent='⚠️ Jeni offline — disa funksione mund të mos funksionojnë';
+  document.body.prepend(b);
+}
+function _hideOfflineBanner(){ document.getElementById('offlineBanner')?.remove(); }
+window.addEventListener('offline',_showOfflineBanner);
+window.addEventListener('online',()=>{ _hideOfflineBanner(); showToast('✅ U rilidh interneti!','success'); });
+if(!navigator.onLine) _showOfflineBanner();
+
+// ── PWA INSTALL PROMPT ──
+let _pwaInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  // Show install banner if not dismissed before
+  if(!localStorage.getItem('pwa_banner_dismissed')) {
+    setTimeout(showPWABanner, 2000);
+  }
+});
+
+function showPWABanner(){
+  if(document.getElementById('pwaBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwaBanner';
+  banner.style.cssText = [
+    'position:fixed','bottom:20px','left:50%','transform:translateX(-50%)',
+    'z-index:99998','display:flex','align-items:center','gap:12px',
+    'background:var(--surface)','border:1px solid var(--border)',
+    'border-radius:14px','padding:12px 16px','max-width:360px',
+    'width:calc(100% - 40px)','box-shadow:0 4px 24px rgba(0,0,0,0.3)',
+    'font-family:Poppins,sans-serif'
+  ].join(';');
+  banner.innerHTML = `
+    <img src="./icon-192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'"/>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:600;color:var(--text)">Instalo si App</div>
+      <div style="font-size:11px;color:var(--text3)">Hap shpejt, pa browser</div>
+    </div>
+    <button onclick="installPWA()" style="background:var(--blue-mid);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif">Instalo</button>
+    <button onclick="dismissPWABanner()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px">✕</button>`;
+  document.body.appendChild(banner);
+}
+
+function installPWA(){
+  if(!_pwaInstallPrompt) return;
+  _pwaInstallPrompt.prompt();
+  _pwaInstallPrompt.userChoice.then(r => {
+    if(r.outcome === 'accepted') dismissPWABanner();
+    _pwaInstallPrompt = null;
+  });
+}
+
+function dismissPWABanner(){
+  document.getElementById('pwaBanner')?.remove();
+  localStorage.setItem('pwa_banner_dismissed','1');
+}
 
 // ── GLOBAL ERROR HANDLER ──
 window.addEventListener('unhandledrejection', e => {
@@ -5239,6 +5304,21 @@ function addChordInteraction(){
       hideChordDiagram();
     }
   });
+  // Song page: ←/→ arrows navigate between songs
+  if(!window._songPageKeyNav){
+    window._songPageKeyNav=true;
+    document.addEventListener('keydown',(e)=>{
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable) return;
+      const songPage=document.getElementById('songPage');
+      if(!currentSong||!songPage||songPage.style.display==='none') return;
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+        const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
+        if(idx<0) return;
+        const next=e.key==='ArrowRight'?SONGS[idx+1]:SONGS[idx-1];
+        if(next){ e.preventDefault(); openSong(next.id); }
+      }
+    });
+  }
 }
 
 function setChordDiagramType(type, popupEl){
@@ -5354,12 +5434,21 @@ function getSimilarSongs(song, limit=4){
   if(!song) return [];
   const compatible=getCompatibleKeys(song.key);
   const allCompatible=[...compatible.related, compatible.relative, compatible.parallel].filter(Boolean);
-  return SONGS.filter(s=>
-    Number(s.id)!==Number(song.id) && (
-      allCompatible.includes(s.key) ||
-      (s.categories||[]).some(c=>(song.categories||[]).includes(c))
-    )
-  ).slice(0, limit);
+  return SONGS.filter(s=>Number(s.id)!==Number(song.id))
+    .map(s=>{
+      let score=0;
+      if(s.artist===song.artist) score+=4;
+      if(s.key===song.key) score+=3;
+      else if(allCompatible.includes(s.key)) score+=1;
+      (song.categories||[]).forEach(c=>{ if((s.categories||[]).includes(c)) score+=2; });
+      if(song.bpm&&s.bpm&&Math.abs(song.bpm-s.bpm)<=20) score+=1;
+      return {s,score};
+    })
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,limit)
+    .map(x=>x.s);
+}
 
 
 // ═══════════════════════════════════════════════════════
@@ -5869,11 +5958,15 @@ function perfKeyHandler(e){
   else if(e.key==='d'||e.key==='D') togglePerfDark();
   else if(e.key==='m'||e.key==='M') toggleSingerMode();
   else if(e.key==='p'||e.key==='P') togglePanic();
+  else if(e.key==='?'||e.key==='/'){
+    const so=document.getElementById('perfShortcutsOverlay');
+    if(so) so.style.display=so.style.display==='none'?'flex':'none';
+  }
   else if(e.key==='Escape'){
     if(_perfPanic){togglePanic();return;}
     const so=document.getElementById('perfShortcutsOverlay');
-    if(so&&so.style.display!=='none') so.style.display='none';
-    else exitPerformanceMode();
+    if(so&&so.style.display!=='none'){ so.style.display='none'; return; }
+    exitPerformanceMode();
   }
 }
 
