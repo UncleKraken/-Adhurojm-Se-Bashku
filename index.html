@@ -1970,6 +1970,8 @@ function toggleCapoField() {
 }
 
 // ── STATISTICS TRACKING ──
+// Increments a view or download counter for a song via a Supabase RPC call.
+// Fires and forgets — if it fails, the song still opens normally.
 async function trackStat(songId, type) {
   if(window._adminOpen) return; // don't count admin views
   const sb = getSB();
@@ -2419,6 +2421,13 @@ function isChordLine(line){
 // ═══════════════════════════════════════════════════════
 //  LYRICS TEXT PARSER  (raw text → structured sections)
 // ═══════════════════════════════════════════════════════
+// Parses raw chord/lyric text into an array of sections.
+// Expected format:
+//   [Verse 1]
+//   Am    G
+//   Some lyric line here
+//
+// Each section gets a label (e.g. "Verse 1") and an array of lyric+chord lines.
 function parseLyricsText(raw){
   if(!raw||!raw.trim()) return [];
   const lines = raw.split('\n');
@@ -2559,6 +2568,8 @@ const DEFAULT_ARTISTS = ["Oasis Worship","Hillsong Worship","Matt Maher","Bethel
 // ═══════════════════════════════════════════════════════
 
 // ── READ SONGS ──
+// Fetches the full song list from Supabase and maps each row.
+// Falls back to loadData() (localStorage/defaults) if the request fails.
 async function loadSongsAsync() {
   const sb = getSB();
   if (!sb) return loadData();
@@ -2573,6 +2584,8 @@ async function loadSongsAsync() {
   return songs;
 }
 
+// Maps a raw Supabase row into the internal song object format.
+// All fields get safe defaults so the rest of the code never has to null-check.
 function mapRow(row){
   return {
     id: row.id,
@@ -2805,6 +2818,8 @@ let ARTISTS = loadArtists();
 let PDFS    = loadPDFs();
 
 // ── INIT: load from Supabase on page load ──
+// Entry point for all data loading. Runs once on page load.
+// Order matters: local data first so the UI isn't blank while Supabase loads.
 async function initData() {
   showLoadingState(true);
   try {
@@ -2867,7 +2882,11 @@ function showLoadingState(on) {
 // ═══════════════════════════════════════════════════════
 //  THUMBNAIL GENERATOR
 // ═══════════════════════════════════════════════════════
+// Cache so we don't re-draw the same gradient for every render.
 const _thumbCache = new Map();
+
+// Generates a gradient canvas thumbnail for songs without a real cover image.
+// Kept at 200×125 (half the original size) — plenty sharp at card size, much faster.
 function makeThumbnail(colors, title){
   const cacheKey = (colors||[]).join(',')+':'+title;
   if(_thumbCache.has(cacheKey)) return _thumbCache.get(cacheKey);
@@ -2911,6 +2930,8 @@ function isNewSong(song){
   return idx >= 0 && idx < 5; // top 5 newest get badge
 }
 
+// Builds a single song card DOM element for the grid views.
+// Uses a canvas-generated gradient thumbnail if no real cover image exists.
 function buildCard(song){
   const d=document.createElement('div');
   d.className='song-card';
@@ -3004,6 +3025,8 @@ function toggleTheme(){
 //  AUTOCOMPLETE
 // ═══════════════════════════════════════════════════════
 let acIdx=-1;
+// Strips accents and Albanian characters (ë→e, ç→c) for fuzzy matching.
+// Applied to both the query and the song fields so "une" finds "Unë".
 function normalizeSearch(str){
   if(!str) return '';
   return str.toLowerCase()
@@ -3015,7 +3038,12 @@ function normalizeSearch(str){
     .replace(/ù|ú|û|ü/g,'u');
 }
 
+// Wraps the matching portion of a string in <em> tags for dropdown highlighting.
+// Uses normalizeSearch on both sides so accent differences don't break the match.
 function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
+// Populates the autocomplete dropdown as the user types.
+// Searches title, original title, artist, and lyrics (3+ chars).
+// All slash chords like Em/Am are treated as alternatives — arrows let users switch.
 function updateAC(inputId,listId){
   const inp=document.getElementById(inputId),list=document.getElementById(listId);
   const q=inp.value.trim();
@@ -3072,6 +3100,8 @@ function updateAC(inputId,listId){
   list.classList.add('open');
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
+// Keyboard handler for autocomplete dropdowns.
+// Arrow keys move focus, Enter selects or triggers a full search, Escape closes.
 function acKey(e,listId){
   const list=document.getElementById(listId);const items=list?list.querySelectorAll('.ac-item'):[];
   if(!list||!list.classList.contains('open')||!items.length)return;
@@ -3188,6 +3218,8 @@ async function filterByCategory(cat){
 }
 
 
+// Re-renders only the favorites section without rebuilding the entire home page.
+// Called when the user adds/removes a favorite so the rest of the page doesn't flicker.
 function renderFavorites(){
   // Re-render only the favorites section without rebuilding entire home
   const favGrid=document.getElementById('favGrid');
@@ -3224,6 +3256,8 @@ function heroSearchInput(val){
   updateAC('heroSearch','heroAC');
 }
 
+// Triggered when the user presses Enter on the hero search bar or clicks the search button.
+// Copies the query to the library search input and navigates to the Songs page.
 function doHeroSearch(){
   clearTimeout(_heroSearchTimer);
   const q=document.getElementById('heroSearch').value.trim();
@@ -3323,10 +3357,14 @@ function updateSongUrl(song){
   history.replaceState(null,'',url);
   document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
 }
-// Recently viewed constants — declared here so all functions can access them
+// Recently viewed — stored in localStorage as an array of song IDs.
+// var (not const) so there's no temporal dead zone if called before this line runs.
 var RV_KEY = 'aa_recently_viewed';
-var RV_MAX = 10;
+var RV_MAX = 10; // max songs to keep in history
 
+// Opens the song detail page for a given song ID.
+// Fetches fresh data from Supabase if available, falls back to local SONGS array.
+// Tracks a view stat and adds to recently viewed history.
 async function openSong(id){
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
@@ -3419,6 +3457,9 @@ async function submitReport(songId){
   document.getElementById('reportModal')?.remove();
 }
 
+// Renders the full song page: lyrics, chords, transpose controls, PDF badge,
+// similar songs, metronome button, share/report buttons, and star rating.
+// Called after openSong() resolves and whenever transpose changes.
 function renderSong(){
   const s=currentSong;
   const rawText=s.lyricsRaw?.[currentInst]||'';
@@ -3833,6 +3874,8 @@ function openAdmin(){
   refreshAdminSongs();
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
+// Fetches song requests from Supabase and renders them in the admin panel.
+// Auto-cleans up requests marked as done that are older than 30 days on each load.
 async function loadSongRequests(){
   const el=document.getElementById('songRequestsList');
   if(!el) return;
@@ -4222,6 +4265,8 @@ async function refreshSiteData(){
 // ═══════════════════════════════════════════════════════
 //  TOAST
 // ═══════════════════════════════════════════════════════
+// Toast queue — messages line up instead of overwriting each other.
+// Each toast shows for 2.8s with a 300ms gap between them.
 const _toastQueue=[];let _toastRunning=false;
 function showToast(msg,type=''){
   _toastQueue.push({msg,type});
@@ -4343,6 +4388,9 @@ window.addEventListener('beforeinstallprompt', e => {
   }
 });
 
+// Shows the "Install as App" banner for first-time visitors.
+// Only appears if the browser supports PWA install and the user hasn't dismissed it.
+// Dismissed state is saved in localStorage so it only shows once.
 function showPWABanner(){
   if(document.getElementById('pwaBanner')) return;
   const banner = document.createElement('div');
@@ -4366,6 +4414,8 @@ function showPWABanner(){
   document.body.appendChild(banner);
 }
 
+// Triggers the browser's native PWA install dialog.
+// Uses the deferred beforeinstallprompt event captured at page load.
 function installPWA(){
   if(!_pwaInstallPrompt) return;
   _pwaInstallPrompt.prompt();
@@ -5054,6 +5104,8 @@ const PIANO_CHORD_NOTES={
   'Bbm': [[10,1,5], 'Bb-Db-F'],   // Bb(10) Db(1) F(5)
 };
 
+// Renders a mini piano keyboard SVG showing which keys to press for a chord.
+// Shows one octave (C to B) with highlighted keys in the app's blue accent color.
 function buildPianoChordSVG(name){
   const data=PIANO_CHORD_NOTES[name];
   if(!data) return '<div style="font-size:11px;color:var(--text3);padding:8px">Nuk ka diagram</div>';
@@ -5131,6 +5183,8 @@ function hasChordDiagram(name){
   return !!resolveChordName(name);
 }
 
+// Builds an SVG chord diagram for guitar or piano.
+// Returns a ready-to-insert HTML string with the fretboard/keys drawn.
 function buildChordDiagram(name, type){
   type = type||_chordDiagramType;
   const resolved = resolveChordName(name) || name;
@@ -5255,6 +5309,9 @@ function showChordDiagram(name, el){
   popup.style.top=top+'px';
 }
 
+// Moves between alternative chords (e.g. Em ↔ Am in "Em/Am").
+// Updates only the name and diagram parts of the popup — doesn't replace the
+// whole innerHTML so the button element stays in the DOM and the click event completes.
 function navigateChordPopup(dir){
   const popup=document.getElementById('chordPopup');
   if(!popup||!popup._isAlt||!popup._altParts) return;
@@ -5272,6 +5329,9 @@ function navigateChordPopup(dir){
   if(navBtns[1]){ navBtns[1].disabled=newIdx===popup._altParts.length-1; navBtns[1].style.opacity=newIdx===popup._altParts.length-1?'0.35':'1'; }
 }
 
+// Attaches click/hover listeners to every .chord-clickable span on the page.
+// Clones the element first to remove any old listeners (cleaner than removeEventListener).
+// Also sets up the document click listener to close the popup when clicking outside.
 function addChordInteraction(){
   document.querySelectorAll('.chord-clickable').forEach(el=>{
     // Remove old listeners by cloning
@@ -5346,6 +5406,7 @@ function setChordDiagramType(type, popupEl){
   }
 }
 
+// Hides the chord popup and resets its state.
 function hideChordDiagram(){
   const p=document.getElementById('chordPopup'); if(p) p.style.display='none';
 }
@@ -5430,6 +5491,13 @@ function hideChordDiagram(){
 // ═══════════════════════════════════════════════════════
 //  SIMILAR SONGS
 // ═══════════════════════════════════════════════════════
+// Finds songs similar to the given one, scored by relevance:
+//   Artist match  = 4 pts  (strongest signal — same artist = same style)
+//   Same key      = 3 pts  (can be played back-to-back without retuning)
+//   Compatible key = 1 pt  (relative/parallel keys)
+//   Same category = 2 pts  (per shared category tag)
+//   Similar BPM   = 1 pt   (within ±20 BPM)
+// Only songs with score > 0 are returned, sorted highest first.
 function getSimilarSongs(song, limit=4){
   if(!song) return [];
   const compatible=getCompatibleKeys(song.key);
@@ -5486,6 +5554,8 @@ function downloadAllPDFs(){
   showToast('Duke shkarkuar '+items.length+' PDF...','success');
 }
 
+// Prepends a song ID to the recently viewed list and trims to RV_MAX.
+// Called every time a song page is opened.
 function addRecentlyViewed(songId){
   const id = Number(songId);
   let rv = getRecentlyViewed().filter(x => x !== id);
@@ -5496,6 +5566,8 @@ function addRecentlyViewed(songId){
 function getRecentlyViewed(){ try{ return JSON.parse(localStorage.getItem(RV_KEY)||'[]'); }catch(e){ return []; } }
 function clearRecentlyViewed(){ localStorage.removeItem(RV_KEY); renderRecentlyViewed(); }
 
+// Rebuilds the "Recently Viewed" section on the home page.
+// Hides the section entirely if the list is empty.
 function renderRecentlyViewed(){
   const ids = getRecentlyViewed();
   const sec = document.getElementById('recentlyViewedSection');
@@ -5555,6 +5627,8 @@ function saveAllSetlists(lists){ localStorage.setItem(SETLIST_KEY, JSON.stringif
 function getActiveIdx(){ return parseInt(localStorage.getItem(SETLIST_ACTIVE_KEY)||'0'); }
 function setActiveIdx(i){ localStorage.setItem(SETLIST_ACTIVE_KEY, String(i)); }
 
+// Returns the currently active setlist object.
+// A setlist has: { name, songs: [{id, title, artist, key, instrument, note}] }
 function getSetlist(){
   const lists = getAllSetlists();
   if(!lists.length){ const sl={id:Date.now(),name:'Setlista 1',songs:[]}; lists.push(sl); saveAllSetlists(lists); }
@@ -5747,6 +5821,8 @@ function setPerfLang(lang){
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
+// Launches performance mode — the full-screen teleprompter view used during live worship.
+// Sets up wake lock (screen stays on), countdown, keyboard handler, and beta notice.
 function startPerformanceMode(){
   const sl=getSetlist(); if(!sl.songs.length) return;
   perfIdx=0; _perfLang=null; _perfPanic=false; _perfControlsHidden=false;
@@ -5767,6 +5843,8 @@ function startPerformanceMode(){
   document.addEventListener('keydown',perfKeyHandler);
 }
 
+// Tears down performance mode completely.
+// Stops all timers, releases wake lock, removes keyboard listener, resets state.
 function exitPerformanceMode(){
   document.getElementById('performanceMode').style.display='none';
   document.body.style.overflow='';
@@ -5878,6 +5956,11 @@ function showPerfControls(){
 }
 
 // ── CURRENT LINE HIGHLIGHT ──
+// Highlights the lyric line currently in the "reading zone" (30% from the top).
+// Uses getBoundingClientRect for pixel-accurate positions rather than scrollTop math.
+// Empty spacer lines between sections are skipped so they never get highlighted.
+// Closest-to-readZone algorithm: picks whichever visible non-empty line is
+// nearest to the 30% anchor — no forced jumps at start or end of song.
 function highlightCurrentLine(){
   const content=document.getElementById('perfContent');
   if(!content) return;
@@ -5917,6 +6000,8 @@ function highlightCurrentLine(){
 }
 
 
+// Kicks off the 250ms interval that keeps the highlighted line current.
+// Also attaches a scroll listener so manual scrolling updates highlight immediately.
 function startLineHighlight(){
   stopLineHighlight();
   const content=document.getElementById('perfContent');
@@ -5926,6 +6011,7 @@ function startLineHighlight(){
   }
   window._lineHighlightInterval = setInterval(highlightCurrentLine, 250);
 }
+// Clears the highlight interval and scroll listener, removes all highlight classes.
 function stopLineHighlight(){
   if(window._lineHighlightInterval){
     clearInterval(window._lineHighlightInterval);
@@ -6166,6 +6252,9 @@ function stopPerfTimer(){
 
 // ── BPM TAP CALCULATOR ──
 let _tapBPMTimes=[], _tapBPMResetTimer=null;
+// Records each tap timestamp and calculates BPM from the average interval.
+// Keeps the last 8 taps for a rolling average — more accurate than just 2 taps.
+// If autoscroll is already running, injects the new speed live without restarting.
 function perfTapBPM(){
   clearTimeout(_tapBPMResetTimer);
   const now=performance.now();
@@ -6346,6 +6435,12 @@ function perfResetArr(songId){
 function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
 function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.length-1){perfIdx++;showPerfSong();} }
 
+// Starts or stops BPM-based autoscroll.
+// Speed formula: baseLineH = fontSize × 2.6 (line-height factor)
+//                secPerLine = (BEATS_PER_LINE × 60) / BPM
+//                pxPerSec   = (baseLineH / secPerLine) × (speedSlider / 100)
+// BEATS_PER_LINE = 4 → one lyric line takes 4 beats at the song's tempo.
+// Min speed floor of 15px/s so it's always visibly moving even at slow tempos.
 function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
@@ -6371,7 +6466,8 @@ function toggleAutoScroll(){
       setTimeout(()=>{
         // Use fixed line height based on font size — NOT DOM height
         // DOM height changes when chord diagrams are ON → causes speed inconsistency
-        const baseLineH=(_perfFontSize||18)*2.6; // font × line-height factor
+        // Line height ≈ font-size × 2.6 — matches the CSS line-height used in perfContent.
+    const baseLineH=(_perfFontSize||18)*2.6;
         const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
@@ -6393,6 +6489,17 @@ function toggleAutoScroll(){
   }
 }
 
+// Starts the rAF (requestAnimationFrame) autoscroll loop.
+//
+// ChordU-style teleprompter approach:
+//   - Top spacer:    pushes line 0 down to readZone (30%), so it starts highlighted
+//   - Bottom spacer: lets the last line scroll UP to readZone instead of stopping at bottom
+//   - scrollPos:     float accumulator — browser rounds scrollTop to integers,
+//                    so we keep the real value here to avoid sub-pixel drift over time
+//   - Progress bar:  thin gold line above lyrics, 0→100% as the song plays
+//   - Auto-advance:  if there's a next song in the setlist, moves to it automatically
+//
+// pxPerSec is calculated from BPM in toggleAutoScroll() and scaled by the speed slider.
 function _launchScroll(content,pxPerSec,btn){
   // Instantly jump to first lyric line so pre-lyrics UI doesn't scroll slowly
   const firstLine=content.querySelector('.perf-lyric-line');
@@ -6429,6 +6536,8 @@ function _launchScroll(content,pxPerSec,btn){
 }
 
 
+// Cancels the rAF loop and cleans up everything _launchScroll added:
+// spacers, progress bar, event listeners (touch/wheel pause).
 function stopAutoScroll(){
   if(_autoScrollInterval){
     cancelAnimationFrame(_autoScrollInterval);
