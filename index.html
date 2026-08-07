@@ -892,7 +892,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <input id="setlistNameInput" class="form-input" placeholder="Emri i setlistës..." style="flex:1;min-width:180px;border-radius:100px"/>
           <button class="btn btn-primary btn-sm" onclick="saveSetlistName()">💾 Ruaj</button>
           <button class="btn btn-outline btn-sm" onclick="printSetlist()">🖨️ Printo</button>
-          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Ndaj</button>
+          <button class="btn btn-outline btn-sm" onclick="shareSetlist()">📤 Kopjo Tekst</button>
+          <button class="btn btn-outline btn-sm" onclick="shareSetlistLink()">🔗 Kopjo Link</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCurrentSetlist()">🗑</button>
         </div>
         <!-- Stats bar -->
@@ -1014,6 +1015,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- ROW 4: Scrollable content (lyrics only — no controls inside) -->
   <div id="perfContent" style="flex:1;overflow-y:auto;padding:20px 16px;max-width:900px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch"></div>
 
+  <!-- PROGRESS BAR — thin gold line above lyrics, 0→100% during autoscroll -->
+  <div id="perfProgressBar" style="width:100%;height:3px;background:rgba(255,255,255,0.08);flex-shrink:0;position:relative;display:none">
+    <div id="perfProgressFill" style="height:100%;width:0%;background:var(--gold,#f0c040);transition:width .25s linear;border-radius:0 2px 2px 0"></div>
+  </div>
+  <!-- END OF SONG indicator -->
+  <div id="perfEndIndicator" style="display:none;position:absolute;inset:0;z-index:25;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+    <div style="font-size:40px;animation:pulse 1.2s infinite">🙏</div>
+    <div id="perfEndText" style="font-size:15px;font-weight:600;color:var(--text);font-family:'Poppins',sans-serif;opacity:.85">Fund i këngës</div>
+  </div>
   <!-- Panic overlay — blank screen -->
   <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:20;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
     <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif">Tap për të kthyer</div>
@@ -1455,7 +1465,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
-      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat</button>
+      <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat<span id="requestsBadge" style="display:none;background:#e53935;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;vertical-align:middle"></span></button>
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
     </div>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
@@ -1480,8 +1490,14 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           style="width:100%;padding:9px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;outline:none"/>
       </div>
       <div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)">
+        <div id="adminBulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.25);border-radius:8px;margin-bottom:10px">
+          <span id="adminBulkCount" style="font-size:13px;font-weight:600;color:var(--text)">0 të zgjedhura</span>
+          <button class="btn btn-danger btn-sm" onclick="adminBulkDelete()" style="font-size:12px">🗑 Fshi të zgjedhurat</button>
+          <button class="btn btn-outline btn-sm" onclick="adminClearSelection()" style="font-size:12px">✕ Anulo</button>
+        </div>
         <table class="songs-table" id="adminSongsTable">
           <thead><tr>
+            <th style="width:32px"><input type="checkbox" id="adminSelectAll" onchange="adminToggleAll(this.checked)" title="Zgjidh të gjitha" style="cursor:pointer;width:15px;height:15px"></th>
             <th style="width:52px">Cover</th>
             <th>Titulli Shqip</th>
             <th>Titulli Origjinal</th>
@@ -1872,6 +1888,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
           <p style="font-size:13px;color:var(--text2);margin:0">Kërkesat e dërguara nga vizitorët përmes formës Contact.</p>
           <button class="btn btn-outline btn-sm" onclick="loadSongRequests()">🔄 Rifresko</button>
+          <button class="btn btn-outline btn-sm" onclick="cleanupDoneRequests()" style="color:var(--red);border-color:var(--red)">🗑 Fshi të kryerat (+30 ditë)</button>
         </div>
         <div id="songRequestsList" style="display:flex;flex-direction:column;gap:8px">
           <div style="padding:40px;text-align:center;color:var(--text3);font-size:13px">Duke ngarkuar kërkesat...</div>
@@ -3040,7 +3057,14 @@ function normalizeSearch(str){
 
 // Wraps the matching portion of a string in <em> tags for dropdown highlighting.
 // Uses normalizeSearch on both sides so accent differences don't break the match.
-function hilite(t,q){if(!q)return t;const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);}
+function hilite(t,q){
+  if(!q||!t) return t||'';
+  const tn=normalizeSearch(t), qn=normalizeSearch(q);
+  const i=tn.indexOf(qn);
+  if(i<0) return t;
+  // Map normalized index back to original string for correct slicing
+  return t.slice(0,i)+'<em>'+t.slice(i,i+q.length)+'</em>'+t.slice(i+q.length);
+}
 // Populates the autocomplete dropdown as the user types.
 // Searches title, original title, artist, and lyrics (3+ chars).
 // All slash chords like Em/Am are treated as alternatives — arrows let users switch.
@@ -3874,6 +3898,26 @@ function openAdmin(){
   refreshAdminSongs();
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open'); window._adminOpen = false;}
+// Counts unfulfilled requests and shows a red badge on the Requests tab.
+async function updateRequestsBadge(){
+  const sb=getSB(); if(!sb) return;
+  try{
+    const {count}=await sb.from('song_requests').select('*',{count:'exact',head:true}).eq('done',false);
+    const badge=document.getElementById('requestsBadge');
+    if(!badge) return;
+    if(count>0){ badge.textContent=count>99?'99+':count; badge.style.display='inline-block'; }
+    else { badge.style.display='none'; }
+  }catch(e){}
+}
+// Deletes fulfilled requests older than 30 days to keep Supabase storage lean.
+async function cleanupDoneRequests(){
+  const sb=getSB(); if(!sb) return;
+  const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+  const {error,count}=await sb.from('song_requests').delete({count:'exact'}).eq('done',true).lt('created_at',cutoff);
+  if(error){ showToast('Gabim gjatë fshirjes: '+error.message,'error'); return; }
+  showToast('🗑 U fshinë '+(count||0)+' kërkesa të kryera (>30 ditë)','success');
+  loadSongRequests();
+}
 // Fetches song requests from Supabase and renders them in the admin panel.
 // Auto-cleans up requests marked as done that are older than 30 days on each load.
 async function loadSongRequests(){
@@ -3920,6 +3964,7 @@ async function deleteRequest(id){
 }
 
 function switchAdminTab(tab,el){
+  updateRequestsBadge();
   document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   const panel = document.getElementById('tab-'+tab);
@@ -3929,7 +3974,7 @@ function switchAdminTab(tab,el){
   if(tab==='artists') renderArtistsList();
   if(tab==='songs') refreshAdminSongs();
   if(tab==='social'){ loadSocialAdminForm(); }
-  if(tab==='requests'){ setTimeout(loadSongRequests,100); }
+  if(tab==='requests'){ setTimeout(loadSongRequests,100); const b=document.getElementById('requestsBadge'); if(b) b.style.display='none'; }
   if(tab==='stats') renderStatsDashboard();
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
@@ -3970,7 +4015,9 @@ async function refreshAdminSongs(){
     const thumbSrc=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
     const stat = STATS[s.id] || { views: 0, downloads: 0 };
     const tr=document.createElement('tr');
+    tr.dataset.songId=s.id;
     tr.innerHTML=`
+      <td><input type="checkbox" class="admin-song-cb" data-id="${s.id}" onchange="adminUpdateBulkBar()" style="cursor:pointer;width:15px;height:15px"></td>
       <td><img class="thumb-mini" src="${thumbSrc}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover"/></td>
       <td><strong style="color:var(--text)">${s.title}</strong>${s.popular?'<span class="pdf-badge ok" style="margin-left:6px">⭐ Popular</span>':''}</td>
       <td style="color:var(--text3);font-style:italic;font-size:12px">${s.original||'–'}</td>
@@ -3990,6 +4037,28 @@ async function refreshAdminSongs(){
       </td>`;
     tbody.appendChild(tr);
   });
+}
+
+function adminUpdateBulkBar(){
+  const checked=[...document.querySelectorAll('.admin-song-cb:checked')];
+  const bar=document.getElementById('adminBulkBar'), count=document.getElementById('adminBulkCount'), all=document.getElementById('adminSelectAll');
+  const total=document.querySelectorAll('.admin-song-cb').length;
+  if(bar) bar.style.display=checked.length>0?'flex':'none';
+  if(count) count.textContent=checked.length+' të zgjedhura';
+  if(all){ all.indeterminate=checked.length>0&&checked.length<total; all.checked=checked.length===total&&total>0; }
+}
+function adminToggleAll(checked){ document.querySelectorAll('.admin-song-cb').forEach(cb=>{ cb.checked=checked; }); adminUpdateBulkBar(); }
+function adminClearSelection(){ document.querySelectorAll('.admin-song-cb').forEach(cb=>{ cb.checked=false; }); const a=document.getElementById('adminSelectAll'); if(a){a.checked=false;a.indeterminate=false;} adminUpdateBulkBar(); }
+async function adminBulkDelete(){
+  const checked=[...document.querySelectorAll('.admin-song-cb:checked')];
+  if(!checked.length) return;
+  const ids=checked.map(cb=>Number(cb.dataset.id));
+  if(!confirm('Fshi '+ids.length+' këngë? Ky veprim nuk mund të kthehet.')) return;
+  const sb=getSB();
+  if(sb){ const {error}=await sb.from('songs').delete().in('id',ids); if(error){ showToast('Gabim: '+error.message,'error'); return; } }
+  ids.forEach(id=>{ const i=SONGS.findIndex(s=>Number(s.id)===id); if(i>=0) SONGS.splice(i,1); });
+  showToast('✅ U fshinë '+ids.length+' këngë','success');
+  adminClearSelection(); renderAdminSongs(); renderSongCards();
 }
 
 function filterAdminSongs(q){
@@ -4362,6 +4431,7 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
+window.addEventListener('load', loadSetlistFromHash);
 
 // ── ONLINE/OFFLINE detection ──
 function _showOfflineBanner(){
@@ -5707,6 +5777,32 @@ function clearSetlist(){
   const sl=getSetlist(); sl.songs=[]; saveSetlist(sl); updateSetlistBadge(); renderSetlist();
 }
 
+// Encodes the current setlist as a base64 URL hash and copies to clipboard.
+function shareSetlistLink(){
+  const sl=getSetlist();
+  if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
+  try{
+    const payload={name:sl.name,songs:sl.songs.map(s=>({id:s.id,note:s.note||'',inst:s.instrument||''}))};
+    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    const url=window.location.origin+window.location.pathname+'#setlist='+encoded;
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>showToast('✅ Link i kopjuar! Ndaje me ekipin.','success'));
+  }catch(e){ showToast('Gabim gjatë krijimit të link-ut','error'); }
+}
+// Loads a shared setlist from the URL hash on page load.
+function loadSetlistFromHash(){
+  const hash=window.location.hash;
+  if(!hash.startsWith('#setlist=')) return;
+  try{
+    const payload=JSON.parse(decodeURIComponent(escape(atob(hash.replace('#setlist=','')))));
+    if(!payload.songs?.length) return;
+    if(confirm('Ngarko setlistën "'+payload.name+'" ('+payload.songs.length+' këngë) nga link-u?')){
+      const lists=getAllSetlists(); const newList={name:payload.name,songs:payload.songs,active:true};
+      lists.forEach(l=>l.active=false); lists.push(newList); saveAllSetlists(lists);
+      renderSetlist(); showToast('✅ Setlista u ngarkua!','success');
+      history.replaceState(null,'',window.location.pathname);
+    }
+  }catch(e){ console.warn('Invalid setlist hash',e); }
+}
 function shareSetlist(){
   const sl=getSetlist();
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
@@ -5806,6 +5902,9 @@ function setPerfLang(lang){
   const en = document.getElementById('perfLangEN');
   if(sq){ sq.style.background=lang==='sq'?'var(--blue-mid)':'transparent'; sq.style.color=lang==='sq'?'#fff':'var(--text2)'; }
   if(en){ en.style.background=lang==='en'?'var(--blue-mid)':'transparent'; en.style.color=lang==='en'?'#fff':'var(--text2)'; }
+  // Update beta notice language live
+  const betaText=document.getElementById('perfBetaText');
+  if(betaText){ const BETA={sq:{title:'Performance Mode — Beta',body:'Disa funksione mund të jenë të pasigurta.'},en:{title:'Performance Mode — Beta',body:'Some features may be unstable.'}}; const t=BETA[lang==='sq'?'sq':'en']; betaText.innerHTML=`<strong style="display:block;margin-bottom:2px">${t.title}</strong><span style="color:rgba(255,255,255,0.72)">${t.body}</span>`; }
   // Update perf UI labels
   const autoBtn=document.getElementById('autoScrollBtn');
   if(autoBtn&&!_autoScrollInterval) autoBtn.textContent=lang==='sq'?'▶ Auto':'▶ Auto';
@@ -5841,6 +5940,18 @@ function startPerformanceMode(){
     // Line highlight starts ONLY when auto-scroll or audio-scroll is activated
   });
   document.addEventListener('keydown',perfKeyHandler);
+  // Beta notice — shown once per browser session
+  if(!sessionStorage.getItem('perf_beta_dismissed')){
+    const isSQ=(_perfLang||currentLang)==='sq';
+    const notice=document.createElement('div');
+    notice.id='perfBetaNotice';
+    notice.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;align-items:center;gap:10px;background:rgba(20,20,30,0.93);backdrop-filter:blur(8px);border:1px solid rgba(255,200,0,0.35);border-radius:12px;padding:10px 16px 10px 14px;max-width:520px;width:calc(100% - 40px);box-shadow:0 4px 24px rgba(0,0,0,0.5);font-family:Poppins,sans-serif;transition:opacity .4s';
+    const BETA={sq:{title:'Performance Mode — Beta',body:'Disa funksione mund të jenë të pasigurta ose jo plotësisht funksionale. Po punojmë vazhdimisht për ta përmirësuar.'},en:{title:'Performance Mode — Beta',body:'Some features may be unstable or not fully functional. We are continuously working to improve it.'}};
+    const t=BETA[isSQ?'sq':'en'];
+    notice.innerHTML=`<span style="font-size:20px;flex-shrink:0">🚧</span><span id="perfBetaText" style="font-size:12px;color:#e8d87a;line-height:1.5"><strong style="display:block;margin-bottom:2px">${t.title}</strong><span style="color:rgba(255,255,255,0.72)">${t.body}</span></span><button onclick="document.getElementById('perfBetaNotice')?.remove();sessionStorage.setItem('perf_beta_dismissed','1')" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;padding:2px 0 2px 4px">✕</button>`;
+    setTimeout(()=>{ const el=document.getElementById('perfBetaNotice'); if(el){el.style.opacity='0';setTimeout(()=>el.remove(),400);} sessionStorage.setItem('perf_beta_dismissed','1'); },8000);
+    pm.appendChild(notice);
+  }
 }
 
 // Tears down performance mode completely.
@@ -5968,30 +6079,23 @@ function highlightCurrentLine(){
   if(!lyricLines.length) return;
   const scrollTop=content.scrollTop;
   const maxScroll=content.scrollHeight-content.clientHeight;
-  const atTop=scrollTop<40;
-  const atBottom=maxScroll>0&&scrollTop>=maxScroll-60; // last 60px = at bottom
-  const viewMid=content.clientHeight*0.40; // viewport mid as % from top of visible area
-  let activeIdx=-1;
-  const rects=[];
-  // Use getBoundingClientRect for accurate positions
+  const viewH=content.clientHeight;
+  const readZone=viewH*0.30; // 30% anchor — where the singer's eyes rest on screen
   const containerTop=content.getBoundingClientRect().top;
+  let activeIdx=-1, closest=Infinity;
   lyricLines.forEach((line,i)=>{
+    if(!line.textContent.trim()) return; // skip empty spacers between sections
     const r=line.getBoundingClientRect();
-    const topRel=r.top-containerTop; // position relative to visible viewport
-    rects.push({topRel,height:r.height,i});
+    const topRel=r.top-containerTop;
+    const botRel=r.bottom-containerTop;
+    if(botRel<0||topRel>viewH) return; // off screen
+    const dist=Math.abs((topRel+r.height/2)-readZone);
+    if(dist<closest){closest=dist;activeIdx=i;}
   });
-  if(atTop){
-    activeIdx=0;
-  } else if(atBottom){
-    activeIdx=lyricLines.length-1;
-  } else {
-    // Find line closest to viewMid
-    let closest=Infinity;
-    rects.forEach(({topRel,height,i})=>{
-      const lineMid=topRel+height/2;
-      const dist=Math.abs(lineMid-viewMid);
-      if(dist<closest){closest=dist;activeIdx=i;}
-    });
+  if(activeIdx===-1){
+    const scrollTop=content.scrollTop;
+    const maxScroll=content.scrollHeight-content.clientHeight;
+    activeIdx=scrollTop<maxScroll/2?0:lyricLines.length-1;
   }
   lyricLines.forEach((line,i)=>{
     line.classList.toggle('active-line',i===activeIdx);
@@ -6268,11 +6372,14 @@ function perfTapBPM(){
     for(let i=1;i<_tapBPMTimes.length;i++) tot+=_tapBPMTimes[i]-_tapBPMTimes[i-1];
     const bpm=Math.round(Math.min(220,Math.max(40,60000/(tot/(_tapBPMTimes.length-1)))));
     if(btn) btn.textContent='\u266a '+bpm+' BPM';
-    // Apply to scroll if running
-    if(_autoScrollInterval&&_tapBPMTimes.length>=3){
+    // Apply new BPM live without restarting scroll
+    if(_tapBPMTimes.length>=3){
       window._tapBPMOverride=bpm;
-      stopAutoScroll();
-      setTimeout(()=>{ toggleAutoScroll(); },60);
+      if(_autoScrollInterval){
+        const secPerLine=(4*60)/bpm;
+        const baseLineH=(_perfFontSize||18)*2.6;
+        window._tapPxPerSecOverride=Math.max(15,(baseLineH/secPerLine)*((_perfScrollSpeed||100)/100));
+      }
     }
     // Reset display after 4s of no tapping
     _tapBPMResetTimer=setTimeout(()=>{
@@ -6425,6 +6532,18 @@ function perfAddSection(songId,label){
   if(!_perfArrangements) _perfArrangements={};
   _perfArrangements[key].push(label); showPerfSong();
 }
+// Cycles the repeat count for a section chip: 1→2→3→1.
+// Clicking the chip body toggles repeat; the ✕ button removes it.
+function perfCycleRepeat(songId,label){
+  if(!window._perfSectionRepeats) window._perfSectionRepeats={};
+  const key=songId+'_reps';
+  if(!window._perfSectionRepeats[key]) window._perfSectionRepeats[key]={};
+  const cur=window._perfSectionRepeats[key][label]||1;
+  window._perfSectionRepeats[key][label]=cur>=3?1:cur+1;
+  const item=getSetlist().songs.find(x=>Number(x.id)===Number(songId));
+  if(item){ const sm=buildSectionMap(SONGS.find(s=>Number(s.id)===Number(songId)),item.instrument||_perfInstrument); renderPerfArrangement(songId,sm,_perfArrangements[songId]||Object.keys(sm),item.instrument||_perfInstrument); }
+}
+
 function perfRemoveSection(songId,idx){
   _perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
 }
@@ -6454,7 +6573,7 @@ function toggleAutoScroll(){
   const content=document.getElementById('perfContent'); if(!content) return;
 
   const startWithDuration=(ytDur)=>{
-    const BEATS_PER_LINE=8;
+    const BEATS_PER_LINE=4; // 4 beats/line feels natural for worship tempos
     if(ytDur>30){
       const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
       const pxPerSec=(scrollH/ytDur)*(_perfScrollSpeed/100);
@@ -6468,7 +6587,7 @@ function toggleAutoScroll(){
         // DOM height changes when chord diagrams are ON → causes speed inconsistency
         // Line height ≈ font-size × 2.6 — matches the CSS line-height used in perfContent.
     const baseLineH=(_perfFontSize||18)*2.6;
-        const pxPerSec=Math.max(5,(baseLineH/secPerLine)*(_perfScrollSpeed/100));
+        const pxPerSec=Math.max(15,(baseLineH/secPerLine)*(_perfScrollSpeed/100)); // 15px/s min floor
         if(btn){btn.textContent=bpm>0?'⏸ '+bpm+' BPM':'⏸ Auto';btn.style.background='var(--blue-mid)';btn.style.color='#fff';}
         _launchScroll(content,pxPerSec,btn);
       },80);
@@ -6501,32 +6620,71 @@ function toggleAutoScroll(){
 //
 // pxPerSec is calculated from BPM in toggleAutoScroll() and scaled by the speed slider.
 function _launchScroll(content,pxPerSec,btn){
-  // Instantly jump to first lyric line so pre-lyrics UI doesn't scroll slowly
-  const firstLine=content.querySelector('.perf-lyric-line');
-  if(firstLine&&content.scrollTop<10){
-    const firstLineTop=firstLine.getBoundingClientRect().top-content.getBoundingClientRect().top;
-    if(firstLineTop>40) content.scrollTop=Math.max(0,firstLineTop-20);
-  }
+  const viewH=content.clientHeight;
+  const readZone=Math.round(viewH*0.30);
+  // Remove stale spacers from any previous session
+  content.querySelector('.perf-top-spacer')?.remove();
+  content.querySelector('.perf-bot-spacer')?.remove();
+  const lyricsEl=document.getElementById('perfLyricsContent')||content;
+  lyricsEl.querySelector('.perf-top-spacer')?.remove();
+  lyricsEl.querySelector('.perf-bot-spacer')?.remove();
+  // Top spacer: positions line 0 at readZone, accounting for arrangement chips above lyrics
+  content.scrollTop=0;
+  const lyricsOffset=Math.max(0,Math.round(lyricsEl.getBoundingClientRect().top-content.getBoundingClientRect().top));
+  const topSpacerH=Math.max(0,readZone-lyricsOffset);
+  const topSpacer=document.createElement('div');
+  topSpacer.className='perf-top-spacer';
+  topSpacer.style.cssText='height:'+topSpacerH+'px;pointer-events:none;flex-shrink:0';
+  lyricsEl.insertBefore(topSpacer,lyricsEl.firstChild);
+  // Bottom spacer: lets last lyric scroll up to readZone
+  const botSpacer=document.createElement('div');
+  botSpacer.className='perf-bot-spacer';
+  botSpacer.style.cssText='height:'+(viewH-readZone)+'px;pointer-events:none;flex-shrink:0';
+  lyricsEl.appendChild(botSpacer);
+  requestAnimationFrame(()=>highlightCurrentLine());
   startLineHighlight();
-  let last=null,paused=false,pauseTimer=null;
+  // Progress bar
+  const progressBar=document.getElementById('perfProgressBar');
+  const progressFill=document.getElementById('perfProgressFill');
+  if(progressBar) progressBar.style.display='block';
+  // Float accumulator — prevents sub-pixel scroll loss
+  let scrollPos=0,last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   const onWheel=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   content.addEventListener('touchstart',onTouch,{passive:true});
   content.addEventListener('wheel',onWheel,{passive:true});
-  content._scrollCleanup=()=>{content.removeEventListener('touchstart',onTouch);content.removeEventListener('wheel',onWheel);clearTimeout(pauseTimer);};
+  content._scrollCleanup=()=>{
+    content.removeEventListener('touchstart',onTouch);
+    content.removeEventListener('wheel',onWheel);
+    clearTimeout(pauseTimer);
+    if(progressBar) progressBar.style.display='none';
+    if(progressFill) progressFill.style.width='0%';
+    lyricsEl.querySelector('.perf-top-spacer')?.remove();
+    lyricsEl.querySelector('.perf-bot-spacer')?.remove();
+  };
   const tick=(ts)=>{
     if(!last) last=ts;
     const dt=Math.min((ts-last)/1000,0.1); last=ts;
     if(!paused){
-      content.scrollTop+=pxPerSec*dt;
-      // Stop only when truly at bottom - add larger buffer for last section
+      if(window._tapPxPerSecOverride){ pxPerSec=window._tapPxPerSecOverride; delete window._tapPxPerSecOverride; }
+      scrollPos+=pxPerSec*dt;
+      content.scrollTop=scrollPos;
       const maxScroll=content.scrollHeight-content.clientHeight;
-      if(maxScroll>0&&content.scrollTop>=maxScroll-5){
-        content.scrollTop=maxScroll; // ensure we reach absolute bottom
+      if(maxScroll>0&&progressFill) progressFill.style.width=Math.min(100,(scrollPos/maxScroll)*100)+'%';
+      if(maxScroll>0&&scrollPos>=maxScroll-5){
+        content.scrollTop=maxScroll;
+        if(progressFill) progressFill.style.width='100%';
+        const endEl=document.getElementById('perfEndIndicator');
+        const endTxt=document.getElementById('perfEndText');
+        const isSQ=(_perfLang||currentLang)==='sq';
+        const sl=getSetlist(); const hasNext=perfIdx<sl.songs.length-1;
+        if(endTxt) endTxt.textContent=isSQ?(hasNext?'Fund i këngës — Duke kaluar...':'Fund i këngës'):(hasNext?'End of Song — Advancing...':'End of Song');
+        if(endEl){ endEl.style.display='flex'; setTimeout(()=>endEl.style.display='none',hasNext?1800:3000); }
         setTimeout(()=>{
           stopAutoScroll(); stopLineHighlight();
           if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
-        },800); // small delay so last line stays highlighted
+          if(hasNext){ setTimeout(()=>{ perfIdx++; showPerfSong(); setTimeout(()=>toggleAutoScroll(),800); },1200); }
+        },800);
         return;
       }
     }
@@ -6539,13 +6697,16 @@ function _launchScroll(content,pxPerSec,btn){
 // Cancels the rAF loop and cleans up everything _launchScroll added:
 // spacers, progress bar, event listeners (touch/wheel pause).
 function stopAutoScroll(){
-  if(_autoScrollInterval){
-    cancelAnimationFrame(_autoScrollInterval);
-    _autoScrollInterval=null;
-  }
+  if(_autoScrollInterval){ cancelAnimationFrame(_autoScrollInterval); _autoScrollInterval=null; }
   const content=document.getElementById('perfContent');
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
   if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
+  // Belt-and-suspenders cleanup
+  const lyricsEl=document.getElementById('perfLyricsContent');
+  lyricsEl?.querySelector('.perf-top-spacer')?.remove();
+  lyricsEl?.querySelector('.perf-bot-spacer')?.remove();
+  const pb=document.getElementById('perfProgressBar'); if(pb) pb.style.display='none';
+  const pf=document.getElementById('perfProgressFill'); if(pf) pf.style.width='0%';
 }
 
 async function sendContactEmail() {
