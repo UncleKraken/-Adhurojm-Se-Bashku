@@ -177,6 +177,9 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .search-btn:hover{background:var(--gold-l)}
 .ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:9999;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin}
 .ac-drop.open{display:block}
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.92);color:#fff;font-size:11px;font-family:'Poppins',sans-serif;white-space:nowrap;padding:4px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .18s;z-index:99995;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+[data-tip]:hover::after{opacity:1}
 .ac-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .ac-item:last-child{border-bottom:none}
 .ac-item:hover,.ac-item.focused{background:var(--bg3)}
@@ -1061,268 +1064,101 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 <!-- ═══════ GUIDE ═══════ -->
 <div class="page" id="page-guide">
   <div class="page-hero">
-    <h1 data-sq="🎸 Udhëzues Teknik" data-en="🎸 Technical Guide">🎸 Udhëzues Teknik</h1>
-    <p data-sq="Si t'i përdorni materialet tona" data-en="How to use our materials">Si t'i përdorni materialet tona</p>
+    <h1 data-sq="📖 Udhëzues" data-en="📖 Guide">📖 Udhëzues</h1>
+    <p data-sq="Si të përdorni Adhurojmë Së Bashku" data-en="How to use Adhurojmë Së Bashku">Si të përdorni Adhurojmë Së Bashku</p>
   </div>
   <div class="guide-inner">
 
-    <!-- Intro -->
+    <!-- INTRO -->
     <div class="g-block" style="background:var(--blue-light);border-color:rgba(44,64,116,0.2)">
       <p style="font-size:14px;line-height:1.8;color:var(--text)"
-        data-sq="Ky seksion i shkurtër ju ndihmon të lundroni me lehtësi në arkivën tonë të këngëve të adhurimit."
-        data-en="This short section helps you navigate our worship song archive with ease.">
-        Ky seksion i shkurtër ju ndihmon të lundroni me lehtësi në arkivën tonë të këngëve të adhurimit.
+        data-sq="Adhurojmë Së Bashku është një arkivë këngësh adhurimi me akorde, tekste dhe PDF — falas për çdo ekip adhurimi shqipfolës. Ky udhëzues ju ndihmon ta përdorni me efikasitet."
+        data-en="Adhurojmë Së Bashku is a worship song archive with chords, lyrics and PDFs — free for every Albanian-speaking worship team. This guide helps you use it effectively.">
+        Adhurojmë Së Bashku është një arkivë këngësh adhurimi me akorde, tekste dhe PDF — falas për çdo ekip adhurimi shqipfolës. Ky udhëzues ju ndihmon ta përdorni me efikasitet.
       </p>
     </div>
 
-    <!-- 1. Bilingual Structure -->
+    <!-- 1. NAVIGATION -->
     <div class="g-block">
-      <div class="g-block-title" data-sq="1. Struktura Dygjuhëshe" data-en="1. Bilingual Structure">1. Struktura Dygjuhëshe</div>
-      <p data-sq="Të gjitha këngët tona janë të formatuara për të qenë sa më të qarta:" data-en="All our songs are formatted to be as clear as possible:">Të gjitha këngët tona janë të formatuara për të qenë sa më të qarta:</p>
-      <div style="margin:12px 0;display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
-          <span style="background:var(--blue);color:#fff;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px" data-sq="BOLD" data-en="BOLD">BOLD</span>
-          <span data-sq="Teksti në gjuhën shqipe (SemiBold, i theksuar)" data-en="Text in Albanian language (SemiBold, bold weight)">Teksti në gjuhën shqipe (SemiBold, i theksuar)</span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
-          <span style="background:var(--bg3);color:var(--text2);padding:2px 10px;border-radius:6px;font-size:11px;font-weight:500;flex-shrink:0;margin-top:2px;border:1px solid var(--border)" data-sq="NORMAL" data-en="NORMAL">NORMAL</span>
-          <span data-sq="Teksti në gjuhën origjinale — Anglisht, Spanjisht, Hebraisht, etj. (Regular)" data-en="Text in the original language — English, Spanish, Hebrew, etc. (Regular weight)">Teksti në gjuhën origjinale — Anglisht, Spanjisht, Hebraisht, etj. (Regular)</span>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px">
-          <span style="background:var(--gold-muted);color:var(--gold);padding:2px 10px;border-radius:6px;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">FONT</span>
-          <span data-sq="Fonti i përdorur: Monospace — për tekstin dhe akordet, duke siguruar pozicionim të saktë të akordeve mbi rrokjet." data-en="Font used: Monospace — for lyrics and chords, ensuring precise chord placement above syllables.">Fonti i përdorur: <strong>Monospace</strong> — për tekstin dhe akordet, duke siguruar pozicionim të saktë të akordeve mbi rrokjet.</span>
-        </div>
-      </div>
-      <div class="code-ex">
-        <div style="color:var(--red);font-weight:700;font-family:monospace;margin-bottom:2px">Dm      Gm</div>
-        <div style="font-family:monospace;font-weight:700;color:var(--text)">Dua të lavdëroj, Zotit t'i këndoj</div>
-        <div style="font-family:monospace;color:var(--text3);font-style:italic">(I will celebrate, sing unto the Lord)</div>
-      </div>
+      <div class="g-block-title" data-sq="1. 🧭 Navigimi" data-en="1. 🧭 Navigation">1. 🧭 Navigimi</div>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq="<strong>Home</strong> — Faqja kryesore me këngët e reja, të preferuarat dhe statistikat." data-en="<strong>Home</strong> — Main page with new songs, favorites and stats."><strong>Home</strong> — Faqja kryesore me këngët e reja, të preferuarat dhe statistikat.</li>
+        <li data-sq="<strong>Songs</strong> — Lista e plotë. Filtro sipas artistit, tonalitetit, instrumentit ose BPM." data-en="<strong>Songs</strong> — Full library. Filter by artist, key, instrument or BPM."><strong>Songs</strong> — Lista e plotë. Filtro sipas artistit, tonalitetit, instrumentit ose BPM.</li>
+        <li data-sq="<strong>Search</strong> — Kërko sipas titullit, artistit ose fjalëve brenda lyrics. Shtypni Enter për rezultate të plota." data-en="<strong>Search</strong> — Search by title, artist or words inside lyrics. Press Enter for full results."><strong>Search</strong> — Kërko sipas titullit, artistit ose fjalëve brenda lyrics.</li>
+        <li data-sq="<strong>← →</strong> (tastiera) — Kalo midis këngëve kur je në faqen e një këngë." data-en="<strong>← →</strong> (keyboard) — Navigate between songs when on a song page."><strong>← →</strong> (tastiera) — Kalo midis këngëve.</li>
+        <li data-sq="<strong>SQ / EN</strong> — Ndrysho gjuhën e faqes në çdo moment." data-en="<strong>SQ / EN</strong> — Switch the page language at any time."><strong>SQ / EN</strong> — Ndrysho gjuhën e faqes.</li>
+      </ul>
     </div>
 
-    <!-- 2. Chords & Positioning -->
+    <!-- 2. SONG PAGE -->
     <div class="g-block">
-      <div class="g-block-title" data-sq="2. Akordet dhe Pozicionimi" data-en="2. Chords and Positioning">2. Akordet dhe Pozicionimi</div>
-      <p data-sq="Akordet janë vendosur saktësisht mbi rrokjen ku ndryshon harmonia. Ne përdorim shënimin standard ndërkombëtar, jo notat e zakonshme (Do, Re, Mi):" data-en="Chords are placed precisely above the syllable where the harmony changes. We use international standard notation, not solfège (Do, Re, Mi):">Akordet janë vendosur saktësisht mbi rrokjen ku ndryshon harmonia. Ne përdorim shënimin standard ndërkombëtar, jo notat e zakonshme (Do, Re, Mi):</p>
-      <div class="code-ex" style="margin-top:10px">
-        <span style="font-weight:700;color:var(--blue-mid);font-family:monospace;letter-spacing:.1em;font-size:15px">A &nbsp; B &nbsp; C &nbsp; D &nbsp; E &nbsp; F &nbsp; G</span><br>
-        <span style="color:var(--text3);font-size:12px" data-sq="(Në vend të: Do, Re, Mi, Fa, Sol, La, Si)" data-en="(Instead of: Do, Re, Mi, Fa, Sol, La, Si)">(Në vend të: Do, Re, Mi, Fa, Sol, La, Si)</span>
-      </div>
-      <p style="margin-top:12px;font-size:13px" data-sq="Çdo akord mund të ketë variacione si: m (minore), maj7, sus4, dim, etj. — të gjitha sipas shënimit standard." data-en="Each chord may have variations such as: m (minor), maj7, sus4, dim, etc. — all in standard notation.">Çdo akord mund të ketë variacione si: <strong>m</strong> (minore), <strong>maj7</strong>, <strong>sus4</strong>, <strong>dim</strong> — të gjitha sipas shënimit standard.</p>
+      <div class="g-block-title" data-sq="2. 🎵 Faqja e Këngës" data-en="2. 🎵 Song Page">2. 🎵 Faqja e Këngës</div>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq="<strong>Transpose −/+</strong> — Ndrysho tonalitetin. Ruan tonalitetin e zgjedhur për herën tjetër." data-en="<strong>Transpose −/+</strong> — Change key. Saves your chosen key for next time."><strong>Transpose −/+</strong> — Ndrysho tonalitetin. Ruhet automatikisht.</li>
+        <li data-sq="<strong>🎸 Guitar / 🎹 Piano</strong> — Kalo midis akordet e Guitar dhe Piano." data-en="<strong>🎸 Guitar / 🎹 Piano</strong> — Switch between Guitar and Piano chords."><strong>🎸 / 🎹</strong> — Kalo midis Guitar dhe Piano.</li>
+        <li data-sq="<strong>Capo</strong> — Nëse shfaqet baneri i verdhë 🎸, vendose capo-n në fretin e treguar para se të fillosh." data-en="<strong>Capo</strong> — If the gold 🎸 banner appears, place capo at the shown fret before playing."><strong>Capo</strong> — Vendose capo-n kur shfaqet baneri i verdhë.</li>
+        <li data-sq="<strong>Klik mbi akord</strong> — Shfaqet diagrami i dorës. Kalo Guitar ↔ Piano. Për akorde alternative (Em/Am) përdor shigjetat ‹ ›." data-en="<strong>Click a chord</strong> — Shows fingering diagram. Switch Guitar ↔ Piano. For alternative chords (Em/Am) use ‹ › arrows."><strong>Klik mbi akord</strong> — Diagrami i dorës. ‹ › për alternativa.</li>
+        <li data-sq="<strong>📋 Kopjo</strong> — Kopjo lyrics pa akorde: vetëm Shqip, vetëm Anglisht, ose të dyja." data-en="<strong>📋 Copy</strong> — Copy clean lyrics: Albanian only, English only, or both."><strong>📋 Kopjo</strong> — Kopjo lyrics (pa akorde) për slides.</li>
+        <li data-sq="<strong>📤 Ndaj</strong> — Ndaj këngën me link, WhatsApp, ose QR code." data-en="<strong>📤 Share</strong> — Share the song via link, WhatsApp, or QR code."><strong>📤 Ndaj</strong> — Share me link, WhatsApp, QR.</li>
+        <li data-sq="<strong>⭐ Vlerëso</strong> — Lër vlerësimin tënd (ruhet lokalisht)." data-en="<strong>⭐ Rate</strong> — Leave your rating (saved locally)."><strong>⭐</strong> — Vlerëso këngën.</li>
+        <li data-sq="<strong>⚠️ Raporto</strong> — Raporto gabime në akorde ose tekst." data-en="<strong>⚠️ Report</strong> — Report errors in chords or lyrics."><strong>⚠️</strong> — Raporto gabime.</li>
+      </ul>
     </div>
 
-    <!-- 3. Capo -->
+    <!-- 3. PERFORMANCE MODE -->
     <div class="g-block">
-      <div class="g-block-title" data-sq="3. Këshilla për Kitaristët (Kapo)" data-en="3. Tips for Guitarists (Capo)">3. Këshilla për Kitaristët (Kapo)</div>
-      <p data-sq="Për të thjeshtuar ekzekutimin e këngëve në tonalitete të vështira (si Cm, Ab ose Eb), sugjerojmë përdorimin e Kapos:" data-en="To simplify playing songs in difficult keys (like Cm, Ab or Eb), we suggest using a Capo:">Për të thjeshtuar ekzekutimin e këngëve në tonalitete të vështira (si Cm, Ab ose Eb), sugjerojmë përdorimin e Kapos:</p>
-      <div class="code-ex" style="margin-top:10px;line-height:2.2">
-        <div><strong style="color:var(--gold)">Ab</strong> → Kapo Fret 1 → luaj pozicionet e <strong style="color:var(--blue-mid)">G</strong></div>
-        <div><strong style="color:var(--gold)">Eb</strong> → Kapo Fret 1 → luaj pozicionet e <strong style="color:var(--blue-mid)">D</strong></div>
-        <div><strong style="color:var(--gold)">Bb</strong> → Kapo Fret 3 → luaj pozicionet e <strong style="color:var(--blue-mid)">G</strong></div>
-        <div><strong style="color:var(--gold)">F</strong> &nbsp;→ Kapo Fret 5 → luaj pozicionet e <strong style="color:var(--blue-mid)">C</strong></div>
-        <div><strong style="color:var(--gold)">Cm</strong> → Kapo Fret 3 → luaj pozicionet e <strong style="color:var(--blue-mid)">Am</strong></div>
-      </div>
-      <p style="margin-top:10px;font-size:13px;color:var(--text2)"
-        data-sq="Ky proces ndihmon që kënga të tingëllojë e plotë pa pasur nevojë për akorde të ndërlikuara barre."
-        data-en="This process helps the song sound full without needing complex barre chords.">
-        Ky proces ndihmon që kënga të tingëllojë e plotë pa pasur nevojë për akorde të ndërlikuara barre.
+      <div class="g-block-title" data-sq="3. 🎤 Performance Mode" data-en="3. 🎤 Performance Mode">3. 🎤 Performance Mode</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px"
+        data-sq="Modaliteti i plotë për ekipin e adhurimit gjatë shërbimit live. Hapeni nga butoni ▶ në Setlist."
+        data-en="Full-screen mode for the worship team during live service. Open it from the ▶ button in Setlist.">
+        Modaliteti i plotë për ekipin gjatë shërbimit live. Hapeni nga Setlist → ▶.
       </p>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq="<strong>▶ Auto</strong> — AutoScroll bazuar në BPM. Lyrics lëvizin automatikisht." data-en="<strong>▶ Auto</strong> — BPM-based autoscroll. Lyrics scroll automatically."><strong>▶ Auto</strong> — AutoScroll bazuar në BPM.</li>
+        <li data-sq="<strong>♩ TAP</strong> — Tap me ritmin e muzikës për të llogaritur BPM-in live." data-en="<strong>♩ TAP</strong> — Tap to the beat to calculate BPM live."><strong>♩ TAP</strong> — Tap BPM live.</li>
+        <li data-sq="<strong>🎼 Akorde</strong> — Shfaq/fshih akorde brenda lyrics." data-en="<strong>🎼 Chords</strong> — Show/hide chords inside lyrics."><strong>🎼</strong> — Shfaq/fshih akorde.</li>
+        <li data-sq="<strong>🌙 Dark / ⛶ Fullscreen</strong> — Dark mode dhe ekran i plotë." data-en="<strong>🌙 Dark / ⛶ Fullscreen</strong> — Dark mode and fullscreen."><strong>🌙 / ⛶</strong> — Dark mode dhe fullscreen.</li>
+        <li data-sq="<strong>🚨 Panic</strong> — Ekran bosh i zi (shortcut: P)." data-en="<strong>🚨 Panic</strong> — Blank black screen (shortcut: P)."><strong>🚨</strong> — Ekran bosh (P).</li>
+        <li data-sq="<strong>Shortcuts tastiere:</strong> Hap/Mbyll akorde (K), Panic (P), Fullscreen (F), Dark (D), Ndalim autoscroll (Space)" data-en="<strong>Keyboard shortcuts:</strong> Chords (K), Panic (P), Fullscreen (F), Dark (D), Stop scroll (Space)"><strong>Tastierë:</strong> K=akorde, P=panic, F=fullscreen, D=dark, Space=ndalim</li>
+      </ul>
     </div>
 
-    <!-- 4. Structure Symbols -->
+    <!-- 4. SETLIST -->
     <div class="g-block">
-      <div class="g-block-title" data-sq="4. Simbolet e Strukturës" data-en="4. Structure Symbols">4. Simbolet e Strukturës</div>
-      <p data-sq="Për të kursyer hapësirë në PDF, përdorim shkurtesat standarde:" data-en="To save space in the PDF, we use standard abbreviations:">Për të kursyer hapësirë në PDF, përdorim shkurtesat standarde:</p>
-      <div style="margin-top:14px;display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;font-size:13px">
-        <span style="background:var(--blue);color:#fff;padding:3px 10px;border-radius:7px;font-weight:700;font-family:monospace;font-size:12px;justify-self:start">V1 / V2</span>
-        <span data-sq="Strofa 1, Strofa 2 (Verse)" data-en="Verse 1, Verse 2">Strofa 1, Strofa 2 (Verse)</span>
-        <span style="background:var(--red);color:#fff;padding:3px 10px;border-radius:7px;font-weight:700;font-family:monospace;font-size:12px;justify-self:start">CH</span>
-        <span data-sq="Refreni (Chorus)" data-en="Chorus">Refreni (Chorus)</span>
-        <span style="background:#5a4a8a;color:#fff;padding:3px 10px;border-radius:7px;font-weight:700;font-family:monospace;font-size:12px;justify-self:start">BR</span>
-        <span data-sq="Ura e këngës (Bridge)" data-en="Bridge">Ura e këngës (Bridge)</span>
-        <span style="background:#2a6a3a;color:#fff;padding:3px 10px;border-radius:7px;font-weight:700;font-family:monospace;font-size:12px;justify-self:start">PR</span>
-        <span data-sq="Para-Refreni (Pre-Chorus)" data-en="Pre-Chorus">Para-Refreni (Pre-Chorus)</span>
-        <span style="background:var(--text3);color:#fff;padding:3px 10px;border-radius:7px;font-weight:700;font-family:monospace;font-size:12px;justify-self:start">INST</span>
-        <span data-sq="Pjesë instrumentale (Instrumental)" data-en="Instrumental section">Pjesë instrumentale (Instrumental)</span>
-      </div>
+      <div class="g-block-title" data-sq="4. 📋 Setlist" data-en="4. 📋 Setlist">4. 📋 Setlist</div>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq="Shto këngë nga faqja e këngës ose nga search." data-en="Add songs from the song page or from search.">Shto këngë nga faqja e këngës ose search.</li>
+        <li data-sq="Rirendit me drag &amp; drop." data-en="Reorder with drag &amp; drop.">Rirendit me drag &amp; drop.</li>
+        <li data-sq="<strong>📤 Kopjo Tekst</strong> — Kopjo setlistën si tekst." data-en="<strong>📤 Copy Text</strong> — Copy setlist as text."><strong>📤 Kopjo Tekst</strong> — Kopjo si tekst.</li>
+        <li data-sq="<strong>🔗 Kopjo Link</strong> — Ndaj setlistën me ekipin tuaj me një link. Tjetri hap linkun dhe ngarkon setlistën automatikisht." data-en="<strong>🔗 Copy Link</strong> — Share setlist with your team. Opening the link loads it automatically."><strong>🔗 Kopjo Link</strong> — Ndaj me ekipin (link automatik).</li>
+      </ul>
     </div>
 
-    <!-- 5. Transpose -->
+    <!-- 5. PWA + OFFLINE -->
     <div class="g-block">
-      <div class="g-block-title" data-sq="5. Transpose Online" data-en="5. Online Transpose">5. Transpose Online</div>
-      <p data-sq="Çdo faqe këngësh ka butonin Transpose (+ / −). Klikoni për të ndryshuar tonalitetin direkt në ekran, pa ndryshuar PDF-in origjinal." data-en="Every song page has a Transpose button (+ / −). Click to change the key directly on screen, without altering the original PDF.">Çdo faqe këngësh ka butonin <strong>Transpose (+ / −)</strong>. Klikoni për të ndryshuar tonalitetin direkt në ekran, pa ndryshuar PDF-in origjinal.</p>
-      <div class="code-ex" style="margin-top:10px;line-height:2">
-        <span data-sq="Shembull: Dm + 2 hapa → Em" data-en="Example: Dm + 2 steps → Em">Dm + 2 hapa → <strong style="color:var(--blue-mid)">Em</strong></span><br>
-        <span style="color:var(--text3);font-size:12px" data-sq="Butoni ↺ kthen tonalitetin origjinal." data-en="The ↺ button resets to the original key.">Butoni ↺ kthen tonalitetin origjinal.</span>
-      </div>
+      <div class="g-block-title" data-sq="5. 📱 Instalo &amp; Offline" data-en="5. 📱 Install &amp; Offline">5. 📱 Instalo &amp; Offline</div>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq='Kur shfaqet baneri "Instalo si App" klikoni Instalo për ta pasur si app në celular/desktop pa browser.' data-en='When the "Install as App" banner appears, click Install to have it as an app on mobile/desktop.'>Klikoni "Instalo" kur shfaqet baneri për ta pasur si app.</li>
+        <li data-sq="Pas instalimit faqja funksionon pjesërisht edhe offline — këngët e hapura ruhen në cache." data-en="After install the page works partially offline — opened songs are cached.">Funksionon pjesërisht offline pas instalimit.</li>
+      </ul>
     </div>
 
-    <!-- 6. Capo Calculator -->
-    <div class="g-block" style="border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
-      <div class="g-block-title" data-sq="6. 🎸 Kalkulatori i Kapos" data-en="6. 🎸 Capo Calculator">6. 🎸 Kalkulatori i Kapos</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px" data-sq="Fut tonalitetin e këngës dhe kapon — kalkulatori tregon çfarë akordesh duhet të luash." data-en="Enter the song key and capo — the calculator shows what chords you need to play.">Fut tonalitetin e këngës dhe kapon — kalkulatori tregon çfarë akordesh duhet të luash.</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Tonaliteti i Këngës</div>
-          <select id="capoCalcKey" onchange="calcCapo()" class="form-select" style="min-width:100px">
-            <option>Am</option><option>Bbm</option><option>Bm</option><option>Cm</option><option>C#m</option><option>Dm</option><option>Ebm</option><option>Em</option><option>Fm</option><option>F#m</option><option>Gm</option><option>G#m</option>
-            <option>A</option><option>Bb</option><option>B</option><option>C</option><option>C#</option><option>Db</option><option>D</option><option>Eb</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>Ab</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">Capo Fret</div>
-          <select id="capoCalcFret" onchange="calcCapo()" class="form-select" style="min-width:100px">
-            <option value="1">Capo 1</option><option value="2">Capo 2</option><option value="3">Capo 3</option>
-            <option value="4">Capo 4</option><option value="5">Capo 5</option><option value="6">Capo 6</option>
-            <option value="7">Capo 7</option><option value="8">Capo 8</option><option value="9">Capo 9</option>
-            <option value="10">Capo 10</option><option value="11">Capo 11</option><option value="12">Capo 12</option>
-          </select>
-        </div>
-      </div>
-      <div id="capoCalcResult" style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px 20px;display:none">
-        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Rezultati:</div>
-        <div id="capoCalcText" style="font-size:15px;font-weight:700;color:var(--text)"></div>
-      </div>
-      <button onclick="calcCapo()" class="btn btn-primary btn-sm" style="margin-top:12px">🎸 Llogarit</button>
-    </div>
-
-    <!-- 7. PDF Guide -->
-    <div class="g-block" style="border-color:rgba(201,151,58,0.4);background:linear-gradient(135deg,var(--gold-muted),transparent)">
-      <div class="g-block-title" data-sq="7. 📄 Si Funksionojnë PDF-ët" data-en="7. 📄 How the PDFs Work">7. 📄 Si Funksionojnë PDF-ët</div>
-
-    <!-- 8. Performance Mode -->
-    <div class="g-block" style="border-color:rgba(139,26,26,0.3);background:linear-gradient(135deg,var(--red-muted),transparent)">
-      <div class="g-block-title" data-sq="8. 🎤 Performance Mode — Mënyra e Shërbimit" data-en="8. 🎤 Performance Mode — Service Mode">8. 🎤 Performance Mode</div>
-      <p style="font-size:13.5px;color:var(--text2);margin-bottom:16px" data-sq="Performance Mode është mënyra e plotë për shërbimin e adhurimit — shfaq lyrics të mëdha, akorde, dhe të gjitha kontrollat e nevojshme." data-en="Performance Mode is the full worship service mode — shows large lyrics, chords, and all necessary controls.">Performance Mode hapet nga Setlista → 🎤 Fillo Shërbimin</p>
-      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text2)">
-        <div><strong style="color:var(--text)">🎵 Kontrolla kryesore:</strong> Transpose (−/+), Instrument (🎸/🎹), Font Size (A slider ↺), Scroll Speed (🐢🐇 slider ↺), Chord Diagrams (🎼), Metronome (🥁)</div>
-        <div><strong style="color:var(--text)">📋 Seksionet:</strong> Shto kopje të V1/CH/BR duke klikuar butonin "+". Kliko emrin e seksionit për të shkuar direkt (Section Jump)</div>
-        <div><strong style="color:var(--text)">🌙 Dark Mode:</strong> Butoni 🌙 → background i errët për skenë. Tasti <kbd style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">D</kbd></div>
-        <div><strong style="color:var(--text)">⛶ Fullscreen:</strong> Butoni ⛶ ose tasti <kbd style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">F</kbd> — ideal për tableta</div>
-        <div><strong style="color:var(--text)">▶ Auto-scroll:</strong> Ndjek BPM-in e këngës automatikisht. Space = start/stop</div>
-        <div><strong style="color:var(--text)">⌨️ Keyboard shortcuts:</strong> ← → navigim, Space = scroll, F = fullscreen, D = dark, Esc = dil</div>
-        <div><strong style="color:var(--text)">📱 Mobile:</strong> Swipe majtas/djathtas për këngën tjetër/mëparshme</div>
-        <div><strong style="color:var(--text)">🌐 Gjuha:</strong> SQ/EN ndryshon lyrics dhe UI brenda Performance Mode</div>
-      </div>
-    </div>
-      <p style="font-size:13.5px;color:var(--text2);margin-bottom:18px"
-        data-sq="Çdo këngë mund të ketë deri në dy versione PDF — një për Piano dhe një për Kitarë. Ja si të zgjidhni atë që ju nevojitet:"
-        data-en="Each song can have up to two PDF versions — one for Piano and one for Guitar. Here's how to choose the right one for you:">
-        Çdo këngë mund të ketë deri në dy versione PDF — një për Piano dhe një për Kitarë. Ja si të zgjidhni atë që ju nevojitet:
-      </p>
-
-      <!-- Piano PDF -->
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:24px">🎹</span>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:var(--text)" data-sq="PDF Piano — Akordet Origjinale" data-en="Piano PDF — Original Chords">PDF Piano — Akordet Origjinale</div>
-            <div style="font-size:11px;color:var(--text3)" data-sq="Versioni i plotë harmonik" data-en="Full harmonic version">Versioni i plotë harmonik</div>
-          </div>
-        </div>
-        <ul style="font-size:13px;color:var(--text2);line-height:2;padding-left:18px;margin:0">
-          <li data-sq="Përmban akordet origjinale të këngës — ashtu si janë shkruar nga autori." data-en="Contains the original chords of the song — exactly as written by the author.">Përmban akordet origjinale të këngës — ashtu si janë shkruar nga autori.</li>
-          <li data-sq="Ideal për pianistë dhe muzikantë me eksperiencë që njohin akordet e plota." data-en="Ideal for pianists and experienced musicians who know full chords.">Ideal për pianistë dhe muzikantë me eksperiencë që njohin akordet e plota.</li>
-          <li data-sq="Kitaristët e avancuar mund ta përdorin gjithashtu — nëse janë të aftë të luajnë barre chords." data-en="Advanced guitarists can also use it — if they are able to play barre chords.">Kitaristët e avancuar mund ta përdorin gjithashtu — nëse janë të aftë të luajnë barre chords.</li>
-        </ul>
-      </div>
-
-      <!-- Guitar PDF -->
-      <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span style="font-size:24px">🎸</span>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:var(--text)" data-sq="PDF Kitarë — Versioni Easy (me Capo)" data-en="Guitar PDF — Easy Version (with Capo)">PDF Kitarë — Versioni Easy (me Capo)</div>
-            <div style="font-size:11px;color:var(--text3)" data-sq="Versioni i thjeshtësuar me pozicionin e Capos" data-en="Simplified version with Capo position">Versioni i thjeshtësuar me pozicionin e Capos</div>
-          </div>
-        </div>
-        <ul style="font-size:13px;color:var(--text2);line-height:2;padding-left:18px;margin:0">
-          <li data-sq="Përmban akordet e thjeshta (open chords) që luhen me Capo në fret të caktuar." data-en="Contains simple open chords played with a Capo at a specific fret.">Përmban akordet e thjeshta (open chords) që luhen me Capo në fret të caktuar.</li>
-          <li data-sq="Brenda PDF-it është shënuar pozicioni i Capos — p.sh. 🎸 Capo Fret 2." data-en="The Capo position is marked inside the PDF — e.g. 🎸 Capo Fret 2.">Brenda PDF-it është shënuar pozicioni i Capos — p.sh. <strong>🎸 Capo Fret 2</strong>.</li>
-          <li data-sq="Ideal për kitaristë fillestarë dhe të mesëm që duan teknika më të thjeshta." data-en="Ideal for beginner and intermediate guitarists who want simpler techniques.">Ideal për kitaristë fillestarë dhe të mesëm që duan teknika më të thjeshta.</li>
-        </ul>
-      </div>
-
-      <!-- Important note -->
-      <div style="background:rgba(139,26,26,0.08);border:1.5px solid rgba(139,26,26,0.25);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:20px;flex-shrink:0">⚠️</span>
-        <div style="font-size:13px;color:var(--text2);line-height:1.8">
-          <strong style="color:var(--red);display:block;margin-bottom:4px" data-sq="Shënim i Rëndësishëm" data-en="Important Note">Shënim i Rëndësishëm</strong>
-          <span data-sq="Nëse kënga ka vetëm PDF Piano, kitaristët mund ta luajnë gjithsesi — akordet janë të thjeshta dhe nuk kërkojnë Capo. Nëse ka edhe PDF Kitarë, do të thotë se versioni origjinal ka akorde të vështira — dhe ky PDF është versioni i thjeshtësuar me Capo për ju." data-en="If a song only has a Piano PDF, guitarists can still play it — the chords are simple and don't require a Capo. If there is also a Guitar PDF, it means the original version has difficult chords — and this PDF is the simplified Capo version made for you.">
-            Nëse kënga ka vetëm <strong>PDF Piano</strong>, kitaristët mund ta luajnë gjithsesi — akordet janë të thjeshta dhe nuk kërkojnë Capo.<br>
-            Nëse ka edhe <strong>PDF Kitarë</strong>, do të thotë se versioni origjinal ka akorde të vështira — dhe ky PDF është versioni i thjeshtësuar me Capo për ju.
-          </span>
-        </div>
-      </div>
+    <!-- 6. TIPS -->
+    <div class="g-block" style="background:var(--blue-light);border-color:rgba(44,64,116,0.2)">
+      <div class="g-block-title" data-sq="6. 💡 Tips të shpejta" data-en="6. 💡 Quick Tips">6. 💡 Tips të shpejta</div>
+      <ul style="font-size:13px;line-height:2;color:var(--text2);padding-left:18px">
+        <li data-sq='Hover mbi çdo buton — shfaqet etiketa shpjeguese.' data-en='Hover over any button — an explanatory label appears.'>Hover mbi butona — shfaqet etiketa.</li>
+        <li data-sq="Këngët kanë URL unike — mund t'i share-osh direkt." data-en="Songs have unique URLs — share them directly.">Këngët kanë URL unike — share-o direkt.</li>
+        <li data-sq="Tonaliteti i transpozuar ruhet — hera tjetër kënga hapet me tonalitetin tënd." data-en="Transposed key is saved — next time the song opens with your key.">Transpozimi ruhet automatikisht per këngë.</li>
+        <li data-sq="⭐ Këngët e preferuara shfaqen në Home." data-en="⭐ Favorite songs appear on Home.">⭐ Preferuarat shfaqen në Home.</li>
+        <li data-sq="Kodi burim: github.com/UncleKraken/-Adhurojm-Se-Bashku" data-en="Source code: github.com/UncleKraken/-Adhurojm-Se-Bashku">Kodi: github.com/UncleKraken/-Adhurojm-Se-Bashku</li>
+      </ul>
     </div>
 
   </div>
-</div>
-
-<!-- ═══════ CONTACT ═══════ -->
-<div class="page" id="page-contact">
-  <div class="page-hero">
-    <h1 data-sq="Kontakt" data-en="Contact">Kontakt</h1>
-    <p data-sq="Na shkruani për sugjerime ose bashkëpunim" data-en="Write to us for suggestions or collaboration">Na shkruani për sugjerime ose bashkëpunim</p>
-  </div>
-  <section class="section">
-    <div class="section-inner" style="max-width:720px">
-      <!-- Social Links -->
-      <div class="g-block" style="margin-bottom:24px">
-        <div class="g-block-title" data-sq="📲 Na Gjeni Këtu" data-en="📲 Find Us Here">📲 Na Gjeni Këtu</div>
-        <div class="social-grid" id="socialLinksDisplay"></div>
-      </div>
-      <!-- Donations -->
-      <div class="g-block" style="margin-bottom:24px;background:var(--gold-muted);border-color:rgba(201,151,58,0.3)" id="donationsBlock">
-        <div class="g-block-title" data-sq="💝 Mbështetni Punën Tonë" data-en="💝 Support Our Work">💝 Mbështetni Punën Tonë</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:14px" data-sq="Nëse kjo faqe ju ka ndihmuar, mund të mbështetni punën tonë me një donacion vullnetar." data-en="If this website has helped you, you can support our work with a voluntary donation.">Nëse kjo faqe ju ka ndihmuar, mund të mbështetni punën tonë me një donacion vullnetar.</p>
-        <div class="social-grid" id="donationsDisplay"></div>
-      </div>
-      <!-- References -->
-      <div class="g-block" style="margin-bottom:24px" id="referencesBlock">
-        <div class="g-block-title" data-sq="🌐 Referenca & Burime" data-en="🌐 References & Resources">🌐 Referenca & Burime</div>
-        <div class="social-grid" id="referencesDisplay"></div>
-      </div>
-      <!-- Song Request -->
-      <div class="g-block" style="margin-bottom:24px;border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
-        <div class="g-block-title" data-sq="🎵 Kërko një Këngë" data-en="🎵 Request a Song">🎵 Kërko një Këngë</div>
-        <p style="margin-bottom:14px;font-size:13px;color:var(--text2)" data-sq="Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin." data-en="If you'd like us to add a specific song, let us know the title and artist.">Nëse dëshiron të shtojmë një këngë specifike, na trego titullin dhe artistin.</p>
-        <div style="display:flex;flex-direction:column;gap:9px">
-          <input type="text" class="form-input" id="reqName" placeholder="Emri juaj"/>
-          <input type="text" class="form-input" id="reqSongTitle" placeholder="Titulli i këngës (shqip ose anglisht)"/>
-          <input type="text" class="form-input" id="reqArtist" placeholder="Artisti / Banda"/>
-          <input type="text" class="form-input" id="reqYoutube" placeholder="Linku YouTube (opsionale)"/>
-          <button class="btn btn-primary btn-sm" style="align-self:flex-start" onclick="sendSongRequest()">🎵 Dërgo Kërkesën →</button>
-        </div>
-      </div>
-      <!-- Contact Form -->
-      <div class="g-block">
-        <div class="g-block-title" data-sq="📬 Na Kontaktoni" data-en="📬 Get In Touch">📬 Na Kontaktoni</div>
-        <p style="margin-bottom:14px;font-size:13px;color:var(--text2)" data-sq="Ky projekt është i hapur për sugjerime, korrigjime akordesh ose kontribute me këngë të reja." data-en="This project is open to suggestions, chord corrections, or contributions with new songs.">Ky projekt është i hapur për sugjerime, korrigjime akordesh ose kontribute me këngë të reja.</p>
-        <div style="display:flex;flex-direction:column;gap:9px">
-          <input type="text" class="form-input" id="contactName" data-placeholder-sq="Emri juaj" data-placeholder-en="Your name" placeholder="Emri juaj"/>
-          <input type="email" class="form-input" id="contactEmail" data-placeholder-sq="Email-i juaj" data-placeholder-en="Your email" placeholder="Email-i juaj"/>
-          <textarea class="form-textarea" id="contactMessage" data-placeholder-sq="Mesazhi juaj..." data-placeholder-en="Your message..." placeholder="Mesazhi juaj..."></textarea>
-          <button class="btn btn-primary" id="contactSendBtn" style="align-self:flex-start" onclick="sendContactEmail()">
-            <span data-sq="Dërgo →" data-en="Send →">Dërgo →</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
 </div>
 
 <!-- ═══════ SHARE MODAL ═══════ -->
-<!-- Admin Song Preview Modal -->
-<div id="songPreviewModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:20px" onclick="if(event.target===this)closeSongPreview()">
-  <div style="background:var(--bg);border-radius:16px;max-width:900px;margin:0 auto;position:relative">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
-      <span style="font-size:15px;font-weight:700;color:var(--text);font-family:'Poppins',sans-serif">👁 Song Preview</span>
-      <button onclick="closeSongPreview()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
-    </div>
-    <div id="songPreviewContent" style="padding:20px"></div>
-  </div>
-</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <div id="shareModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeShareModal()">
@@ -2000,6 +1836,7 @@ function toggleCapoField() {
 // Increments a view or download counter for a song via a Supabase RPC call.
 // Fires and forgets — if it fails, the song still opens normally.
 async function trackStat(songId, type) {
+  invalidateStatsCache();
   if(window._adminOpen) return; // don't count admin views
   const sb = getSB();
   if (!sb || !songId) return;
@@ -2008,16 +1845,25 @@ async function trackStat(songId, type) {
   } catch(e) {}
 }
 
-async function loadStats() {
-  const sb = getSB();
-  if (!sb) return {};
-  try {
-    const { data } = await sb.from('song_stats').select('song_id, views, downloads');
-    const result = {};
-    (data || []).forEach(r => result[r.song_id] = { views: r.views || 0, downloads: r.downloads || 0 });
-    return result;
-  } catch(e) { return {}; }
+let _statsCache=null,_statsFetching=null,_statsCacheTime=0;
+const STATS_TTL=60000;
+async function loadStats(){
+  const sb=getSB(); if(!sb) return {};
+  if(_statsCache&&Date.now()-_statsCacheTime<STATS_TTL) return _statsCache;
+  if(_statsFetching) return _statsFetching;
+  _statsFetching=(async()=>{
+    try{
+      const{data,error}=await sb.from('song_stats').select('song_id, views, downloads');
+      if(error){console.warn('[stats]',error.message);return _statsCache||{};}
+      const result={};
+      (data||[]).forEach(r=>result[r.song_id]={views:r.views||0,downloads:r.downloads||0});
+      _statsCache=result; _statsCacheTime=Date.now(); return result;
+    }catch(e){console.warn('[stats] failed:',e.message);return _statsCache||{};}
+    finally{_statsFetching=null;}
+  })();
+  return _statsFetching;
 }
+function invalidateStatsCache(){_statsCache=null;_statsCacheTime=0;}
 
 function toEmbedUrl(url) {
   if (!url) return '';
@@ -2301,19 +2147,21 @@ function calcCapo(){
 }
 
 async function updateHeroStats(){
-  const songCountEl = document.getElementById('heroSongCount');
-  const viewEl = document.getElementById('heroViewCount');
-  const dlEl = document.getElementById('heroDownloadCount');
+  const songCountEl=document.getElementById('heroSongCount');
+  const viewEl=document.getElementById('heroViewCount');
+  const dlEl=document.getElementById('heroDownloadCount');
   if(!songCountEl) return;
-  const sq = currentLang === 'sq';
-  songCountEl.textContent = `${SONGS.length} ${sq?'këngë':'songs'}`;
-  try {
-    const STATS = await loadStats();
-    const totalViews = Object.values(STATS).reduce((s,r)=>s+(r.views||0),0);
-    const totalDl = Object.values(STATS).reduce((s,r)=>s+(r.downloads||0),0);
-    if(viewEl) viewEl.textContent = `${totalViews} ${sq?'shikime':'views'}`;
-    if(dlEl) dlEl.textContent = `${totalDl} ${sq?'shkarkime':'downloads'}`;
-  } catch(e){}
+  const sq=currentLang==='sq';
+  songCountEl.textContent=`${SONGS.length} ${sq?'këngë':'songs'}`;
+  if(viewEl&&!viewEl.textContent.match(/[0-9]/)) viewEl.textContent=sq?'... shikime':'... views';
+  if(dlEl&&!dlEl.textContent.match(/[0-9]/)) dlEl.textContent=sq?'... shkarkime':'... downloads';
+  try{
+    const STATS=await loadStats();
+    const totalViews=Object.values(STATS).reduce((s,r)=>s+(r.views||0),0);
+    const totalDl=Object.values(STATS).reduce((s,r)=>s+(r.downloads||0),0);
+    if(viewEl) viewEl.textContent=`${totalViews.toLocaleString()} ${sq?'shikime':'views'}`;
+    if(dlEl) dlEl.textContent=`${totalDl.toLocaleString()} ${sq?'shkarkime':'downloads'}`;
+  }catch(e){console.warn('[stats] hero update:',e);}
 }
 
 function openShareModal(){
@@ -2646,7 +2494,7 @@ async function loadPDFsAsync(){
     if(!result[row.song_id]) result[row.song_id]={};
     result[row.song_id][row.instrument] = row.pdf_url;
   });
-  try { localStorage.setItem('aa_pdfs_cache', JSON.stringify(result)); } catch(e){ console.warn('[cache] PDF cache write failed:', e.message); }
+  try { localStorage.setItem('aa_pdfs_cache', JSON.stringify(result)); } catch(e){}
   return result;
 }
 async function upsertSongAsync(song) {
@@ -3400,14 +3248,15 @@ var RV_MAX = 10; // max songs to keep in history
 // Fetches fresh data from Supabase if available, falls back to local SONGS array.
 // Tracks a view stat and adds to recently viewed history.
 async function openSong(id){
-  // Update URL hash so this song can be shared/bookmarked directly
-  history.pushState(null, '', '#song=' + id);
   currentSong=SONGS.find(s=>s.id===id || Number(s.id)===Number(id));
   if(!currentSong) return;
   addRecentlyViewed(id);
   updateSongUrl(currentSong);
   currentInst = currentSong.instruments?.[0] || 'Guitar';
-  transposeSteps=0; // will be overridden in renderSong if saved value exists
+  transposeSteps=0;
+  // Restore saved transpose for this song
+  var _savedTs=localStorage.getItem('aa_tp_'+id);
+  if(_savedTs!==null) transposeSteps=Number(_savedTs);
   // Only load PDFs if not already cached
   if(!PDFS || Object.keys(PDFS).length === 0){
     PDFS = await loadPDFsAsync();
@@ -3419,6 +3268,12 @@ async function openSong(id){
   trackStat(currentSong.id, 'view');
   const url = new URL(window.location.href);
   url.searchParams.set('song', currentSong.id);
+  // Add readable slug so shared links show the song title
+  const slug = currentSong.title.toLowerCase()
+    .replace(/ë/g,'e').replace(/ç/g,'c')
+    .replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-')
+    .replace(/^-|-$/g,'').slice(0,50);
+  if(slug) url.searchParams.set('slug', slug);
   window.history.pushState({songId: currentSong.id}, '', url.toString());
   updateMetaTags(currentSong);
 }
@@ -3469,7 +3324,7 @@ function getSongRating(songId){ try{ return JSON.parse(localStorage.getItem('aa_
 // Note: ratings stored in localStorage — personal to this device/browser
 
 function rateSong(songId, stars){
-  try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){ console.warn('[ratings] save failed:', e.message); }
+  try{ const r=JSON.parse(localStorage.getItem('aa_ratings')||'{}'); r[songId]=stars; localStorage.setItem('aa_ratings',JSON.stringify(r)); }catch(e){}
   renderSong(); showToast(''+stars+'/5 — Faleminderit!','success');
 }
 
@@ -3496,12 +3351,22 @@ async function submitReport(songId){
 // Renders the full song page: lyrics, chords, transpose controls, PDF badge,
 // similar songs, metronome button, share/report buttons, and star rating.
 // Called after openSong() resolves and whenever transpose changes.
+function updateCapoBanner(){
+  var old=document.getElementById('capoBanner'); if(old) old.remove();
+  if(!currentSong||!currentSong.capo||currentSong.capo<1||currentInst!=='Guitar') return;
+  var sq=currentLang==='sq';
+  var b=document.createElement('div'); b.id='capoBanner';
+  b.style.cssText='display:flex;align-items:center;gap:10px;background:rgba(240,192,64,0.1);border:1.5px solid var(--gold);border-radius:10px;padding:10px 16px;margin:10px 0;font-family:Poppins,sans-serif;font-size:13px';
+  b.innerHTML='<span style="font-size:20px;flex-shrink:0">🎸</span><span style="color:var(--text);line-height:1.5">'
+    +(sq?'<strong style="color:var(--gold)">Capo '+currentSong.capo+'</strong> — Vëre capo-n në freti e <strong>'+currentSong.capo+'</strong>-të para se të fillosh. Akordet janë shkruar me capo.'
+       :'<strong style="color:var(--gold)">Capo '+currentSong.capo+'</strong> — Place capo on fret <strong>'+currentSong.capo+'</strong> before playing. Chords are written with capo.')
+    +'</span>';
+  var lyricsArea=document.querySelector('#page-song .lyrics-section, #page-song .song-lyrics, #lyricsSection');
+  var songPage=document.getElementById('page-song');
+  if(lyricsArea&&lyricsArea.parentNode) lyricsArea.parentNode.insertBefore(b,lyricsArea);
+  else if(songPage) songPage.appendChild(b);
+}
 function renderSong(){
-  // Load saved transpose for this song (persisted in localStorage per song ID)
-  if(currentSong){
-    const saved = localStorage.getItem('aa_transpose_' + currentSong.id);
-    if(saved !== null && transposeSteps === 0) transposeSteps = Number(saved);
-  }
   const s=currentSong;
   const rawText=s.lyricsRaw?.[currentInst]||'';
   const sections=parseLyricsText(rawText);
@@ -3579,9 +3444,8 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
       ${instBtns}
       <div class="transpose-ctrl">
   ${`<span class='ctrl-label' style='margin-right:4px'>${t('transpose-label')}</span>`}
-        <button class="t-btn" onclick="doTranspose(-1)">−</button>
-        <span id="transposeBadge" style="display:none;align-items:center;gap:4px;background:var(--gold);color:#1a2a4a;border-radius:100px;font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer;font-family:'Poppins',sans-serif" onclick="resetTranspose()" title="Click to reset transpose">↺ <span id="transposeBadgeText"></span></span>
-      <span id="transposeDisplay">${transposeSteps===0?'Original':'+'+(transposeSteps>0?transposeSteps:transposeSteps)+' ('+dispKey+')'}</span>
+        <span id="transposeBadge" data-tip="Klik për reset" onclick="resetTranspose()" style="display:none;align-items:center;gap:3px;background:var(--gold);color:#1a2a4a;border-radius:100px;font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer;font-family:'Poppins',sans-serif;margin-right:4px"></span><button class="t-btn" onclick="doTranspose(-1)">−</button>
+        <span id="transposeDisplay">${transposeSteps===0?'Original':'+'+(transposeSteps>0?transposeSteps:transposeSteps)+' ('+dispKey+')'}</span>
         <button class="t-btn" onclick="doTranspose(1)">+</button>
         ${transposeSteps!==0?`<button class="t-btn" onclick="resetTranspose()" title="Reset" style="font-size:12px;padding:0 6px">↺</button>`:''}
       </div>
@@ -3602,8 +3466,8 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
       <div class="dl-btns" style="display:flex;align-items:center;gap:8px">
         ${dlBtns}${transposedPdfBtn}
         <button onclick="addToSetlist(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid rgba(44,64,116,0.4);background:rgba(44,64,116,0.08);color:var(--blue-mid);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s">📋 +Setlist</button>
-        <button onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
-        <button id="copyLyricsBtn" onclick="showCopyLyricsMenu()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'" title="Kopjo lyrics">📋 ${currentLang==='sq'?'Kopjo':'Copy'}</button>
+        <button data-tip="Ndaj / Share" onclick="openShareModal()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📤 ${currentLang==='sq'?'Ndaj':'Share'}</button>
+        <button id="copyLyricsBtn" data-tip="Kopjo lyrics" onclick="showCopyLyricsMenu()" style="display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border)'">📋 ${currentLang==='sq'?'Kopjo':'Copy'}</button>
         <button onclick="openReportError(${s.id})" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer" title="${currentLang==='sq'?'Raporto gabim':'Report error'}">⚠️</button>
       </div>
     </div>`;
@@ -3660,33 +3524,21 @@ ${`<span class='ctrl-label'>${t('instrument-label')}</span>`}
 }
 
 function selectInst(i){currentInst=i;_chordDiagramType=i==='Piano'?'Piano':'Guitar';renderSong();stopMetronome();}
-// Shows/hides the gold transpose badge next to the song key.
-// Clicking the badge resets transpose back to original.
+// Shows a gold badge when song is transposed — click to reset.
 function updateTransposeBadge(){
-  const badge=document.getElementById('transposeBadge');
+  var badge=document.getElementById('transposeBadge');
   if(!badge) return;
-  if(transposeSteps===0){
-    badge.style.display='none';
-  } else {
-    const sign=transposeSteps>0?'+':'';
-    badge.innerHTML='↺ '+sign+transposeSteps;
-    badge.style.display='inline-flex';
-  }
+  if(transposeSteps===0){ badge.style.display='none'; }
+  else { badge.innerHTML='&#8635; '+(transposeSteps>0?'+':'')+transposeSteps; badge.style.display='inline-flex'; }
 }
-
 function doTranspose(d){
   transposeSteps+=d;
-  // Persist per-song so it's remembered on next visit
-  if(currentSong){
-    if(transposeSteps===0) localStorage.removeItem('aa_transpose_'+currentSong.id);
-    else localStorage.setItem('aa_transpose_'+currentSong.id, transposeSteps);
-  }
-  renderSong();
-  updateTransposeBadge();
+  if(currentSong) transposeSteps===0?localStorage.removeItem('aa_tp_'+currentSong.id):localStorage.setItem('aa_tp_'+currentSong.id,transposeSteps);
+  renderSong(); updateTransposeBadge();
 }
 function resetTranspose(){
   transposeSteps=0;
-  if(currentSong) localStorage.removeItem('aa_transpose_'+currentSong.id);
+  if(currentSong) localStorage.removeItem('aa_tp_'+currentSong.id);
   renderSong(); updateTransposeBadge();
 }
 
@@ -4077,7 +3929,6 @@ async function refreshAdminSongs(){
       <td>
         <div class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="editSong(${s.id})" style="font-size:12px">✏️ Edito</button>
-          <button class="btn btn-outline btn-sm" onclick="previewSong(${s.id})" style="font-size:12px" title="Preview">👁</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateSong(${s.id})" style="font-size:12px" title="Kopjo">📋</button>
           <button class="btn btn-danger btn-sm" onclick="deleteSong(${s.id})" style="font-size:12px">🗑</button>
         </div>
@@ -4478,12 +4329,37 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
-window.addEventListener('load', () => {
-  loadSetlistFromHash();
-  // Open song directly if URL has #song=ID (shared link)
-  const m = window.location.hash.match(/^#song=(\d+)$/);
-  if(m) openSong(Number(m[1]));
-});
+window.addEventListener('load', loadSetlistFromHash);
+
+// ── DEVELOPMENT BANNER (every 15 min) ──────────────────────────────────────
+var DEV_BANNER_MS=15*60*1000;
+function _devBannerText(){
+  var sq=currentLang==='sq';
+  return sq
+    ?'<strong>Website në zhvillim aktiv</strong> — Disa akorde, funksione ose tekste mund të jenë jo të plota. Jemi duke punuar çdo ditë për ta përmirësuar.'
+    :'<strong>Website under active development</strong> — Some chords, features or lyrics may be incomplete. We are working daily to improve the experience.';
+}
+function showDevBanner(){
+  if(document.getElementById('devBanner')) return;
+  var b=document.createElement('div'); b.id='devBanner';
+  b.style.cssText='position:fixed;bottom:16px;right:16px;z-index:99990;max-width:300px;background:rgba(20,20,30,0.93);backdrop-filter:blur(8px);border:1px solid rgba(255,200,0,0.3);border-radius:12px;padding:12px 14px;font-family:Poppins,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
+  b.innerHTML='<div style="display:flex;align-items:flex-start;gap:8px"><span style="font-size:17px;flex-shrink:0">🚧</span><div style="font-size:11px;color:rgba(255,255,255,0.75);line-height:1.5">'+_devBannerText()+'</div><button onclick="dismissDevBanner()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:15px;cursor:pointer;flex-shrink:0;padding:0;margin-left:4px">✕</button></div>';
+  document.body.appendChild(b);
+  setTimeout(function(){if(document.getElementById('devBanner'))dismissDevBanner();},8000);
+}
+function dismissDevBanner(){
+  var b=document.getElementById('devBanner');
+  if(!b) return;
+  b.style.opacity='0'; b.style.transition='opacity .3s';
+  setTimeout(function(){b&&b.remove();},300);
+  localStorage.setItem('dev_banner_last',Date.now());
+}
+function scheduleDevBanner(){
+  var last=Number(localStorage.getItem('dev_banner_last')||0);
+  var due=Math.max(0,DEV_BANNER_MS-(Date.now()-last));
+  setTimeout(function(){showDevBanner();scheduleDevBanner();},due);
+}
+scheduleDevBanner();
 
 // ── ONLINE/OFFLINE detection ──
 function _showOfflineBanner(){
@@ -4552,99 +4428,77 @@ function dismissPWABanner(){
   localStorage.setItem('pwa_banner_dismissed','1');
 }
 
-// ── ADMIN SONG PREVIEW ──
-function previewSong(id){
-  const song = SONGS.find(s=>Number(s.id)===Number(id));
-  if(!song){ showToast('Kënga nuk u gjet','error'); return; }
-  const modal = document.getElementById('songPreviewModal');
-  const content = document.getElementById('songPreviewContent');
-  if(!modal||!content) return;
-  // Build a lightweight preview of the song
-  const thumb = song.thumb || makeThumbnail(song.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'], song.title);
-  const rawLyrics = song.lyricsRaw?.Guitar || song.lyricsRaw?.Piano || song.lyrics || '';
-  const preview = rawLyrics.split('\n').slice(0,30).join('\n'); // first 30 lines
-  content.innerHTML = `
-    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
-      <img src="${thumb}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;flex-shrink:0"/>
-      <div style="flex:1;min-width:200px">
-        <div style="font-size:20px;font-weight:700;color:var(--text);font-family:'Poppins',sans-serif">${song.title}</div>
-        ${song.original?`<div style="font-size:13px;color:var(--text3);font-style:italic">(${song.original})</div>`:''}
-        <div style="font-size:13px;color:var(--text2);margin-top:4px">🎵 ${song.artist||'—'}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <span style="background:var(--bg3);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--text2)">Key: <strong>${song.key||'—'}</strong></span>
-          ${song.bpm?`<span style="background:var(--bg3);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--text2)">BPM: <strong>${song.bpm}</strong></span>`:''}
-          ${(song.categories||[]).map(c=>`<span style="background:var(--blue-mid);color:#fff;border-radius:6px;padding:3px 10px;font-size:11px">${c}</span>`).join('')}
-        </div>
-      </div>
-      <button onclick="closeSongPreview();openSong(${song.id})" style="background:var(--red);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;flex-shrink:0">Shiko faqen →</button>
-    </div>
-    <div style="background:var(--bg2);border-radius:10px;padding:16px;font-family:'Roboto Mono',monospace;font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.8;max-height:400px;overflow-y:auto">${preview||'(Pa lyrics)'}</div>
-  `;
-  modal.style.display='block';
+// ─ COPY LYRICS ─────────────────────────────────────────────────────────────
+// A line is a chord line if >60% of its tokens match chord notation pattern.
+function _isChordLine(line){
+  const t=line.trim();
+  if(!t||t.startsWith('[')) return true;
+  const tokens=t.split(/[ 	]+/);
+  const CHORD_RE=/^[A-G][b#]?(m|maj|min|dim|aug|sus|add|M)?[0-9]?(\/[A-G][b#]?)?$/;
+  return tokens.filter(function(tok){return CHORD_RE.test(tok);}).length/tokens.length>0.6;
 }
 
-function closeSongPreview(){
-  const modal = document.getElementById('songPreviewModal');
-  if(modal) modal.style.display='none';
-}
-
-// ── COPY LYRICS MENU ──
 function showCopyLyricsMenu(){
-  let menu = document.getElementById('copyLyricsMenu');
-  if(menu){ menu.remove(); return; }
-  const btn = document.getElementById('copyLyricsBtn');
-  if(!btn || !currentSong) return;
-  const hasSQ = !!(currentSong.lyricsRaw?.Guitar || currentSong.lyricsRaw?.Piano || currentSong.lyrics);
-  const rawEn = currentSong.lyricsRaw?.Guitar || currentSong.lyricsRaw?.Piano || currentSong.lyrics || '';
-  const hasEN = rawEn.includes('(') && rawEn.includes(')'); // English lines are in parentheses
-  const isMulti = hasSQ && hasEN;
-  menu = document.createElement('div');
-  menu.id = 'copyLyricsMenu';
-  menu.style.cssText = 'position:absolute;z-index:9000;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 4px 20px rgba(0,0,0,0.2);min-width:200px;font-family:Poppins,sans-serif';
-  const options = [];
-  if(hasSQ) options.push({label:'🇦🇱 Teksti Shqip', action:"copyLyrics('sq')"});
-  if(isMulti) options.push({label:'🇬🇧 English Text', action:"copyLyrics('en')"});
-  if(isMulti) options.push({label:'🔀 SQ + EN (të dyja)', action:"copyLyrics('both')"});
-  if(!options.length) options.push({label:'📋 Kopjo Lyrics', action:"copyLyrics('sq')"});
-  menu.innerHTML = options.map(o => `<div onclick="${o.action};document.getElementById('copyLyricsMenu')?.remove()" style="padding:9px 14px;cursor:pointer;border-radius:7px;font-size:13px;color:var(--text)" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">${o.label}</div>`).join('');
-  const rect = btn.getBoundingClientRect();
-  menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-  menu.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
+  var menu=document.getElementById('copyLyricsMenu');
+  if(menu){menu.remove();return;}
+  var btn=document.getElementById('copyLyricsBtn');
+  if(!btn||!currentSong) return;
+  var sq=currentLang==='sq';
+  var raw=(currentSong.lyricsRaw&&(currentSong.lyricsRaw.Guitar||currentSong.lyricsRaw.Piano))||currentSong.lyrics||'';
+  var hasEN=raw.split('\n').some(function(l){var t=l.trim();return t.charAt(0)==='('&&t.charAt(t.length-1)===')';});
+  menu=document.createElement('div');
+  menu.id='copyLyricsMenu';
+  menu.style.cssText='position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 4px 20px rgba(0,0,0,0.25);min-width:200px;font-family:Poppins,sans-serif';
+  var opts=[];
+  opts.push({label:sq?'🇦🇱 Teksti Shqip':'🇦🇱 Albanian Text',mode:'sq'});
+  if(hasEN){
+    opts.push({label:'🇬🇧 English Text',mode:'en'});
+    opts.push({label:sq?'🔀 SQ + EN (të dyja)':'🔀 SQ + EN (both)',mode:'both'});
+  }
+  // Build items using DOM (avoids quote-escaping issues in innerHTML)
+  opts.forEach(function(o){
+    var div=document.createElement('div');
+    div.textContent=o.label;
+    div.style.cssText='padding:9px 14px;cursor:pointer;border-radius:7px;font-size:13px;color:var(--text)';
+    div.onmouseover=function(){this.style.background='var(--bg3)';};
+    div.onmouseout=function(){this.style.background='';};
+    div.onclick=function(){copyLyrics(o.mode);menu.remove();};
+    menu.appendChild(div);
+  });
+  var rect=btn.getBoundingClientRect();
+  menu.style.top=(rect.bottom+window.scrollY+4)+'px';
+  menu.style.left=Math.min(rect.left,window.innerWidth-220)+'px';
   document.body.appendChild(menu);
-  setTimeout(() => document.addEventListener('click', function h(e){ if(!menu.contains(e.target)&&e.target!==btn){menu.remove();document.removeEventListener('click',h);} }), 10);
+  setTimeout(function(){
+    document.addEventListener('click',function h(e){
+      if(!menu.contains(e.target)&&e.target!==btn){menu.remove();document.removeEventListener('click',h);}
+    });
+  },10);
 }
 
 function copyLyrics(mode){
   if(!currentSong) return;
-  const raw = currentSong.lyricsRaw?.Guitar || currentSong.lyricsRaw?.Piano || currentSong.lyrics || '';
-  const lines = raw.split('\n');
-  let out = [];
-  for(const line of lines){
-    const trimmed = line.trim();
-    if(!trimmed || trimmed.startsWith('[') || /^[A-G][b#]?/.test(trimmed) && !trimmed.includes(' ')) continue; // skip chord lines
-    const isEN = trimmed.startsWith('(') && trimmed.endsWith(')');
-    const isSQ = !isEN;
-    if(mode === 'sq' && isSQ) out.push(trimmed);
-    else if(mode === 'en' && isEN) out.push(trimmed.replace(/^\(|\)$/g,''));
-    else if(mode === 'both') out.push(trimmed.startsWith('(')?trimmed.replace(/^\(|\)$/g,''):trimmed);
+  var raw=(currentSong.lyricsRaw&&(currentSong.lyricsRaw.Guitar||currentSong.lyricsRaw.Piano))||currentSong.lyrics||'';
+  var lines=raw.split('\n'), out=[];
+  for(var i=0;i<lines.length;i++){
+    var trimmed=lines[i].trim();
+    if(!trimmed||_isChordLine(trimmed)) continue;
+    var isEN=trimmed.charAt(0)==='('&&trimmed.charAt(trimmed.length-1)===')';
+    var cleanEN=isEN?trimmed.slice(1,-1).trim():trimmed;
+    if(mode==='sq'&&!isEN) out.push(trimmed);
+    else if(mode==='en'&&isEN) out.push(cleanEN);
+    else if(mode==='both') out.push(trimmed);
   }
-  if(!out.length){ showToast('Nuk u gjet tekst për kopjim','error'); return; }
-  const title = mode==='en'?(currentSong.original||currentSong.title):currentSong.title;
-  const text = title + '\n' + (currentSong.artist||'') + '\n\n' + out.join('\n');
-  navigator.clipboard.writeText(text).then(()=>{
-    const label = mode==='sq'?'teksti shqip':mode==='en'?'English text':'të dyja variantet';
-    showToast('✅ U kopjua ' + label + '!','success');
-  }).catch(()=> showToast('Gabim gjatë kopjimit','error'));
+  if(!out.length){showToast(currentLang==='sq'?'Nuk u gjet tekst':'No lyrics found','error');return;}
+  var title=mode==='en'?(currentSong.original||currentSong.title):currentSong.title;
+  var text=title+'\n'+(currentSong.artist||'')+'\n\n'+out.join('\n');
+  navigator.clipboard.writeText(text).then(function(){
+    var label=currentLang==='sq'
+      ?(mode==='sq'?'teksti shqip':mode==='en'?'English text':'SQ + EN')
+      :(mode==='sq'?'Albanian text':mode==='en'?'English text':'SQ + EN');
+    showToast('✅ U kopjua '+label+'!','success');
+  }).catch(function(){showToast(currentLang==='sq'?'Gabim':'Copy failed','error');});
 }
-
-// Handle browser back/forward so song links work correctly
-window.addEventListener('popstate', () => {
-  const m = window.location.hash.match(/^#song=(\d+)$/);
-  if(m) openSong(Number(m[1]));
-  else if(!window.location.hash && document.getElementById('songPage')?.style.display !== 'none') {
-    showPage('home');
-  }
-});
 
 // ── GLOBAL ERROR HANDLER ──
 window.addEventListener('unhandledrejection', e => {
@@ -4663,7 +4517,7 @@ window.onerror = (msg, src, line, col, err) => {
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => console.info('✅ SW registered:', reg.scope))
+      .then(reg => console.log('✅ Service Worker registered'))
       .catch(err => console.warn('SW registration failed:', err));
   });
 }
@@ -5412,66 +5266,59 @@ function buildChordSVG(name){
   if(!shape) return '<div style="font-size:11px;color:var(--text3);padding:10px">Nuk ka diagram</div>';
   const {frets,barre}=shape;
   const FRET_COUNT=4;
-  const W=80, H=98, pad=14;
+  const W=80, H=94, pad=14;
   const sw=(W-pad*2)/5;
-  const sh=(H-pad*2-20)/FRET_COUNT;
+  const sh=(H-pad*2-16)/FRET_COUNT;
 
-  // Find starting fret
+  // Find the min fret position to determine starting fret
   const activeFrets=frets.filter(f=>f>0);
   const minFret=activeFrets.length>0?Math.min(...activeFrets):1;
   const startFret=barre>0?barre:minFret<=1?1:minFret;
   const showFretNum=startFret>1;
 
-  // Extra width for fret number label so it doesn't clip inside the diagram
-  const extraW=showFretNum?20:0;
-  const totalW=W+extraW;
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
 
-  let svg=`<svg width="${totalW}" height="${H}" viewBox="0 0 ${totalW} ${H}" style="display:block;overflow:visible">`;
-
-  // Nut (thick bar at top for open position) or fret number beside diagram
+  // Nut (thick line at top) or fret number
   if(startFret===1){
-    svg+=`<rect x="${pad}" y="${pad+18}" width="${W-pad*2}" height="3.5" fill="var(--text2)" rx="1.5"/>`;
+    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="#888" rx="1"/>`;
   } else {
-    // Fret label sits clearly to the right of the grid
-    svg+=`<text x="${W-pad+6}" y="${pad+26}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
+    svg+=`<text x="${W-pad+3}" y="${pad+22}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
   }
 
   // Fret lines
   for(let f=0;f<=FRET_COUNT;f++){
-    const y=pad+20+f*sh;
-    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="${f===0?1.5:0.8}"/>`;
+    const y=pad+16+f*sh;
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="${f===0?1.5:1}"/>`;
   }
 
   // String lines
   for(let s=0;s<6;s++){
     const x=pad+s*sw;
-    svg+=`<line x1="${x}" y1="${pad+20}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
+    svg+=`<line x1="${x}" y1="${pad+16}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
   }
 
   // Barre bar
   if(barre>0){
-    const barY=pad+20+sh/2-5.5;
-    svg+=`<rect x="${pad}" y="${barY}" width="${W-pad*2}" height="11" rx="5.5" fill="var(--blue-mid)" opacity=".88"/>`;
+    const barY=pad+16+sh/2-6;
+    svg+=`<rect x="${pad}" y="${barY}" width="${W-pad*2}" height="12" rx="6" fill="var(--blue-mid)" opacity=".9"/>`;
   }
 
-  // Dots + muted/open markers
+  // Dots
   frets.forEach((f,s)=>{
     const x=pad+s*sw;
     if(f<0){
-      // Muted string — ✕ above the nut with clear spacing
-      svg+=`<text x="${x}" y="${pad+11}" text-anchor="middle" font-size="9" fill="var(--text3)" font-weight="600">✕</text>`;
+      svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="10" fill="var(--text3)">✕</text>`;
       return;
     }
     if(f===0){
-      // Open string — circle above nut, doesn't touch it
-      svg+=`<circle cx="${x}" cy="${pad+10}" r="3.5" fill="none" stroke="var(--text3)" stroke-width="1.5"/>`;
+      svg+=`<circle cx="${x}" cy="${pad+8}" r="4" fill="none" stroke="var(--text3)" stroke-width="1.5"/>`;
       return;
     }
-    // Finger dot on fret
+    // Active fret dot
     const relFret=f-startFret+1;
     if(relFret>=1&&relFret<=FRET_COUNT){
-      const y=pad+20+(relFret-1)*sh+sh/2;
-      svg+=`<circle cx="${x}" cy="${y}" r="5" fill="var(--blue-mid)"/>`;
+      const y=pad+16+(relFret-1)*sh+sh/2;
+      svg+=`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--blue-mid)"/>`;
     }
   });
 
@@ -6075,7 +5922,20 @@ function setPerfLang(lang){
 
 // Launches performance mode — the full-screen teleprompter view used during live worship.
 // Sets up wake lock (screen stays on), countdown, keyboard handler, and beta notice.
-function startPerformanceMode(){
+// ── PERFORMANCE MODE V2 (Secret dev URL: add ?pmv2 to page URL) ──────────────
+// Build the new touch-friendly PM here. When ready → swap call in startPerformanceMode.
+function startPerfV2(){
+  console.info('[PM v2] Coming soon — falling back to v1');
+  _startPerformanceModeV1();
+}
+if(new URLSearchParams(window.location.search).has('pmv2')){
+  window.addEventListener('DOMContentLoaded',function(){
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;top:8px;right:8px;z-index:99999;background:#e53935;color:#fff;border-radius:6px;padding:3px 10px;font-size:11px;font-family:Poppins,sans-serif;font-weight:700;pointer-events:none';
+    b.textContent='PM v2 DEV'; document.body.appendChild(b);
+  });
+}
+function _startPerformanceModeV1(){
   const sl=getSetlist(); if(!sl.songs.length) return;
   perfIdx=0; _perfLang=null; _perfPanic=false; _perfControlsHidden=false;
   const pm=document.getElementById('performanceMode');
@@ -6446,7 +6306,7 @@ let _perfTimerStart = null;
 
 function setPerfScrollSpeed(val){
   _perfScrollSpeed=Number(val);
-  try{localStorage.setItem('aa_perf_speed',val);}catch(e){ console.warn('[perf] speed save failed:', e.message); }
+  try{localStorage.setItem('aa_perf_speed',val);}catch(e){}
   const label=document.getElementById('perfSpeedLabel');
   if(label) label.textContent=val+'%';
   const slider=document.getElementById('perfSpeedSlider');
@@ -6579,7 +6439,7 @@ function perfSwitchInst(songId, inst){
 
 function setPerfFont(size){
   _perfFontSize = Number(size);
-  try{localStorage.setItem('aa_perf_font',size);}catch(e){ console.warn('[perf] font save failed:', e.message); }
+  try{localStorage.setItem('aa_perf_font',size);}catch(e){}
   // Re-render lyrics with new size without full reload
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
