@@ -689,10 +689,103 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 @media(max-width:768px){
   .page-song-swipe-hint{font-size:11px;color:var(--text3);text-align:center;padding:8px;display:none}
 }
+
+/* ════════════════════════════════════════════════════════
+   MOBILE UI — PHASE A (Quick Wins)
+   ════════════════════════════════════════════════════════ */
+
+/* Bottom Navigation Bar — mobile only */
+#mobileBottomNav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:8000;
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:6px 0 max(6px,env(safe-area-inset-bottom));
+  flex-direction:row;justify-content:space-around;align-items:center;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.12);
+}
+#mobileBottomNav button{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:none;cursor:pointer;padding:4px 12px;
+  color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;
+  transition:color .18s;min-width:48px;
+}
+#mobileBottomNav button.active{color:var(--blue-mid);}
+#mobileBottomNav button:active{opacity:.7;}
+#mobileBottomNav button span.nav-icon{font-size:20px;line-height:1;}
+
+@media(max-width:768px){
+  #mobileBottomNav{display:flex;}
+  /* Add padding to body so content isn't hidden behind bottom nav */
+  body{padding-bottom:64px;}
+  /* Hide desktop nav links on mobile — bottom nav replaces them */
+  .nav-links{display:none !important;}
+  /* Song cards: 2 columns on tablet, stretch on phone */
+  .songs-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  /* Bigger touch targets for all buttons */
+  .btn,.btn-sm,.btn-card,.t-btn,.action-btn{min-height:40px;}
+  /* Song page: full-width action buttons */
+  .song-actions{flex-wrap:wrap;}
+  .song-actions button{flex:1;min-width:140px;}
+  /* Guide inner padding */
+  .guide-inner{padding:0 12px 80px;}
+  /* Page hero smaller on mobile */
+  .page-hero{padding:40px 16px 28px;}
+  .page-hero h1{font-size:24px;}
+}
+
+@media(max-width:390px){
+  /* Single column on very small phones (iPhone SE etc.) */
+  .songs-grid{grid-template-columns:1fr;}
+  /* Smaller hero search */
+  .search-wrap{max-width:100%;}
+}
+
+/* Touch-friendly chord popup on mobile */
+@media(max-width:768px){
+  .chord-popup{
+    position:fixed !important;
+    bottom:80px !important; top:auto !important;
+    left:50% !important; right:auto !important;
+    transform:translateX(-50%) !important;
+    width:170px;pointer-events:auto;z-index:9500;
+  }
+  /* Larger chord tap area */
+  .chord-clickable{padding:2px 1px;margin:-2px -1px;}
+}
+
+/* Improve readability on mobile */
+@media(max-width:480px){
+  .song-wrap{padding:12px 10px 30px;}
+  .meta{font-size:12px;flex-wrap:wrap;gap:4px;}
+  .g-block{padding:16px;}
+  .g-block-title{font-size:15px;}
+  /* Stack filter row on mobile */
+  .filter-row{flex-wrap:wrap;gap:6px;}
+  .f-select{flex:1;min-width:120px;}
+}
 </style>
 
 </head>
 <body>
+<!-- MOBILE BOTTOM NAVIGATION -->
+<nav id="mobileBottomNav" aria-label="Mobile navigation">
+  <button id="mbnHome" onclick="showPage('home');updateMobileNav('home')">
+    <span class="nav-icon">🏠</span>
+    <span data-sq="Home" data-en="Home">Home</span>
+  </button>
+  <button id="mbnSongs" onclick="showPage('songs');updateMobileNav('songs')">
+    <span class="nav-icon">🎵</span>
+    <span data-sq="Këngë" data-en="Songs">Këngë</span>
+  </button>
+  <button id="mbnSetlist" onclick="showPage('setlist');updateMobileNav('setlist')">
+    <span class="nav-icon">📋</span>
+    <span data-sq="Setlist" data-en="Setlist">Setlist</span>
+  </button>
+  <button id="mbnGuide" onclick="showPage('guide');updateMobileNav('guide')">
+    <span class="nav-icon">📖</span>
+    <span data-sq="Udhëzues" data-en="Guide">Udhëzues</span>
+  </button>
+</nav>
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 <!-- SCROLL TO TOP -->
@@ -1121,7 +1214,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <strong>🎸 Guitar</strong> — Akordet janë shkruar për t'u luajtur <em>me capo</em>. Formacionet e gishtave janë të njohura (Am, G, C etj.) edhe pse toni i vërtetë është ndryshe.<br><br>
           <strong>🎹 Piano</strong> — Akordet janë shkruar në tonin e vërtetë (concert pitch), pa efektin e capo-s. Pianisti luan pikërisht ato nota.<br><br>
           <em>Shembull — Kënga në D me Capo 2:</em><br>
-          Gitaristi luan <strong>C (me Capo 2)</strong> → tingëllon si D &nbsp;|&nbsp; Pianisti luan <strong>D</strong> drejtpërdrejt
+          Gitaristi luan <strong>C (me Capo 2)</strong> → tingëllon si D &nbsp;|&nbsp; Pianisti luan <strong>D</strong> drejtpërdrejt<br><br>
+          Zgjidhni instrumentin tuaj me butonat <strong>🎸 Guitar</strong> / <strong>🎹 Piano</strong> mbi tekst.<br><br>
+          <strong>Si funksionon Capo-ja?</strong> — Capo-ja vendoset mbi fretboard dhe ngre tonin e çdo teli. Kur kënga ka <strong>Capo N</strong>, vendoseni para se të filloni dhe luani akordet siç janë shkruar.<br>
+          <em>Shembull — Capo 2:</em> Am → Bm &nbsp;|&nbsp; G → A &nbsp;|&nbsp; C → D<br><br>
+          Kur shfaqet baneri i verdhë <strong>🎸 Capo N</strong> mbi tekst, mos harroni ta vendosni para se të filloni.
         </p>
         <div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.25);border-radius:10px;padding:14px;margin-top:12px;display:flex;gap:10px;align-items:flex-start">
           <span style="font-size:20px;flex-shrink:0">⚠️</span>
@@ -1211,32 +1308,6 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
 
       <div class="g-block">
-        <div class="g-block-title">🎸 Guitar vs 🎹 Piano — Çfarë është ndryshimi?</div>
-        <p style="font-size:13px;color:var(--text2);line-height:1.8">
-          Shumë këngë kanë dy versione akordet — një për Guitar dhe një për Piano. Kjo është e qëllimshme:<br><br>
-          <strong>🎸 Guitar</strong> — Akordet janë shkruar për t'u luajtur me capo (nëse kënga ka capo). Formacionet e gishtave janë të njohura (Am, G, C etj.) edhe pse toni i vërtetë është ndryshe.<br><br>
-          <strong>🎹 Piano</strong> — Akordet janë shkruar në tonin e vërtetë (concert pitch), pa efektin e capo-s. Pianisti luan pikërisht ato nota.<br><br>
-          <em>Shembull — Kënga në D me Capo 2:</em><br>
-          Gitaristi luan <strong>C (me Capo 2)</strong> → tingëllon si D<br>
-          Pianisti luan <strong>D</strong> drejtpërdrejt<br><br>
-          Zgjidhni instrumentin tuaj me butonat <strong>🎸 Guitar</strong> / <strong>🎹 Piano</strong> mbi tekst.
-        </p>
-      </div>
-
-      <div class="g-block">
-        <div class="g-block-title">🎸 Si funksionon Capo-ja?</div>
-        <p style="font-size:13px;color:var(--text2);line-height:1.8">
-          Capo-ja vendoset mbi fretboard dhe ngre tonin e çdo teli. Kur kënga ka <strong>Capo N</strong>:<br><br>
-          ✅ Vini capo-n në fretin <strong>N</strong> para se të filloni<br>
-          ✅ Luani akordet ashtu siç janë shkruar<br>
-          ✅ Rezultati do të tingëllojë në tonin e duhur<br><br>
-          <strong>Shembull — Capo 2:</strong><br>
-          Am → tingëllon si Bm &nbsp;|&nbsp; G → tingëllon si A &nbsp;|&nbsp; C → tingëllon si D<br><br>
-          Kur shfaqet baneri i verdhë <strong>🎸 Capo N</strong> mbi tekst, mos harroni ta vendosni para se të filloni.
-        </p>
-      </div>
-
-      <div class="g-block">
         <div class="g-block-title">🎤 Performance Mode</div>
         <p style="font-size:13px;color:var(--text2);line-height:1.8">
           Modaliteti i plotë për ekipin gjatë shërbimit live. Hapeni me butonin <strong>▶ Fillo</strong> në Setlist.<br><br>
@@ -1310,7 +1381,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <strong>🎸 Guitar</strong> — Chords are written to be played <em>with a capo</em>. The finger shapes are familiar (Am, G, C etc.) even though the actual sounding pitch is different.<br><br>
           <strong>🎹 Piano</strong> — Chords are written in the real pitch (concert pitch), without the capo effect. The pianist plays exactly those notes.<br><br>
           <em>Example — Song in D with Capo 2:</em><br>
-          Guitarist plays <strong>C (with Capo 2)</strong> → sounds like D &nbsp;|&nbsp; Pianist plays <strong>D</strong> directly
+          Guitarist plays <strong>C (with Capo 2)</strong> → sounds like D &nbsp;|&nbsp; Pianist plays <strong>D</strong> directly<br><br>
+          Switch using the <strong>🎸 Guitar</strong> / <strong>🎹 Piano</strong> buttons above the lyrics.<br><br>
+          <strong>How does a Capo work?</strong> — A capo clamps onto the fretboard and raises the pitch of every string. When a song has <strong>Capo N</strong>, place it on fret N before playing and play the chords as written.<br>
+          <em>Example — Capo 2:</em> Am → Bm &nbsp;|&nbsp; G → A &nbsp;|&nbsp; C → D<br><br>
+          When the gold <strong>🎸 Capo N</strong> banner appears above the lyrics, don't forget to place it before you begin.
         </p>
         <div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.25);border-radius:10px;padding:14px;margin-top:12px;display:flex;gap:10px;align-items:flex-start">
           <span style="font-size:20px;flex-shrink:0">⚠️</span>
@@ -1395,32 +1470,6 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           You can <strong>reorder</strong> songs with drag &amp; drop, add notes, and choose the instrument for each song.<br><br>
           <strong>📤 Copy Text</strong> — Copies the setlist as plain text to share with others.<br><br>
           <strong>🔗 Copy Link</strong> — Creates a unique setlist link. When someone opens it, the setlist loads automatically on their device.
-        </p>
-      </div>
-
-      <div class="g-block">
-        <div class="g-block-title">🎸 Guitar vs 🎹 Piano — What's the difference?</div>
-        <p style="font-size:13px;color:var(--text2);line-height:1.8">
-          Many songs have two sets of chords — one for Guitar and one for Piano. This is intentional:<br><br>
-          <strong>🎸 Guitar</strong> — Chords are written to be played <em>with a capo</em> (if the song has one). The finger shapes are familiar (Am, G, C etc.) even though the actual pitch is different.<br><br>
-          <strong>🎹 Piano</strong> — Chords are written in the real pitch of the song (concert pitch), without the capo effect. The pianist plays exactly those notes.<br><br>
-          <em>Example — Song in D with Capo 2:</em><br>
-          Guitarist plays <strong>C (with Capo 2)</strong> → sounds like D<br>
-          Pianist plays <strong>D</strong> directly<br><br>
-          Switch between them using the <strong>🎸 Guitar</strong> / <strong>🎹 Piano</strong> buttons above the lyrics.
-        </p>
-      </div>
-
-      <div class="g-block">
-        <div class="g-block-title">🎸 How does a Capo work?</div>
-        <p style="font-size:13px;color:var(--text2);line-height:1.8">
-          A capo is a clamp placed on the guitar fretboard that raises the pitch of every string. When a song has <strong>Capo N</strong>:<br><br>
-          ✅ Place the capo on fret <strong>N</strong> before you start<br>
-          ✅ Play the chords exactly as written<br>
-          ✅ The result will sound in the correct key<br><br>
-          <strong>Example — Capo 2:</strong><br>
-          Am → sounds like Bm &nbsp;|&nbsp; G → sounds like A &nbsp;|&nbsp; C → sounds like D<br><br>
-          When the gold <strong>🎸 Capo N</strong> banner appears above the lyrics, don't forget to place it before you begin.
         </p>
       </div>
 
@@ -3165,6 +3214,14 @@ function buildCard(song){
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════════════
+// Updates the mobile bottom nav to highlight the active page button.
+function updateMobileNav(page){
+  const map={home:'mbnHome',songs:'mbnSongs',song:'mbnSongs',setlist:'mbnSetlist',guide:'mbnGuide'};
+  document.querySelectorAll('#mobileBottomNav button').forEach(b=>b.classList.remove('active'));
+  const activeId=map[page];
+  if(activeId) document.getElementById(activeId)?.classList.add('active');
+}
+
 function showPage(page,el){
   // Stop YouTube video when leaving song page
   if(page !== 'song') {
@@ -3185,6 +3242,7 @@ function showPage(page,el){
   if(page==='favorites') renderFavoritesPage();
   if(page==='setlist'){ renderSetlist(); updateSetlistBadge(); }
   if(page !== 'song') resetMetaTags();
+  updateMobileNav(page);
 }
 
 function renderFavoritesPage(){
@@ -5647,7 +5705,136 @@ function hasChordDiagram(name){
 function buildChordDiagram(name, type){
   type = type||_chordDiagramType;
   const resolved = resolveChordName(name) || name;
-  return type==='Piano' ? buildPianoChordSVG(resolved) : buildChordSVG(resolved);
+  if(type==='Piano') return buildPianoChordSVG(resolved);
+  if(type==='Ukulele') return buildUkuleleChordSVG(resolved);
+  if(type==='Bass') return buildBassChordSVG(resolved);
+  return buildChordSVG(resolved);
+}
+
+// ── UKULELE CHORD SHAPES (GCEA tuning, 4 strings) ─────────────────────────
+// frets: [G, C, E, A string] — -1=muted, 0=open, N=fret number
+const UKULELE_SHAPES = {
+  'C':{frets:[0,0,0,3]},'Cm':{frets:[0,3,3,3]},'C7':{frets:[0,0,0,1]},
+  'D':{frets:[2,2,2,0]},'Dm':{frets:[2,2,1,0]},'D7':{frets:[2,2,2,3]},
+  'E':{frets:[4,4,4,2]},'Em':{frets:[0,4,3,2]},'E7':{frets:[1,2,0,2]},
+  'F':{frets:[2,0,1,0]},'Fm':{frets:[1,0,1,3]},'F7':{frets:[2,3,1,0]},
+  'G':{frets:[0,2,3,2]},'Gm':{frets:[0,2,3,1]},'G7':{frets:[0,2,1,2]},
+  'A':{frets:[2,1,0,0]},'Am':{frets:[2,0,0,0]},'A7':{frets:[0,1,0,0]},
+  'B':{frets:[4,3,2,2]},'Bm':{frets:[4,2,2,2]},'B7':{frets:[2,3,2,2]},
+  'Bb':{frets:[3,2,1,1]},'Bbm':{frets:[3,1,1,1]},
+  'F#m':{frets:[2,1,2,0]},'C#m':{frets:[1,1,0,2]},'G#m':{frets:[0,3,3,3]},
+  'Ab':{frets:[5,3,4,3]},'Eb':{frets:[3,3,3,1]},'Db':{frets:[1,1,1,4]},
+};
+
+function buildUkuleleChordSVG(name){
+  const shape = UKULELE_SHAPES[name];
+  if(!shape) return '<div style="font-size:11px;color:var(--text3);padding:10px;text-align:center">Nuk ka diagram<br>Ukulele</div>';
+  const {frets} = shape;
+  const STRINGS = 4, FRET_COUNT = 4;
+  const W = 66, H = 90, pad = 12;
+  const sw = (W - pad*2) / (STRINGS-1);
+  const sh = (H - pad*2 - 16) / FRET_COUNT;
+  const activeFrets = frets.filter(f=>f>0);
+  const minFret = activeFrets.length>0 ? Math.min(...activeFrets) : 1;
+  const startFret = minFret <= 1 ? 1 : minFret;
+  const showFretNum = startFret > 1;
+  const extraW = showFretNum ? 18 : 0;
+  let svg = `<svg width="${W+extraW}" height="${H}" viewBox="0 0 ${W+extraW} ${H}" style="display:block">`;
+  // Nut or fret number
+  if(startFret===1){
+    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="var(--text2)" rx="1"/>`;
+  } else {
+    svg+=`<text x="${W-pad+4}" y="${pad+22}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
+  }
+  // Fret lines
+  for(let f=0;f<=FRET_COUNT;f++){
+    const y=pad+16+f*sh;
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="${f===0?1.5:0.8}"/>`;
+  }
+  // String lines
+  for(let s=0;s<STRINGS;s++){
+    const x=pad+s*sw;
+    svg+=`<line x1="${x}" y1="${pad+16}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  // String labels (G C E A)
+  ['G','C','E','A'].forEach((lbl,s)=>{
+    const x=pad+s*sw;
+    svg+=`<text x="${x}" y="${H-2}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="Poppins,sans-serif">${lbl}</text>`;
+  });
+  // Dots + markers
+  frets.forEach((f,s)=>{
+    const x=pad+s*sw;
+    if(f<0){svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="9" fill="var(--text3)">✕</text>`;return;}
+    if(f===0){svg+=`<circle cx="${x}" cy="${pad+9}" r="3.5" fill="none" stroke="var(--text3)" stroke-width="1.5"/>`;return;}
+    const relFret=f-startFret+1;
+    if(relFret>=1&&relFret<=FRET_COUNT){
+      const y=pad+16+(relFret-1)*sh+sh/2;
+      svg+=`<circle cx="${x}" cy="${y}" r="5" fill="var(--blue-mid)"/>`;
+    }
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ── BASS CHORD SHAPES (EADG tuning, 4 strings — root + 5th patterns) ──────
+const BASS_SHAPES = {
+  'C':{frets:[3,3,-1,-1],label:'Root: C'},'Cm':{frets:[3,3,-1,-1],label:'Root: C'},
+  'D':{frets:[0,0,-1,-1],label:'Root: D'},'Dm':{frets:[0,0,-1,-1],label:'Root: D'},
+  'E':{frets:[0,2,2,-1],label:'Root: E'},'Em':{frets:[0,2,2,-1],label:'Root: E'},
+  'F':{frets:[1,3,3,-1],label:'Root: F'},'Fm':{frets:[1,3,3,-1],label:'Root: F'},
+  'G':{frets:[3,5,5,-1],label:'Root: G'},'Gm':{frets:[3,5,5,-1],label:'Root: G'},
+  'A':{frets:[0,2,2,-1],label:'Root: A'},'Am':{frets:[0,2,2,-1],label:'Root: A'},
+  'B':{frets:[2,4,4,-1],label:'Root: B'},'Bm':{frets:[2,4,4,-1],label:'Root: B'},
+  'Bb':{frets:[1,3,3,-1],label:'Root: Bb'},'Eb':{frets:[1,3,3,-1],label:'Root: Eb'},
+  'F#m':{frets:[2,4,4,-1],label:'Root: F#'},'C#m':{frets:[4,4,-1,-1],label:'Root: C#'},
+};
+
+function buildBassChordSVG(name){
+  const shape = BASS_SHAPES[name];
+  const label = shape?.label || ('Root: '+name);
+  if(!shape) return `<div style="font-size:11px;color:var(--text3);padding:10px;text-align:center">${label}<br><span style="font-size:10px">Power 5th pattern</span></div>`;
+  const {frets} = shape;
+  const STRINGS = 4, FRET_COUNT = 4;
+  const W = 66, H = 90, pad = 12;
+  const sw = (W - pad*2) / (STRINGS-1);
+  const sh = (H - pad*2 - 16) / FRET_COUNT;
+  const activeFrets = frets.filter(f=>f>0);
+  const minFret = activeFrets.length>0 ? Math.min(...activeFrets) : 1;
+  const startFret = minFret <= 1 ? 1 : minFret;
+  const showFretNum = startFret > 1;
+  const extraW = showFretNum ? 18 : 0;
+  let svg = `<svg width="${W+extraW}" height="${H}" viewBox="0 0 ${W+extraW} ${H}" style="display:block">`;
+  if(startFret===1){
+    svg+=`<rect x="${pad}" y="${pad+14}" width="${W-pad*2}" height="3" fill="var(--text2)" rx="1"/>`;
+  } else {
+    svg+=`<text x="${W-pad+4}" y="${pad+22}" font-size="9" fill="var(--text3)" font-family="Roboto Mono,monospace">${startFret}fr</text>`;
+  }
+  for(let f=0;f<=FRET_COUNT;f++){
+    const y=pad+16+f*sh;
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="${f===0?1.5:0.8}"/>`;
+  }
+  for(let s=0;s<STRINGS;s++){
+    const x=pad+s*sw;
+    svg+=`<line x1="${x}" y1="${pad+16}" x2="${x}" y2="${H-pad}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+  // String labels E A D G
+  ['E','A','D','G'].forEach((lbl,s)=>{
+    const x=pad+s*sw;
+    svg+=`<text x="${x}" y="${H-2}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="Poppins,sans-serif">${lbl}</text>`;
+  });
+  frets.forEach((f,s)=>{
+    const x=pad+s*sw;
+    if(f<0){svg+=`<text x="${x}" y="${pad+10}" text-anchor="middle" font-size="9" fill="var(--text3)">✕</text>`;return;}
+    if(f===0){svg+=`<circle cx="${x}" cy="${pad+9}" r="3.5" fill="none" stroke="var(--text3)" stroke-width="1.5"/>`;return;}
+    const relFret=f-startFret+1;
+    if(relFret>=1&&relFret<=FRET_COUNT){
+      const y=pad+16+(relFret-1)*sh+sh/2;
+      svg+=`<circle cx="${x}" cy="${y}" r="5" fill="var(--red)"/>`;
+    }
+  });
+  svg+=`<text x="${(W)/2}" y="${pad+6}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="Poppins,sans-serif">${label}</text>`;
+  svg+=`</svg>`;
+  return svg;
 }
 
 function buildChordSVG(name){
@@ -5746,8 +5933,10 @@ function showChordDiagram(name, el){
       </div>` : '';
     return `${navHTML}
       <div style="display:flex;gap:4px;justify-content:center;margin-bottom:8px">
-        <button onclick="event.stopPropagation();setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎸</button>
-        <button onclick="event.stopPropagation();setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer">🎹</button>
+        <button onclick="event.stopPropagation();setChordDiagramType('Guitar',this.parentNode.parentNode)" style="padding:2px 7px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Guitar'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Guitar'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer" title="Guitar">🎸</button>
+        <button onclick="event.stopPropagation();setChordDiagramType('Piano',this.parentNode.parentNode)" style="padding:2px 7px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Piano'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Piano'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer" title="Piano">🎹</button>
+        <button onclick="event.stopPropagation();setChordDiagramType('Ukulele',this.parentNode.parentNode)" style="padding:2px 7px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Ukulele'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Ukulele'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer" title="Ukulele">🪕</button>
+        <button onclick="event.stopPropagation();setChordDiagramType('Bass',this.parentNode.parentNode)" style="padding:2px 7px;border-radius:6px;border:1px solid var(--border);background:${_chordDiagramType==='Bass'?'var(--blue-mid)':'var(--bg3)'};color:${_chordDiagramType==='Bass'?'#fff':'var(--text2)'};font-size:10px;cursor:pointer" title="Bass">🎸<sub style="font-size:7px">4</sub></button>
       </div>
       <div class="chord-popup-name">${chordToShow}</div>
       <div id="chordDiagramContent">${buildChordDiagram(chordToShow)}</div>`;
