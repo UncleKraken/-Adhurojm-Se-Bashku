@@ -4882,22 +4882,12 @@ function copyLyrics(mode){
   if(!out.length){showToast(currentLang==='sq'?'Nuk u gjet tekst':'No lyrics found','error');return;}
   var title=mode==='en'?(currentSong.original||currentSong.title):currentSong.title;
   var text=title+'\n'+(currentSong.artist||'')+'\n\n'+out.join('\n');
-  var label=currentLang==='sq'
-    ?(mode==='sq'?'teksti shqip':mode==='en'?'English text':'SQ + EN')
-    :(mode==='sq'?'Albanian text':mode==='en'?'English text':'SQ + EN');
-  function _execCopy(){
-    var ta=document.createElement('textarea');
-    ta.value=text;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
-    document.body.appendChild(ta);ta.focus();ta.select();
-    try{document.execCommand('copy');showToast('✅ U kopjua '+label+'!','success');}
-    catch(e){showToast(currentLang==='sq'?'Gabim':'Copy failed','error');}
-    document.body.removeChild(ta);
-  }
-  if(navigator.clipboard&&window.isSecureContext){
-    navigator.clipboard.writeText(text).then(function(){
-      showToast('✅ U kopjua '+label+'!','success');
-    }).catch(_execCopy);
-  } else { _execCopy(); }
+  navigator.clipboard.writeText(text).then(function(){
+    var label=currentLang==='sq'
+      ?(mode==='sq'?'teksti shqip':mode==='en'?'English text':'SQ + EN')
+      :(mode==='sq'?'Albanian text':mode==='en'?'English text':'SQ + EN');
+    showToast('✅ U kopjua '+label+'!','success');
+  }).catch(function(){showToast(currentLang==='sq'?'Gabim':'Copy failed','error');});
 }
 
 // ── CAPO CALCULATOR (Guide page) ──────────────────────────────────────────────
@@ -6025,7 +6015,6 @@ function addChordInteraction(){
   // Song page: ←/→ arrows navigate between songs
   if(!window._songPageKeyNav){
     window._songPageKeyNav=true;
-    // Keyboard ← →
     document.addEventListener('keydown',(e)=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable) return;
       const songPage=document.getElementById('songPage');
@@ -6037,26 +6026,6 @@ function addChordInteraction(){
         if(next){ e.preventDefault(); openSong(next.id); }
       }
     });
-    // Swipe left/right on song page (mobile)
-    let _swX=null,_swY=null;
-    document.addEventListener('touchstart',(e)=>{
-      const sp=document.getElementById('songPage');
-      if(!currentSong||!sp||sp.style.display==='none') return;
-      _swX=e.touches[0].clientX; _swY=e.touches[0].clientY;
-    },{passive:true});
-    document.addEventListener('touchend',(e)=>{
-      const sp=document.getElementById('songPage');
-      if(!currentSong||!sp||sp.style.display==='none'||_swX===null) return;
-      const dx=e.changedTouches[0].clientX-_swX;
-      const dy=e.changedTouches[0].clientY-(_swY||0);
-      _swX=null; _swY=null;
-      // Only count horizontal swipes (not scrolling)
-      if(Math.abs(dx)<80||Math.abs(dy)>60) return;
-      const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
-      if(idx<0) return;
-      const next=dx<0?SONGS[idx+1]:SONGS[idx-1];
-      if(next) openSong(next.id);
-    },{passive:true});
   }
 }
 
@@ -6424,25 +6393,7 @@ function printSetlist(){
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>${sl.name}</title>
-  <style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}h1{font-size:22px;margin-bottom:4px}.meta{color:#888;font-size:13px;margin-bottom:24px}.item{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #eee}.num{font-size:20px;font-weight:800;color:#ccc;min-width:32px}.title{font-weight:700;font-size:15px}.sub{font-size:12px;color:#888;margin-top:2px}.note{font-size:12px;color:#555;margin-top:4px;font-style:italic}.key{display:inline-block;background:#1a2a4a;color:#fff;font-size:11px;padding:2px 8px;border-radius:100px;margin-left:6px}.footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}@media print{button{display:none}}/* ════════════════════════════════════════════════════════
-   MOBILE UI — PHASE B (Touch & UX)
-   ════════════════════════════════════════════════════════ */
-@media(max-width:768px){
-  .song-actions{display:flex;flex-wrap:wrap;gap:8px;}
-  .song-actions>button{flex:1 1 140px;justify-content:center;}
-  .t-btn{min-width:36px;min-height:36px;font-size:16px;}
-  .chord-clickable{padding:4px 2px;margin:-4px -2px;display:inline-block;}
-  .inst-row{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;scrollbar-width:none;}
-  #shareModal>div{border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;margin:0;max-height:85vh;overflow-y:auto;}
-  #chordPopup{position:fixed !important;bottom:72px !important;top:auto !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;width:min(200px,90vw) !important;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
-  #perfControlsBar>div{gap:4px;padding:4px 6px;}
-  #perfControlsBar button{min-height:38px;min-width:38px;}
-  #perfContent{font-size:16px;}
-}
-@media(max-width:480px){
-  .songs-grid{grid-template-columns:1fr;}
-}
-</style></head><body>
+  <style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px}h1{font-size:22px;margin-bottom:4px}.meta{color:#888;font-size:13px;margin-bottom:24px}.item{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #eee}.num{font-size:20px;font-weight:800;color:#ccc;min-width:32px}.title{font-weight:700;font-size:15px}.sub{font-size:12px;color:#888;margin-top:2px}.note{font-size:12px;color:#555;margin-top:4px;font-style:italic}.key{display:inline-block;background:#1a2a4a;color:#fff;font-size:11px;padding:2px 8px;border-radius:100px;margin-left:6px}.footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}@media print{button{display:none}}</style></head><body>
   <button onclick="window.print()" style="margin-bottom:20px;padding:8px 18px;background:#1a2a4a;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨️ Printo</button>
   <h1>📋 ${sl.name}</h1><div class="meta">${sl.songs.length} këngë · ${new Date().toLocaleDateString('sq-AL')}</div>
   ${sl.songs.map((s,i)=>`<div class="item"><div class="num">${i+1}</div><div><div class="title">${s.title}<span class="key">${s.key}</span></div><div class="sub">♪ ${s.artist}</div>${s.note?`<div class="note">📝 ${s.note}</div>`:''}</div></div>`).join('')}
