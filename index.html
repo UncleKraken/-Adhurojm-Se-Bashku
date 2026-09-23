@@ -713,25 +713,6 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
 </head>
 <body>
-<!-- MOBILE BOTTOM NAVIGATION -->
-<nav id="mobileBottomNav" aria-label="Mobile navigation">
-  <button id="mbnHome" onclick="showPage('home');updateMobileNav('home')">
-    <span class="nav-icon">🏠</span>
-    <span data-sq="Home" data-en="Home">Home</span>
-  </button>
-  <button id="mbnSongs" onclick="showPage('songs');updateMobileNav('songs')">
-    <span class="nav-icon">🎵</span>
-    <span data-sq="Këngë" data-en="Songs">Këngë</span>
-  </button>
-  <button id="mbnSetlist" onclick="showPage('setlist');updateMobileNav('setlist')">
-    <span class="nav-icon">📋</span>
-    <span data-sq="Setlist" data-en="Setlist">Setlist</span>
-  </button>
-  <button id="mbnGuide" onclick="showPage('guide');updateMobileNav('guide')">
-    <span class="nav-icon">📖</span>
-    <span data-sq="Udhëzues" data-en="Guide">Udhëzues</span>
-  </button>
-</nav>
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 <!-- SCROLL TO TOP -->
@@ -3161,11 +3142,16 @@ function buildCard(song){
 //  NAVIGATION
 // ═══════════════════════════════════════════════════════
 // Updates the mobile bottom nav to highlight the active page button.
+// Wrapped in try/catch — mobile nav is cosmetic and must never break page init.
 function updateMobileNav(page){
-  const map={home:'mbnHome',songs:'mbnSongs',song:'mbnSongs',setlist:'mbnSetlist',guide:'mbnGuide'};
-  document.querySelectorAll('#mobileBottomNav button').forEach(b=>b.classList.remove('active'));
-  const activeId=map[page];
-  if(activeId) document.getElementById(activeId)?.classList.add('active');
+  try{
+    const map={home:'mbnHome',songs:'mbnSongs',song:'mbnSongs',setlist:'mbnSetlist',guide:'mbnGuide'};
+    const nav=document.getElementById('mobileBottomNav');
+    if(!nav) return;
+    nav.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+    const activeId=map[page];
+    if(activeId){ const btn=document.getElementById(activeId); if(btn) btn.classList.add('active'); }
+  }catch(e){}
 }
 
 function showPage(page,el){
@@ -3188,7 +3174,7 @@ function showPage(page,el){
   if(page==='favorites') renderFavoritesPage();
   if(page==='setlist'){ renderSetlist(); updateSetlistBadge(); }
   if(page !== 'song') resetMetaTags();
-  updateMobileNav(page);
+  try{updateMobileNav(page);}catch(e){}
 }
 
 function renderFavoritesPage(){
@@ -4665,7 +4651,7 @@ window._lyricsFontSize = Number(localStorage.getItem('aa_font_size')||14);
 })();
 
 initData();
-window.addEventListener('load', loadSetlistFromHash);
+setTimeout(function(){try{loadSetlistFromHash();}catch(e){}},500);
 
 // ── DEVELOPMENT BANNER (every 15 min) ──────────────────────────────────────
 var DEV_BANNER_MS=15*60*1000;
@@ -7979,5 +7965,24 @@ function resetSongForm() {
 // saveSong and resetSongForm defined below
 
 </script>
+<!-- MOBILE BOTTOM NAVIGATION — fixed at bottom, placed last so it never breaks page flow -->
+<nav id="mobileBottomNav" aria-label="Mobile navigation">
+  <button id="mbnHome" onclick="showPage('home')">
+    <span class="nav-icon">🏠</span>
+    <span data-sq="Home" data-en="Home">Home</span>
+  </button>
+  <button id="mbnSongs" onclick="showPage('songs')">
+    <span class="nav-icon">🎵</span>
+    <span data-sq="Këngë" data-en="Songs">Këngë</span>
+  </button>
+  <button id="mbnSetlist" onclick="showPage('setlist')">
+    <span class="nav-icon">📋</span>
+    <span data-sq="Setlist" data-en="Setlist">Setlist</span>
+  </button>
+  <button id="mbnGuide" onclick="showPage('guide')">
+    <span class="nav-icon">📖</span>
+    <span data-sq="Udhëzues" data-en="Guide">Udhëzues</span>
+  </button>
+</nav>
 </body>
 </html>
