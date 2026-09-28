@@ -685,29 +685,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 /* ── SIMILAR SONGS ── */
 .similar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
 
-/* ── MOBILE BOTTOM NAV — safe CSS ── */
-#mobileBottomNav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;z-index:8000;
-  background:var(--surface);border-top:1px solid var(--border);
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  flex-direction:row;justify-content:space-around;align-items:center;
-  box-shadow:0 -2px 12px rgba(0,0,0,0.12);
-}
-#mobileBottomNav button{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  background:none;border:none;cursor:pointer;padding:8px 12px;
-  color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;
-  transition:color .18s;min-width:48px;
-}
-#mobileBottomNav button.active{color:var(--blue-mid);}
-#mobileBottomNav button span.nav-icon{font-size:22px;line-height:1;}
-#mobileBottomNav button:active{opacity:.7;}
 
-/* Show bottom nav on mobile — DO NOT add body padding-bottom (breaks iOS) */
-@media(max-width:768px){
-  #mobileBottomNav{display:flex;}
-}
 
 </style>
 
@@ -3141,18 +3119,8 @@ function buildCard(song){
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════════════
-// Updates the mobile bottom nav to highlight the active page button.
-// Wrapped in try/catch — mobile nav is cosmetic and must never break page init.
-function updateMobileNav(page){
-  try{
-    const map={home:'mbnHome',songs:'mbnSongs',song:'mbnSongs',setlist:'mbnSetlist',guide:'mbnGuide'};
-    const nav=document.getElementById('mobileBottomNav');
-    if(!nav) return;
-    nav.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
-    const activeId=map[page];
-    if(activeId){ const btn=document.getElementById(activeId); if(btn) btn.classList.add('active'); }
-  }catch(e){}
-}
+// Mobile bottom nav function — nav disabled, kept as no-op for safety
+function updateMobileNav(page){}
 
 function showPage(page,el){
   // Stop YouTube video when leaving song page
@@ -7965,24 +7933,6 @@ function resetSongForm() {
 // saveSong and resetSongForm defined below
 
 </script>
-<!-- MOBILE BOTTOM NAVIGATION — fixed at bottom, placed last so it never breaks page flow -->
-<nav id="mobileBottomNav" aria-label="Mobile navigation">
-  <button id="mbnHome" onclick="showPage('home')">
-    <span class="nav-icon">🏠</span>
-    <span data-sq="Home" data-en="Home">Home</span>
-  </button>
-  <button id="mbnSongs" onclick="showPage('songs')">
-    <span class="nav-icon">🎵</span>
-    <span data-sq="Këngë" data-en="Songs">Këngë</span>
-  </button>
-  <button id="mbnSetlist" onclick="showPage('setlist')">
-    <span class="nav-icon">📋</span>
-    <span data-sq="Setlist" data-en="Setlist">Setlist</span>
-  </button>
-  <button id="mbnGuide" onclick="showPage('guide')">
-    <span class="nav-icon">📖</span>
-    <span data-sq="Udhëzues" data-en="Guide">Udhëzues</span>
-  </button>
-</nav>
+
 </body>
 </html>
