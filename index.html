@@ -632,6 +632,39 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .perf-lyric-line.active-line{opacity:1 !important;transform:scale(1.025);filter:none;}
 .perf-lyric-line.dim-line{opacity:0.28 !important;filter:blur(0.3px);}
 
+/* ── SECTION CUE COLORS ── */
+.perf-section-label{display:inline-block;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 10px;border-radius:20px;margin-bottom:6px;}
+.perf-section-label.sec-verse{background:rgba(96,165,250,0.18);color:#93c5fd;}
+.perf-section-label.sec-chorus{background:rgba(240,192,64,0.18);color:#fcd34d;}
+.perf-section-label.sec-bridge{background:rgba(167,139,250,0.22);color:#c4b5fd;}
+.perf-section-label.sec-prechorus{background:rgba(52,211,153,0.18);color:#6ee7b7;}
+.perf-section-label.sec-intro{background:rgba(251,146,60,0.18);color:#fdba74;}
+.perf-section-label.sec-outro{background:rgba(251,146,60,0.18);color:#fdba74;}
+.perf-section-label.sec-interlude{background:rgba(244,114,182,0.18);color:#f9a8d4;}
+.perf-section-label.sec-default{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+
+/* ── SECTION FLASH animation ── */
+@keyframes perfFlashIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+@keyframes perfFlashOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.08)}}
+#perfSectionFlash.flash-in{animation:perfFlashIn .15s ease-out forwards;}
+#perfSectionFlash.flash-out{animation:perfFlashOut .3s ease-in forwards;}
+
+/* ── COUNT-IN animation ── */
+@keyframes countPulse{0%{transform:scale(1.3);opacity:1}100%{transform:scale(1);opacity:0.85}}
+#perfCountInNum.beat{animation:countPulse .12s ease-out forwards;}
+.ci-beat-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background .08s,transform .08s;}
+.ci-beat-dot.active{background:#f0c040;transform:scale(1.4);}
+
+/* ── SONG CHANGE transition ── */
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+#perfContent.anim-in-right{animation:slideInRight .3s cubic-bezier(.25,.46,.45,.94) forwards;}
+#perfContent.anim-in-left{animation:slideInLeft .3s cubic-bezier(.25,.46,.45,.94) forwards;}
+
+/* ── PERFORMANCE MODE enter animation ── */
+@keyframes perfEnter{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+#performanceMode.perf-entering{animation:perfEnter .4s cubic-bezier(.25,.46,.45,.94) forwards;}
+
 /* ── PERF V2 HUD auto-hide ── */
 #perfV2HUD{transition:opacity .5s;}
 #perfV2HUD.hidden{opacity:0.06;pointer-events:none;}
@@ -1045,6 +1078,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="togglePerfChords()" id="perfChordsBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎼 Chords</button>
           <button onclick="toggleSingerMode()" id="perfSingerBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎤 Singer</button>
+          <button onclick="toggleConfidenceMonitor()" id="perfConfidenceBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">👁 Monitor</button>
           <!-- hidden alias used by keyboard shortcut M -->
           <button onclick="toggleSingerMode()" id="perfModeBtn" style="display:none"></button>
         </div>
@@ -1054,6 +1088,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div style="margin-bottom:18px">
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Metronome</div>
         <span id="perfMetroWrap" style="display:flex;align-items:center;gap:6px"></span>
+      </div>
+
+      <!-- Stage Notes -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📝 Stage Note</div>
+        <textarea id="perfDrawerNoteInput" rows="2" placeholder="Kapo 2, fillo ngadalë, wait for leader..." oninput="(function(el){const sl=getSetlist();const item=sl.songs[perfIdx];if(item){item.note=el.value;saveSetlist(sl);}const btn=document.getElementById('perfDrawerNoteShowBtn');if(btn)btn.style.display=el.value?'block':'none';})(this)" style="width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;resize:none;outline:none;box-sizing:border-box;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button id="perfDrawerNoteShowBtn" onclick="(function(){const sl=getSetlist();const item=sl.songs[perfIdx];if(item?.note)_showStageNote(item.note);})()" style="display:none;width:100%;margin-top:6px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);border-radius:8px;padding:7px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#f0c040">▲ Show Note on Screen</button>
       </div>
 
       <!-- Shortcuts -->
@@ -1079,6 +1120,34 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <div id="perfProgressBar" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.08);z-index:5;display:none">
     <div id="perfProgressFill" style="height:100%;width:0%;background:var(--gold,#f0c040);transition:width .25s linear;border-radius:0 2px 2px 0"></div>
   </div>
+
+  <!-- ── SECTION FLASH overlay ── -->
+  <div id="perfSectionFlash" style="display:none;position:absolute;inset:0;z-index:28;pointer-events:none;align-items:center;justify-content:center">
+    <div id="perfSectionFlashLabel" style="font-family:'Poppins',sans-serif;font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:0.04em;padding:14px 36px;border-radius:18px;backdrop-filter:blur(8px);transition:opacity .15s"></div>
+  </div>
+
+  <!-- ── COUNT-IN overlay (before autoscroll) ── -->
+  <div id="perfCountInOverlay" style="display:none;position:absolute;inset:0;z-index:30;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
+    <div id="perfCountInNum" style="font-family:'Poppins',sans-serif;font-size:clamp(72px,16vw,140px);font-weight:900;color:#fff;line-height:1;transition:transform .08s,opacity .1s"></div>
+    <div id="perfCountInBeats" style="display:flex;gap:10px;margin-top:8px"></div>
+  </div>
+
+  <!-- ── NEXT SECTION preview strip ── -->
+  <div id="perfNextSectionBar" style="display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:7px;white-space:nowrap">
+    <span style="opacity:0.5;font-size:10px">▼ Next</span>
+    <span id="perfNextSectionLabel" style="font-weight:600;color:rgba(255,255,255,0.85)"></span>
+  </div>
+
+  <!-- ── CONFIDENCE MONITOR overlay (vocalist view) ── -->
+  <div id="perfConfidenceMonitor" style="display:none;position:absolute;inset:0;z-index:29;background:#000;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px">
+    <div id="perfCMLine1" style="font-family:'Poppins',sans-serif;font-size:clamp(32px,7vw,72px);font-weight:800;color:#fff;text-align:center;line-height:1.15;transition:opacity .3s"></div>
+    <div id="perfCMLine2" style="font-family:'Poppins',sans-serif;font-size:clamp(20px,4vw,44px);font-weight:600;color:rgba(255,255,255,0.45);text-align:center;line-height:1.3;margin-top:16px;transition:opacity .3s"></div>
+    <div id="perfCMSection" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:4px 16px;border-radius:20px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)"></div>
+    <button onclick="toggleConfidenceMonitor()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.5)">✕</button>
+  </div>
+
+  <!-- ── STAGE NOTES toast ── -->
+  <div id="perfStageNotesToast" style="display:none;position:absolute;bottom:52px;left:50%;transform:translateX(-50%);z-index:16;background:rgba(240,192,64,0.15);border:1px solid rgba(240,192,64,0.4);backdrop-filter:blur(8px);border-radius:12px;padding:8px 18px;font-family:'Poppins',sans-serif;font-size:12px;color:#f0c040;font-weight:600;max-width:80%;text-align:center;pointer-events:none"></div>
 
   <!-- ── END OF SONG indicator ── -->
   <div id="perfEndIndicator" style="display:none;position:absolute;inset:0;z-index:25;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:8px">
@@ -6531,6 +6600,8 @@ function _startPerformanceModeV1(){
   perfIdx=0; _perfLang=null; _perfPanic=false; _perfControlsHidden=false;
   const pm=document.getElementById('performanceMode');
   pm.style.display='flex'; pm.dataset.dark='0';
+  pm.classList.remove('perf-entering'); void pm.offsetWidth; pm.classList.add('perf-entering');
+  setTimeout(()=>pm.classList.remove('perf-entering'), 450);
   document.body.style.overflow='hidden';
   if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(wl=>_wakeLock=wl).catch(()=>{});
   setPerfLang(currentLang);
@@ -6742,6 +6813,18 @@ function highlightCurrentLine(){
     line.classList.toggle('active-line',i===activeIdx);
     line.classList.toggle('dim-line',i!==activeIdx);
   });
+  // ── Section change detection ──
+  const activeLine=lyricLines[activeIdx];
+  const newSection=activeLine?activeLine.dataset.section||'':'';
+  if(newSection && newSection!==content._lastHighlightSection){
+    content._lastHighlightSection=newSection;
+    _flashSection(newSection);
+    // Build sections list from DOM for next-section preview
+    const sectionBlocks=[...document.querySelectorAll('.perf-section-block')];
+    const sections=sectionBlocks.map(b=>({label:b.dataset.label||b.dataset.section||''}));
+    _updateNextSectionPreview(newSection, sections);
+  }
+  _syncConfidenceMonitor();
 }
 
 
@@ -6823,9 +6906,19 @@ function showPerfSong(){
   // ── Row 1: title/meta/counter ──
   document.getElementById('perfCounter').textContent=`${perfIdx+1}/${sl.songs.length}`;
   document.getElementById('perfSongTitle').textContent=s.title;
-  document.getElementById('perfSongMeta').textContent=`${s.artist} · ${s.key}${capoTxt}${s.bpm?' · '+s.bpm+' BPM':''}${item.note?' · 📝 '+item.note:''}`;
+  document.getElementById('perfSongMeta').textContent=`${s.artist} · ${s.key}${capoTxt}${s.bpm?' · '+s.bpm+' BPM':''}`;
   document.getElementById('perfPrevBtn').disabled=perfIdx===0;
   document.getElementById('perfNextBtn').disabled=perfIdx===sl.songs.length-1;
+
+  // ── Auto-show stage note on song load (after 400ms so the song renders first) ──
+  clearTimeout(window._perfNoteAutoShowTimer);
+  if(item.note) window._perfNoteAutoShowTimer=setTimeout(()=>_showStageNote(item.note), 400);
+
+  // ── Sync stage note editor in drawer ──
+  const noteEl=document.getElementById('perfDrawerNoteInput');
+  const noteBtnEl=document.getElementById('perfDrawerNoteShowBtn');
+  if(noteEl){ noteEl.value=item.note||''; noteEl.dataset.songId=s.id; }
+  if(noteBtnEl) noteBtnEl.style.display=item.note?'block':'none';
 
   // Sync slider values with current state
   const fontSlider=document.getElementById('perfFontSlider');
@@ -6868,8 +6961,8 @@ function showPerfSong(){
       const songData=SONGS.find(ss=>Number(ss.id)===Number(x.id));
       const isCurrent=i===perfIdx;
       return `<button onclick="perfIdx=${i};showPerfSong();closeSetlistDrawer()" class="${isCurrent?'perf-song-active':''}">`+
-        `<div style="font-weight:700;font-size:12px">${i+1}. ${x.title}</div>`+
-        (songData?`<div style="font-size:10px;opacity:.7;margin-top:1px">${songData.artist||''}${songData.key?' · '+songData.key:''}</div>`:'')
+        `<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;font-size:12px">${i+1}. ${x.title}</span>${x.note?`<span title="${x.note.replace(/"/g,'&quot;')}" style="width:7px;height:7px;border-radius:50%;background:#f0c040;flex-shrink:0;display:inline-block" ></span>`:''}</div>`+
+        (songData?`<div style="font-size:10px;opacity:.7;margin-top:1px">${songData.artist||''}${songData.key?' · '+songData.key:''}${x.note?' · 📝':''}</div>`:'')
         +`</button>`;
     }).join('');
     // Scroll active song into view
@@ -7108,9 +7201,26 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   const lyricsEl=document.getElementById('perfLyricsContent');
 
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
-    const sec=sectionMap[label];const color=sec?.color||'var(--blue)';
     const rep=reps[label]||1;
-    return `<div style="display:flex;align-items:center;gap:3px;background:${color};color:#fff;border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="perfRemoveSection('${songId}',${i})" style="background:rgba(255,255,255,0.3);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:#fff;font-size:9px">x</button></div>`;
+    const cls=_sectionClass(label);
+    const chipColor={
+      'sec-verse':'rgba(96,165,250,0.22)','sec-chorus':'rgba(240,192,64,0.22)',
+      'sec-bridge':'rgba(167,139,250,0.26)','sec-prechorus':'rgba(52,211,153,0.22)',
+      'sec-intro':'rgba(251,146,60,0.22)','sec-outro':'rgba(251,146,60,0.22)',
+      'sec-interlude':'rgba(244,114,182,0.22)','sec-default':'rgba(255,255,255,0.12)'
+    }[cls]||'rgba(255,255,255,0.12)';
+    const chipText={
+      'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
+      'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
+      'sec-interlude':'#f9a8d4','sec-default':'rgba(255,255,255,0.75)'
+    }[cls]||'rgba(255,255,255,0.75)';
+    const chipBorder={
+      'sec-verse':'rgba(96,165,250,0.4)','sec-chorus':'rgba(240,192,64,0.4)',
+      'sec-bridge':'rgba(167,139,250,0.4)','sec-prechorus':'rgba(52,211,153,0.4)',
+      'sec-intro':'rgba(251,146,60,0.4)','sec-outro':'rgba(251,146,60,0.4)',
+      'sec-interlude':'rgba(244,114,182,0.4)','sec-default':'rgba(255,255,255,0.2)'
+    }[cls]||'rgba(255,255,255,0.2)';
+    return `<div onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="display:flex;align-items:center;gap:4px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0">×</button></div>`;
   }).join('');
 
   // Build sections list with repeats expanded
@@ -7164,10 +7274,10 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
         }
       }
 
-      return '<div class="perf-lyric-line" style="margin-bottom:'+fs+'px;transition:opacity .3s,transform .3s">'+chordHtml+'<div style="font-weight:600;font-size:'+fs+'px;line-height:1.85;font-family:\'Roboto Mono\',monospace">'+lyricText+'</div>'+(secondaryText&&secondaryText!==lyricText?'<div style="color:var(--text3);font-style:italic;font-size:'+(fs-3)+'px;font-family:\'Roboto Mono\',monospace;margin-top:2px">'+secondaryText+'</div>':'')+'</div>'+chordDiagramsHtml;
+      return '<div class="perf-lyric-line" data-section="'+label+'" style="margin-bottom:'+fs+'px;transition:opacity .3s,transform .3s">'+chordHtml+'<div style="font-weight:600;font-size:'+fs+'px;line-height:1.85;font-family:\'Roboto Mono\',monospace">'+lyricText+'</div>'+(secondaryText&&secondaryText!==lyricText?'<div style="color:var(--text3);font-style:italic;font-size:'+(fs-3)+'px;font-family:\'Roboto Mono\',monospace;margin-top:2px">'+secondaryText+'</div>':'')+'</div>'+chordDiagramsHtml;
     }).join('');
     const secLabelHtml=rep>1?`${label} <span style="font-size:10px;opacity:0.8">(${repNum}/${rep})</span>`:label;
-    return `<div class="perf-section-block" data-label="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="sec-lbl" style="background:${sec.color||'var(--blue)'};font-size:12px">${secLabelHtml}</span><div style="margin-top:14px">${lines}</div></div>`;
+    return `<div class="perf-section-block" data-label="${label}" data-section="${label}" style="margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)"><span class="perf-section-label ${_sectionClass(label)}">${secLabelHtml}</span><div style="margin-top:14px">${lines}</div></div>`;
   }).join('')||`<p style="color:var(--text3);padding:20px;font-size:16px">Nuk ka tekst per kete instrument.</p>`;
 }
 
@@ -7195,8 +7305,32 @@ function perfResetArr(songId){
   delete _perfArrangements[`perf_arr_${songId}`]; showPerfSong();
 }
 
-function prevPerformanceSong(){ if(perfIdx>0){perfIdx--;showPerfSong();} }
-function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.length-1){perfIdx++;showPerfSong();} }
+function _perfAnimateSongChange(dir, cb){
+  const content=document.getElementById('perfContent');
+  if(!content){ cb(); return; }
+  content.classList.remove('anim-in-right','anim-in-left');
+  // Brief fade-out
+  content.style.transition='opacity .15s';
+  content.style.opacity='0';
+  setTimeout(()=>{
+    content.style.transition='';
+    content.style.opacity='1';
+    cb();
+    // Slide in from appropriate side
+    const cls=dir>0?'anim-in-right':'anim-in-left';
+    void content.offsetWidth;
+    content.classList.add(cls);
+    setTimeout(()=>content.classList.remove(cls),350);
+  },150);
+}
+
+function prevPerformanceSong(){
+  if(perfIdx>0){ _perfAnimateSongChange(-1,()=>{ perfIdx--; showPerfSong(); }); }
+}
+function nextPerformanceSong(){
+  const sl=getSetlist();
+  if(perfIdx<sl.songs.length-1){ _perfAnimateSongChange(1,()=>{ perfIdx++; showPerfSong(); }); }
+}
 
 // Starts or stops BPM-based autoscroll.
 // Speed formula: baseLineH = fontSize × 2.6 (line-height factor)
@@ -7204,6 +7338,173 @@ function nextPerformanceSong(){ const sl=getSetlist(); if(perfIdx<sl.songs.lengt
 //                pxPerSec   = (baseLineH / secPerLine) × (speedSlider / 100)
 // BEATS_PER_LINE = 4 → one lyric line takes 4 beats at the song's tempo.
 // Min speed floor of 15px/s so it's always visibly moving even at slow tempos.
+// ── SECTION CUE COLOR HELPER ──
+function _sectionClass(label){
+  const l=(label||'').toLowerCase();
+  if(l.includes('verse')||l.includes('varg')) return 'sec-verse';
+  if(l.includes('chorus')||l.includes('refren')||l.includes('kor')) return 'sec-chorus';
+  if(l.includes('bridge')||l.includes('ure')) return 'sec-bridge';
+  if(l.includes('pre')) return 'sec-prechorus';
+  if(l.includes('intro')) return 'sec-intro';
+  if(l.includes('outro')||l.includes('fund')) return 'sec-outro';
+  if(l.includes('inter')||l.includes('nderm')) return 'sec-interlude';
+  return 'sec-default';
+}
+
+// Flash section name on screen for 1.5s
+function _flashSection(label){
+  const el=document.getElementById('perfSectionFlash');
+  const lbl=document.getElementById('perfSectionFlashLabel');
+  if(!el||!lbl||!label) return;
+  // Build color for flash label based on section type
+  const cls=_sectionClass(label);
+  const colorMap={
+    'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
+    'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
+    'sec-interlude':'#f9a8d4','sec-default':'rgba(255,255,255,0.8)'
+  };
+  const bgMap={
+    'sec-verse':'rgba(96,165,250,0.12)','sec-chorus':'rgba(240,192,64,0.14)',
+    'sec-bridge':'rgba(167,139,250,0.16)','sec-prechorus':'rgba(52,211,153,0.14)',
+    'sec-intro':'rgba(251,146,60,0.14)','sec-outro':'rgba(251,146,60,0.14)',
+    'sec-interlude':'rgba(244,114,182,0.14)','sec-default':'rgba(0,0,0,0.4)'
+  };
+  lbl.style.color=colorMap[cls]||'#fff';
+  lbl.style.background=bgMap[cls]||'rgba(0,0,0,0.4)';
+  lbl.style.border=`1px solid ${(colorMap[cls]||'#fff').replace(')',',0.3)').replace('rgb','rgba')}`;
+  lbl.textContent=label.toUpperCase();
+  el.style.display='flex'; el.classList.remove('flash-in','flash-out');
+  void el.offsetWidth; el.classList.add('flash-in');
+  clearTimeout(el._flashTimer);
+  el._flashTimer=setTimeout(()=>{
+    el.classList.remove('flash-in'); el.classList.add('flash-out');
+    setTimeout(()=>{ el.style.display='none'; el.classList.remove('flash-out'); },320);
+  },1200);
+}
+
+// ── COUNT-IN before autoscroll ──
+// Shows animated beat countdown at BPM tempo before scroll begins.
+function _runCountIn(bpm, beats, cb){
+  const overlay=document.getElementById('perfCountInOverlay');
+  const numEl=document.getElementById('perfCountInNum');
+  const beatsEl=document.getElementById('perfCountInBeats');
+  if(!overlay||!numEl||!beatsEl){ cb(); return; }
+
+  const msPerBeat=bpm>0?(60000/bpm):500;
+  const totalBeats=beats||4;
+  let current=0;
+
+  // Build beat dots
+  beatsEl.innerHTML=Array.from({length:totalBeats},(_,i)=>
+    `<div class="ci-beat-dot" id="ci-dot-${i}"></div>`
+  ).join('');
+
+  overlay.style.display='flex';
+  overlay.style.background='rgba(0,0,0,0.82)';
+  overlay.style.backdropFilter='blur(4px)';
+
+  const tick=()=>{
+    if(current>=totalBeats){
+      numEl.textContent=''; numEl.classList.remove('beat');
+      overlay.style.display='none';
+      cb(); return;
+    }
+    // Highlight current dot
+    document.querySelectorAll('.ci-beat-dot').forEach((d,i)=>{
+      d.classList.toggle('active', i===current);
+    });
+    numEl.classList.remove('beat');
+    void numEl.offsetWidth;
+    numEl.textContent=current+1;
+    numEl.classList.add('beat');
+    current++;
+    setTimeout(tick, msPerBeat);
+  };
+  tick();
+}
+
+// ── NEXT SECTION PREVIEW ──
+let _perfNextSectionLabel='';
+function _updateNextSectionPreview(currentSectionLabel, sections){
+  const bar=document.getElementById('perfNextSectionBar');
+  const lbl=document.getElementById('perfNextSectionLabel');
+  if(!bar||!lbl) return;
+  // Find next section after current
+  const idx=sections.findIndex(s=>s.label===currentSectionLabel);
+  const next=sections[idx+1];
+  if(next && next.label!==currentSectionLabel){
+    lbl.textContent=next.label;
+    bar.style.display='flex';
+    _perfNextSectionLabel=next.label;
+  } else {
+    bar.style.display='none';
+    _perfNextSectionLabel='';
+  }
+}
+
+// ── CONFIDENCE MONITOR (vocalist view) ──
+let _perfCMActive=false;
+let _perfCMLyricLines=[];
+let _perfCMCurrentIdx=0;
+
+function toggleConfidenceMonitor(){
+  _perfCMActive=!_perfCMActive;
+  const cm=document.getElementById('perfConfidenceMonitor');
+  const btn=document.getElementById('perfConfidenceBtn');
+  if(!cm) return;
+  cm.style.display=_perfCMActive?'flex':'none';
+  if(btn){
+    btn.style.background=_perfCMActive?'var(--blue-mid)':'var(--bg3)';
+    btn.style.color=_perfCMActive?'#fff':'var(--text2)';
+  }
+  if(_perfCMActive) _syncConfidenceMonitor();
+}
+
+function _syncConfidenceMonitor(){
+  if(!_perfCMActive) return;
+  // Read lyric lines and scroll-sync with perfContent
+  const lines=document.querySelectorAll('.perf-lyric-line');
+  const content=document.getElementById('perfContent');
+  if(!lines.length||!content) return;
+  // Find active line
+  let activeIdx=0;
+  lines.forEach((l,i)=>{ if(l.classList.contains('active-line')) activeIdx=i; });
+  const cmLine1=document.getElementById('perfCMLine1');
+  const cmLine2=document.getElementById('perfCMLine2');
+  const cmSection=document.getElementById('perfCMSection');
+  const activeLyricEl=lines[activeIdx];
+  // Extract only the lyric text (skip chord lines) from the active element
+  const lyricDiv=activeLyricEl?.querySelector('[style*="line-height:1.85"]')||activeLyricEl;
+  const nextLyricEl=lines[activeIdx+1];
+  const nextLyricDiv=nextLyricEl?.querySelector('[style*="line-height:1.85"]')||nextLyricEl;
+  if(cmLine1) cmLine1.textContent=lyricDiv?.textContent||'';
+  if(cmLine2) cmLine2.textContent=nextLyricDiv?.textContent||'';
+  // Read section directly from data-section on the lyric line
+  const secLabel=activeLyricEl?.dataset?.section||'';
+  if(cmSection){
+    cmSection.textContent=secLabel;
+    // Apply section color class for visual cue
+    cmSection.className='';
+    if(secLabel) cmSection.classList.add('perf-section-label',_sectionClass(secLabel));
+  }
+}
+
+// ── STAGE NOTES ──
+function _showStageNote(note){
+  if(!note) return;
+  const toast=document.getElementById('perfStageNotesToast');
+  if(!toast) return;
+  toast.textContent='📝 '+note;
+  toast.style.display='block';
+  toast.style.opacity='1';
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(()=>{
+    toast.style.transition='opacity .5s';
+    toast.style.opacity='0';
+    setTimeout(()=>{ toast.style.display='none'; toast.style.transition=''; },520);
+  },5000);
+}
+
 function _syncAutoScrollBtns(active,label){
   const btnHUD=document.getElementById('autoScrollBtn');
   const btnDrawer=document.getElementById('autoScrollBtnDrawer');
@@ -7222,14 +7523,16 @@ function toggleAutoScroll(){
     return;
   }
   // Stop any running highlight immediately so it doesn't flash the wrong line
-  // while we wait for the scroll to start (the 80ms timer below)
   stopLineHighlight();
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx]; if(!item) return;
   const s=SONGS.find(x=>Number(x.id)===Number(item.id)); if(!s) return;
   const bpm=s.bpm||0;
   const content=document.getElementById('perfContent'); if(!content) return;
 
-  const startWithDuration=(ytDur)=>{
+  // Show stage note if present
+  if(item.note) _showStageNote(item.note);
+
+  const _doStartWithDuration=(ytDur)=>{
     const BEATS_PER_LINE=4; // 4 beats/line feels natural for worship tempos
     if(ytDur>30){
       const scrollH=Math.max(100,content.scrollHeight-content.clientHeight);
@@ -7251,17 +7554,27 @@ function toggleAutoScroll(){
     }
   };
 
+  // Count-in: 4 beats at BPM before scroll starts (skip if BPM unknown)
+  const startWithCountIn=(getDur)=>{
+    if(bpm>0){
+      _syncAutoScrollBtns(true,'⏳');
+      _runCountIn(bpm, 4, ()=>getDur());
+    } else {
+      getDur();
+    }
+  };
+
   if(s.youtube){
     const ytId=extractYTId(s.youtube);
     const cached=ytId?_ytDurationCache[ytId]:0;
     if(cached){
-      startWithDuration(cached);
+      startWithCountIn(()=>_doStartWithDuration(cached));
     } else {
       _syncAutoScrollBtns(true,'⏳');
-      fetchYTDuration(s.youtube,(dur)=>startWithDuration(dur));
+      fetchYTDuration(s.youtube,(dur)=>startWithCountIn(()=>_doStartWithDuration(dur)));
     }
   } else {
-    startWithDuration(0);
+    startWithCountIn(()=>_doStartWithDuration(0));
   }
 }
 
