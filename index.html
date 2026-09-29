@@ -64,13 +64,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Adhurojmë Së Bashku"/>
 <!-- Google Analytics — Measurement ID: G-6XGMX9PBY6 -->
-<!-- To activate: remove the outer comment tags below -->
-<!--
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6XGMX9PBY6"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6XGMX9PBY6',{anonymize_ip:true});</script>
-
-
--->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/></noscript>
@@ -674,6 +669,18 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 #perfSongList button:hover{background:var(--bg3);}
 #perfSongList button.perf-song-active{background:var(--blue-mid);color:#fff;font-weight:700;}
 
+/* ── ROLE PICKER cards ── */
+.perf-role-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 12px;cursor:pointer;transition:all .18s;font-family:'Poppins',sans-serif;color:#fff;}
+.perf-role-card:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);transform:translateY(-2px);}
+.perf-role-card.selected{border-color:var(--gold);background:rgba(240,192,64,0.12);}
+.perf-role-card .role-icon{font-size:28px;line-height:1;}
+.perf-role-card .role-name{font-size:12px;font-weight:700;letter-spacing:.02em;}
+.perf-role-card .role-desc{font-size:10px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.4;}
+
+/* ── MIC SCROLL beat dots ── */
+#perfAudioBar{transition:opacity .3s;}
+@keyframes micPulse{0%{opacity:1;transform:scaleX(1)}100%{opacity:.3;transform:scaleX(.6)}}
+
 /* ── PERF MODE MOBILE — V2 ── */
 @media(max-width:768px){
   #perfContent{padding:68px 12px 36px}
@@ -1006,6 +1013,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
 
       <!-- Icon buttons: dark, fullscreen, settings, panic, exit -->
+      <button onclick="togglePerfPDF()" id="perfPDFBtn" title="Chord Chart PDF" style="display:none;background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0">📄</button>
+      <button onclick="showPerfLiveSync()" id="perfLiveSyncBtn" title="Live Room Sync" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0">📡</button>
+      <span id="perfRoleBadge" style="display:none;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);flex-shrink:0"></span>
       <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0">🌙</button>
       <button onclick="togglePerfFullscreen()" title="Fullscreen (F)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0">⛶</button>
       <button onclick="togglePerfDrawer()" id="perfDrawerBtn" title="Settings" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0">⚙️</button>
@@ -1090,6 +1100,26 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <span id="perfMetroWrap" style="display:flex;align-items:center;gap:6px"></span>
       </div>
 
+      <!-- Role -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">My Role</div>
+        <button onclick="showRolePicker()" id="perfRoleChangeBtn" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🎛️ Operator <span style="opacity:.5;font-size:10px;float:right">Change →</span></button>
+      </div>
+
+      <!-- Mic Scroll -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎙️ Mic Auto-Scroll</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+          <button onclick="toggleMicScroll()" id="micScrollBtn" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif">🎙️ Start Mic</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3)">Sensitivity</span>
+          <input type="range" min="1" max="10" value="5" id="micSensitivitySlider" oninput="_micSensitivity=Number(this.value)" style="flex:1;accent-color:var(--blue-mid)"/>
+          <span id="micSensLabel" style="font-size:10px;color:var(--text3);min-width:12px">5</span>
+        </div>
+        <div id="micStatusText" style="font-size:10px;color:var(--text3);margin-top:6px;font-family:'Poppins',sans-serif"></div>
+      </div>
+
       <!-- Stage Notes -->
       <div style="margin-bottom:18px">
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📝 Stage Note</div>
@@ -1116,9 +1146,73 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- ── DRAWER BACKDROP — closes whichever drawer is open ── -->
   <div id="perfDrawerBackdrop" onclick="closePerfDrawer();closeSetlistDrawer()" style="display:none;position:absolute;inset:0;z-index:21;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px)"></div>
 
-  <!-- ── PROGRESS BAR — bottom edge, shows during autoscroll ── -->
-  <div id="perfProgressBar" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.08);z-index:5;display:none">
-    <div id="perfProgressFill" style="height:100%;width:0%;background:var(--gold,#f0c040);transition:width .25s linear;border-radius:0 2px 2px 0"></div>
+  <!-- progress bar removed — lyric line highlight is the position indicator -->
+
+  <!-- ── ROLE PICKER overlay ── -->
+  <div id="perfRolePicker" style="display:none;position:absolute;inset:0;z-index:40;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;padding:24px">
+    <div style="max-width:420px;width:100%">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">What's your role today?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif">Your view will adapt to help you serve better</div>
+      </div>
+      <div id="perfRoleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:16px">
+        <input type="checkbox" id="perfRoleRemember" style="accent-color:var(--gold);width:14px;height:14px">
+        <label for="perfRoleRemember" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Remember my role on this device</label>
+      </div>
+      <button onclick="setPerfRole('operator')" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35)">Skip — use full operator view</button>
+    </div>
+  </div>
+
+  <!-- ── LIVE SYNC overlay ── -->
+  <div id="perfLiveSync" style="display:none;position:absolute;inset:0;z-index:39;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;padding:24px">
+    <div style="max-width:340px;width:100%;text-align:center">
+      <div style="font-size:28px;margin-bottom:12px">📡</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Live Room Sync</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;margin-bottom:24px">All devices follow the worship leader in real time</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <button onclick="perfLiveStart('leader')" style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.45);border-radius:12px;padding:14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:#93c5fd">
+          🎙️ Start as Leader<div style="font-size:10px;font-weight:400;opacity:.7;margin-top:3px">Room code: <span id="perfLiveRoomCode" style="letter-spacing:3px;font-weight:800">------</span></div>
+        </button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="perfLiveFollowerCode" type="text" maxlength="6" placeholder="Room code" style="flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:#fff;font-family:'Roboto Mono',monospace;font-size:16px;font-weight:700;text-align:center;letter-spacing:4px;outline:none;text-transform:uppercase">
+          <button onclick="perfLiveStart('follower')" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);border-radius:10px;padding:11px 16px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#6ee7b7;white-space:nowrap">Join →</button>
+        </div>
+      </div>
+      <div id="perfLiveSyncStatus" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:12px;min-height:16px"></div>
+      <button onclick="closePerfLiveSync()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35)">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── LIVE SYNC status badge ── -->
+  <div id="perfLiveBadge" style="display:none;position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.6);border:1px solid rgba(96,165,250,0.4);backdrop-filter:blur(6px);border-radius:20px;padding:4px 12px;display:none;align-items:center;gap:6px;pointer-events:none">
+    <span style="width:6px;height:6px;border-radius:50%;background:#93c5fd;display:inline-block;animation:pulse 1.2s infinite"></span>
+    <span id="perfLiveBadgeText" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;color:#93c5fd"></span>
+  </div>
+
+  <!-- ── AUDIO ONSET indicator ── -->
+  <div id="perfAudioBar" style="display:none;position:absolute;bottom:0;left:0;right:0;height:2px;z-index:6;overflow:hidden">
+    <div id="perfAudioLevel" style="height:100%;width:0%;background:linear-gradient(90deg,#6ee7b7,#93c5fd);transition:width .05s"></div>
+  </div>
+
+  <!-- ── PDF VIEWER overlay ── -->
+  <div id="perfPDFOverlay" style="display:none;position:absolute;inset:0;z-index:18;background:#111;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(0,0,0,0.7);flex-shrink:0;gap:8px">
+      <div style="display:flex;gap:6px">
+        <button onclick="perfPDFPage(-1)" style="background:var(--bg3);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--text2)">‹</button>
+        <span id="perfPDFPageLabel" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);align-self:center">1 / 1</span>
+        <button onclick="perfPDFPage(1)" style="background:var(--bg3);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--text2)">›</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="perfPDFZoom(-0.2)" style="background:var(--bg3);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--text2)">−</button>
+        <button onclick="perfPDFZoom(0.2)" style="background:var(--bg3);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:13px;color:var(--text2)">+</button>
+        <button onclick="togglePerfPDF()" style="background:var(--bg3);border:none;border-radius:7px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif">📝 Lyrics</button>
+      </div>
+    </div>
+    <div id="perfPDFScroll" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:12px;position:relative">
+      <div id="perfPDFLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:13px;color:rgba(255,255,255,0.45)">Loading PDF…</div>
+      <canvas id="perfPDFCanvas" style="max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px;display:none"></canvas>
+    </div>
   </div>
 
   <!-- ── SECTION FLASH overlay ── -->
@@ -1732,7 +1826,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
       <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat<span id="requestsBadge" style="display:none;background:#e53935;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;vertical-align:middle"></span></button>
       <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
+      <button class="admin-tab" id="atab-tools" onclick="switchAdminTab('tools',this)">🔧 Tools</button>
     </div>
+    <button class="btn btn-ghost" onclick="previewAsVisitor()" title="Shiko faqen si vizitor (pa admin mode)" style="margin-left:8px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);border:none;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">👁 Preview</button>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
     <!-- Lang toggle in admin -->
     <div style="display:flex;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-left:8px">
@@ -2161,6 +2257,62 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
     </div>
 
+    <!-- ── TAB: TOOLS ── -->
+    <div class="admin-panel" id="tab-tools">
+      <div class="admin-section-title">🔧 Tools & Diagnostika</div>
+      <div style="padding:0 0 24px">
+
+        <!-- PDF Link Checker -->
+        <div class="admin-form" style="margin-bottom:20px">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">📄 Kontrollo Linqet e PDF-ve</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kontrollon nëse çdo URL e PDF-it është ende aktive. Tregon ✅ nëse funksionon, ❌ nëse ka problem.</p>
+          <button class="btn btn-primary btn-sm" onclick="runPDFLinkCheck()">🔍 Fillo Kontrollin</button>
+          <div id="pdfCheckResults" style="margin-top:16px;display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+
+        <!-- Sitemap Live Check -->
+        <div class="admin-form" style="margin-bottom:20px;border-color:rgba(44,64,116,0.3);background:var(--blue-light)">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">🗺️ Kontrollo Sitemap Live</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Verifikon nëse <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">sitemap.xml</code> dhe <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">robots.txt</code> janë të ngarkuara në GitHub Pages.</p>
+          <button class="btn btn-primary btn-sm" onclick="runSitemapCheck()">🔍 Kontrollo tani</button>
+          <div id="sitemapCheckResults" style="margin-top:14px;font-size:13px;line-height:2"></div>
+        </div>
+
+        <!-- Full Per-Song Analytics Table -->
+        <div class="admin-form" style="padding:0;overflow:hidden">
+          <div style="padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">📊 Të Gjitha Këngët — Statistikat</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="toolsStatsSearch" class="form-input" placeholder="🔍 Kërko..." oninput="renderSongStatsTable()" style="padding:6px 12px;border-radius:100px;font-size:12px;width:160px"/>
+              <select id="toolsStatsSort" class="form-select" onchange="renderSongStatsTable()" style="font-size:12px;padding:6px 10px;border-radius:8px">
+                <option value="views">👁 Shikime ↓</option>
+                <option value="downloads">⬇ Shkarkime ↓</option>
+                <option value="score">⭐ Score ↓</option>
+                <option value="title">Az Titull</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:var(--bg3);text-align:left">
+                  <th style="padding:10px 18px;font-weight:600;color:var(--text2)">Kënga</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">👁</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⬇</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⭐</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">PDF</th>
+                </tr>
+              </thead>
+              <tbody id="songStatsTableBody">
+                <tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">⏳ Duke ngarkuar...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <div class="admin-panel" id="tab-export">
       <div class="admin-section-title">💾 Backup & Export</div>
       <div style="padding:0 0 20px">
@@ -2181,7 +2333,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
             3. Shto: <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">https://unclekraken.github.io/-Adhurojm-Se-Bashku/sitemap.xml</code><br>
             4. Kliko <strong>"Submit"</strong> → Google do e indexojë brenda 1-7 ditëve
           </p>
-          <button class="btn btn-primary btn-sm" onclick="generateAndDownloadSitemap()">🗺️ Gjenero Sitemap tani</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="generateAndDownloadSitemap()">🗺️ Gjenero Sitemap tani</button>
+            <button class="btn btn-outline btn-sm" onclick="generateRobotsTxt()">🤖 Gjenero robots.txt</button>
+          </div>
         </div>
         <div class="admin-form" style="background:var(--gold-muted);border-color:rgba(201,151,58,0.3)">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">🛡️ Si të rikthesh faqen</div>
@@ -2255,13 +2410,16 @@ function toggleCapoField() {
 // Increments a view or download counter for a song via a Supabase RPC call.
 // Fires and forgets — if it fails, the song still opens normally.
 async function trackStat(songId, type) {
-  invalidateStatsCache();
   if(window._adminOpen) return; // don't count admin views
   const sb = getSB();
   if (!sb || !songId) return;
   try {
-    await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
-  } catch(e) {}
+    const { error } = await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
+    if(error) console.warn('[trackStat] RPC error:', error.message);
+    // Bust cache & refresh hero stats so the new count appears immediately
+    invalidateStatsCache();
+    setTimeout(()=>updateHeroStats(), 800);
+  } catch(e) { console.warn('[trackStat]', e.message); }
 }
 
 let _statsCache=null,_statsFetching=null,_statsCacheTime=0;
@@ -2346,6 +2504,29 @@ async function renderStatsDashboard() {
       const {data}=await sb.from('songs').select('*').order('created_at',{ascending:false});
       if(data?.length) allSongs=(data||[]).map(mapRow);
     }catch(e){}
+  }
+
+  // Check if increment_stat RPC exists — show warning if not
+  if(sb){
+    try{
+      const {error} = await sb.rpc('increment_stat', {p_song_id:'__healthcheck__', p_type:'view'});
+      if(error && error.message.includes('not exist')){
+        container.innerHTML = `<div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:18px;color:var(--red);font-size:13px;line-height:1.8">
+          <strong>⚠️ RPC increment_stat nuk ekziston në Supabase!</strong><br>
+          Statistikat nuk po regjistrohen. Shko te Supabase → SQL Editor dhe krijo funksionin:<br>
+          <code style="display:block;margin-top:8px;background:var(--bg3);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap">CREATE OR REPLACE FUNCTION increment_stat(p_song_id text, p_type text)
+RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO song_stats(song_id, views, downloads)
+  VALUES(p_song_id, CASE WHEN p_type='view' THEN 1 ELSE 0 END, CASE WHEN p_type='download' THEN 1 ELSE 0 END)
+  ON CONFLICT(song_id) DO UPDATE SET
+    views = song_stats.views + CASE WHEN p_type='view' THEN 1 ELSE 0 END,
+    downloads = song_stats.downloads + CASE WHEN p_type='download' THEN 1 ELSE 0 END;
+END; $$;</code>
+        </div>`;
+        return;
+      }
+    } catch(e){}
   }
 
   const STATS = await loadStats();
@@ -3713,24 +3894,52 @@ async function openSong(id){
   updateMetaTags(currentSong);
 }
 
+const _HOME_TITLE = 'Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF';
+const _HOME_DESC  = 'Bibliotekë falas e këngëve të adhurimit në shqip me akorde, tekste dygjuhëshe dhe PDF. Albanian worship songs with chords — Hillsong, Bethel, Elevation shqip.';
+const _HOME_URL   = 'https://unclekraken.github.io/-Adhurojm-Se-Bashku/';
+
 function updateMetaTags(song){
   const title = `${song.title} — ${song.artist} | Adhurojmë Së Bashku`;
-  const desc = `Akorde dhe tekste shqip për "${song.title}" nga ${song.artist}. Tonaliteti: ${song.key}. Falas në Adhurojmë Së Bashku.`;
-  const url = window.location.href;
+  const desc  = `Akorde dhe tekste shqip për "${song.title}" nga ${song.artist}. Tonaliteti: ${song.key}${song.bpm?' · '+song.bpm+' BPM':''}. Falas në Adhurojmë Së Bashku.`;
+  const url   = window.location.href;
   document.title = title;
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
   document.querySelector('meta[property="og:description"]')?.setAttribute('content', desc);
   document.querySelector('meta[property="og:url"]')?.setAttribute('content', url);
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', url);
   document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
   document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', desc);
+  // Inject / update per-song structured data (MusicComposition) for Google
+  let ldSong = document.getElementById('ld-song');
+  if(!ldSong){ ldSong = document.createElement('script'); ldSong.id='ld-song'; ldSong.type='application/ld+json'; document.head.appendChild(ldSong); }
+  ldSong.textContent = JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"MusicComposition",
+    "name": song.title,
+    "alternateName": song.titleEn || song.title,
+    "composer": {"@type":"Person","name": song.artist},
+    "musicalKey": song.key,
+    "inLanguage": ["sq","en"],
+    "url": url,
+    "publisher": {"@type":"Organization","name":"Kisha Kanaan Media Team"}
+  });
+  // GA virtual pageview for SPAs
+  if(typeof gtag === 'function') gtag('event','page_view',{page_title:title, page_location:url});
 }
 
 function resetMetaTags(){
-  document.title = 'Adhurojmë Së Bashku — Këngë Adhurimi Shqip me Akorde & PDF';
+  document.title = _HOME_TITLE;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', _HOME_DESC);
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content', _HOME_TITLE);
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', _HOME_DESC);
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', _HOME_URL);
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', _HOME_URL);
+  document.getElementById('ld-song')?.remove();
   const url = new URL(window.location.href);
-  if(url.searchParams.has('song')){
+  if(url.searchParams.has('song') || url.searchParams.has('slug')){
     url.searchParams.delete('song');
+    url.searchParams.delete('slug');
     window.history.pushState({}, '', url.toString());
   }
 }
@@ -4102,6 +4311,183 @@ function generateAndDownloadSitemap(){
   showToast(`✅ Sitemap u gjenerua me ${songUrls.length} këngë + ${staticUrls.length} faqe!`, 'success');
 }
 
+function generateRobotsTxt(){
+  const base = 'https://unclekraken.github.io/-Adhurojm-Se-Bashku/';
+  const txt = [
+    '# robots.txt — Adhurojmë Së Bashku',
+    '# Generated: '+new Date().toISOString().slice(0,10),
+    '',
+    'User-agent: *',
+    'Allow: /',
+    '',
+    '# Block admin panel from indexing',
+    'Disallow: /?admin',
+    '',
+    '# Sitemap location',
+    'Sitemap: '+base+'sitemap.xml',
+  ].join('\n');
+  const blob = new Blob([txt], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'robots.txt'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast('🤖 robots.txt u gjenerua! Ngarko në GitHub root pranë index.html', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+//  🔧 TOOLS TAB
+// ═══════════════════════════════════════════════════════
+
+function previewAsVisitor(){
+  // Close admin, then show site as normal visitor would see it
+  closeAdmin();
+  showToast('👁 Admin panel mbyllur — shikoni faqen si vizitor. Shtypni Admin për t\'u kthyer.', '');
+}
+
+async function initToolsTab(){
+  // Load song stats table on first open
+  await renderSongStatsTable();
+}
+
+// ── Full Sortable Song Stats Table ──
+async function renderSongStatsTable(){
+  const tbody = document.getElementById('songStatsTableBody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">⏳ Duke ngarkuar...</td></tr>';
+
+  const STATS = await loadStats();
+  const search = (document.getElementById('toolsStatsSearch')?.value || '').toLowerCase();
+  const sortBy = document.getElementById('toolsStatsSort')?.value || 'views';
+
+  let songs = [...SONGS];
+  if(search) songs = songs.filter(s => s.title.toLowerCase().includes(search) || (s.artist||'').toLowerCase().includes(search));
+
+  songs.sort((a,b) => {
+    if(sortBy==='title') return a.title.localeCompare(b.title);
+    if(sortBy==='views') return (STATS[b.id]?.views||0) - (STATS[a.id]?.views||0);
+    if(sortBy==='downloads') return (STATS[b.id]?.downloads||0) - (STATS[a.id]?.downloads||0);
+    if(sortBy==='score') return getPopularityScore(b.id,STATS) - getPopularityScore(a.id,STATS);
+    return 0;
+  });
+
+  if(!songs.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">Nuk u gjetën këngë.</td></tr>';
+    return;
+  }
+
+  const allPDFs = window.PDFS || {};
+  tbody.innerHTML = songs.map((s,i) => {
+    const stat = STATS[s.id] || {views:0, downloads:0};
+    const score = getPopularityScore(s.id, STATS);
+    const hasPDF = !!(allPDFs[s.id] && Object.keys(allPDFs[s.id]).length > 0);
+    const rowBg = i%2===0 ? '' : 'background:var(--bg2)';
+    return `<tr style="${rowBg}">
+      <td style="padding:9px 18px;max-width:220px">
+        <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
+        ${s.artist ? `<div style="font-size:11px;color:var(--text3)">${s.artist}</div>` : ''}
+      </td>
+      <td style="padding:9px 12px;text-align:center;font-weight:700;color:var(--red)">${stat.views||0}</td>
+      <td style="padding:9px 12px;text-align:center;font-weight:700;color:var(--gold)">${stat.downloads||0}</td>
+      <td style="padding:9px 12px;text-align:center;font-weight:700;color:var(--blue-mid)">${score}</td>
+      <td style="padding:9px 12px;text-align:center;font-size:15px">${hasPDF ? '✅' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PDF Link Checker ──
+async function runPDFLinkCheck(){
+  const container = document.getElementById('pdfCheckResults');
+  if(!container) return;
+  const allPDFs = window.PDFS || {};
+  const entries = [];
+  Object.entries(allPDFs).forEach(([songId, instMap]) => {
+    const song = SONGS.find(s=>String(s.id)===String(songId));
+    const title = song?.title || `Song #${songId}`;
+    Object.entries(instMap).forEach(([inst, url]) => {
+      entries.push({title, inst, url, songId});
+    });
+  });
+
+  if(!entries.length){
+    container.innerHTML = '<div style="color:var(--text3);font-size:13px">Nuk u gjetën PDF-e të regjistruara.</div>';
+    return;
+  }
+
+  container.innerHTML = `<div style="font-size:13px;color:var(--text3)">🔍 Duke kontrolluar ${entries.length} PDF-e...</div>`;
+
+  const results = [];
+  // Check in batches of 5 to avoid hammering
+  for(let i=0; i<entries.length; i+=5){
+    const batch = entries.slice(i, i+5);
+    const batchResults = await Promise.all(batch.map(async e => {
+      try{
+        const res = await fetch(e.url, {method:'HEAD', signal: AbortSignal.timeout(8000)});
+        return {...e, ok: res.ok, status: res.status};
+      }catch(err){
+        return {...e, ok: false, status: 'ERR', error: err.message};
+      }
+    }));
+    results.push(...batchResults);
+    // Update progress
+    const pct = Math.round(((i+5)/entries.length)*100);
+    const done = results.length;
+    const bad = results.filter(r=>!r.ok).length;
+    container.innerHTML = `<div style="font-size:13px;color:var(--text3)">🔍 ${done}/${entries.length} (${bad} problem${bad!==1?'e':''})</div>`;
+  }
+
+  const bad = results.filter(r=>!r.ok);
+  const good = results.filter(r=>r.ok);
+
+  container.innerHTML = `
+    <div style="font-size:13px;margin-bottom:10px">
+      <span style="color:var(--green,#2ecc71);font-weight:700">✅ ${good.length} OK</span>
+      ${bad.length ? `&nbsp;·&nbsp;<span style="color:var(--red);font-weight:700">❌ ${bad.length} Problem</span>` : ''}
+    </div>
+    ${bad.length ? `<div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px">PDF-et me problem:</div>
+    ${bad.map(e=>`<div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.25);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:12px">
+      <div style="font-weight:700">${e.title} <span style="color:var(--text3)">[${e.inst}]</span></div>
+      <div style="color:var(--red);margin-top:2px">Status: ${e.status}${e.error?' — '+e.error:''}</div>
+      <div style="color:var(--text3);word-break:break-all;margin-top:2px">${e.url}</div>
+    </div>`).join('')}` : '<div style="color:var(--text3);font-size:12px">Të gjitha PDF-et janë aktive 🎉</div>'}
+  `;
+}
+
+// ── Sitemap + robots.txt Live Check ──
+async function runSitemapCheck(){
+  const container = document.getElementById('sitemapCheckResults');
+  if(!container) return;
+  container.innerHTML = '<span style="color:var(--text3)">⏳ Duke kontrolluar...</span>';
+
+  const base = 'https://unclekraken.github.io/-Adhurojm-Se-Bashku/';
+  const checks = [
+    {label:'sitemap.xml', url: base+'sitemap.xml'},
+    {label:'robots.txt',  url: base+'robots.txt'},
+  ];
+
+  const results = await Promise.all(checks.map(async c => {
+    try{
+      const res = await fetch(c.url, {method:'HEAD', signal: AbortSignal.timeout(8000)});
+      return {...c, ok: res.ok, status: res.status};
+    }catch(e){
+      return {...c, ok: false, status: 'ERR'};
+    }
+  }));
+
+  container.innerHTML = results.map(r => {
+    const icon = r.ok ? '✅' : '❌';
+    const color = r.ok ? 'var(--text)' : 'var(--red)';
+    const note = r.ok ? `(HTTP ${r.status})` : `— <strong style="color:var(--red)">NUK U GJE!</strong> Gjenero dhe ngarko në GitHub root.`;
+    return `<div style="color:${color}">${icon} <strong>${r.label}</strong> ${note}</div>`;
+  }).join('');
+
+  if(results.some(r=>!r.ok)){
+    container.innerHTML += `<div style="margin-top:10px;font-size:12px;color:var(--text3)">
+      💡 Shko te <strong>Backup</strong> tab → gjenero skedaret → commit <code>sitemap.xml</code> dhe <code>robots.txt</code> në GitHub root.
+    </div>`;
+  }
+}
+
+
 async function exportAllData(){
   showToast('⏳ Duke eksportuar të dhënat...','');
   const sb = getSB();
@@ -4311,6 +4697,7 @@ function switchAdminTab(tab,el){
   if(tab==='stats') renderStatsDashboard();
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
+  if(tab==='tools') initToolsTab();
   if(tab==='addSong'){ 
     const dl=document.getElementById('artistDatalist');
     if(dl){ dl.innerHTML=''; ARTISTS.forEach(a=>{const o=document.createElement('option');o.value=a;dl.appendChild(o);}); }
@@ -6613,6 +7000,10 @@ function _startPerformanceModeV1(){
     showPerfSong();
     startPerfTimer();
     // Line highlight starts ONLY when auto-scroll or audio-scroll is activated
+    // Apply musician role adaptations
+    _applyPerfRole();
+    // Show role picker if not yet remembered
+    if(!localStorage.getItem('perfRoleRemember')) setTimeout(()=>showRolePicker(), 800);
   });
   document.addEventListener('keydown',perfKeyHandler);
   // Beta notice — shown once per browser session
@@ -6834,7 +7225,7 @@ function startLineHighlight(){
   stopLineHighlight();
   const content=document.getElementById('perfContent');
   if(content){
-    content._manualScrollHL=()=>highlightCurrentLine();
+    content._manualScrollHL=()=>{ highlightCurrentLine(); _perfLiveOnScroll(); };
     content.addEventListener('scroll',content._manualScrollHL,{passive:true});
   }
   window._lineHighlightInterval = setInterval(highlightCurrentLine, 250);
@@ -7022,6 +7413,8 @@ function showPerfSong(){
   setTimeout(addChordInteraction, 80);
   const mbi=document.getElementById('metroBpmInput');
   if(mbi&&s.bpm) mbi.value=s.bpm;
+  // Phase 2–5 hooks
+  setTimeout(()=>_onPerfSongShown(s.id), 100);
 }
 
 let _perfScrollSpeed = Number(localStorage.getItem('aa_perf_speed')||100);
@@ -7515,6 +7908,442 @@ function _syncAutoScrollBtns(active,label){
   });
 }
 
+// ═══════════════════════════════════════════════════════════
+// PHASE 2 — MUSICIAN ROLE SYSTEM
+// ═══════════════════════════════════════════════════════════
+let _perfRole = localStorage.getItem('perfRole') || 'operator';
+
+const PERF_ROLES = [
+  { id:'vocalist',      icon:'🎤', name:'Vocalist',      desc:'Large lyrics, no chords' },
+  { id:'guitarist',     icon:'🎸', name:'Guitarist',     desc:'Chords + lyrics visible' },
+  { id:'keys',          icon:'🎹', name:'Keys',          desc:'Chords + lyrics visible' },
+  { id:'drummer',       icon:'🥁', name:'Drummer',       desc:'Section cues + arrangement' },
+  { id:'worship_leader',icon:'🙏', name:'Worship Leader',desc:'Full view + Confidence Monitor' },
+  { id:'operator',      icon:'🎛️', name:'Operator',      desc:'Full control view' },
+];
+
+function showRolePicker(){
+  const overlay = document.getElementById('perfRolePicker');
+  if(!overlay) return;
+  const grid = document.getElementById('perfRoleGrid');
+  if(grid){
+    grid.innerHTML = PERF_ROLES.map(r=>`
+      <div class="perf-role-card${_perfRole===r.id?' selected':''}" onclick="setPerfRole('${r.id}')">
+        <span class="role-icon">${r.icon}</span>
+        <span class="role-name">${r.name}</span>
+        <span class="role-desc">${r.desc}</span>
+      </div>`).join('');
+  }
+  const rememberCb = document.getElementById('perfRoleRemember');
+  if(rememberCb) rememberCb.checked = !!localStorage.getItem('perfRoleRemember');
+  overlay.style.display = 'flex';
+}
+
+function closeRolePicker(){
+  const overlay = document.getElementById('perfRolePicker');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function setPerfRole(roleId){
+  _perfRole = roleId;
+  const rememberCb = document.getElementById('perfRoleRemember');
+  if(rememberCb && rememberCb.checked){
+    localStorage.setItem('perfRole', roleId);
+    localStorage.setItem('perfRoleRemember','1');
+  } else {
+    localStorage.removeItem('perfRoleRemember');
+    // still keep in session via variable
+  }
+  _applyPerfRole();
+  closeRolePicker();
+}
+
+function _applyPerfRole(){
+  const role = _perfRole;
+  const roleInfo = PERF_ROLES.find(r=>r.id===role) || PERF_ROLES[5];
+
+  // Update role button label in drawer
+  const roleBtn = document.getElementById('perfRoleChangeBtn');
+  if(roleBtn) roleBtn.innerHTML = `${roleInfo.icon} ${roleInfo.name} <span style="opacity:.5;font-size:10px;float:right">Change →</span>`;
+
+  // Update HUD badge
+  const badge = document.getElementById('perfRoleBadge');
+  if(badge){
+    badge.textContent = roleInfo.icon;
+    badge.title = roleInfo.name;
+    badge.style.display = 'inline-flex';
+  }
+
+  // Font size adjustments
+  const content = document.getElementById('perfContent');
+  if(content){
+    if(role==='vocalist'){
+      content.style.fontSize = '1.18em';
+    } else if(role==='drummer'){
+      content.style.fontSize = '0.95em';
+    } else {
+      content.style.fontSize = '';
+    }
+  }
+
+  // Chord visibility
+  const showChords = (role==='guitarist'||role==='keys'||role==='worship_leader'||role==='operator');
+  document.querySelectorAll('.perf-chord-row').forEach(el=>{
+    el.style.display = showChords ? '' : 'none';
+  });
+
+  // Vocalist: auto-hide chords toggle option label
+  const chordsToggleBtn = document.getElementById('perfChordsBtn');
+  if(chordsToggleBtn) chordsToggleBtn.style.opacity = showChords ? '1' : '0.4';
+
+  // Worship leader / operator: auto-show Confidence Monitor
+  if(role==='worship_leader'){
+    const cm = document.getElementById('confMonitor');
+    if(cm && cm.style.display==='none') toggleConfidenceMonitor();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 3 — LIVE MULTI-DEVICE SYNC (Supabase Realtime)
+// ═══════════════════════════════════════════════════════════
+let _perfLiveChannel = null;
+let _perfLiveMode = null;   // 'leader' | 'follower'
+let _perfLiveRoomCode = null;
+let _perfLiveLast = 0;       // debounce broadcast timestamp
+
+function showPerfLiveSync(){
+  const overlay = document.getElementById('perfLiveSync');
+  if(!overlay) return;
+  // Generate a room code if none yet
+  if(!_perfLiveRoomCode){
+    _perfLiveRoomCode = Math.random().toString(36).slice(2,8).toUpperCase();
+  }
+  const codeEl = document.getElementById('perfLiveRoomCode');
+  if(codeEl) codeEl.textContent = _perfLiveRoomCode;
+  // If already live show status
+  const statusEl = document.getElementById('perfLiveSyncStatus');
+  if(statusEl) statusEl.textContent = _perfLiveChannel ? `🟢 Live as ${_perfLiveMode}` : '';
+  overlay.style.display = 'flex';
+}
+
+function closePerfLiveSync(){
+  const overlay = document.getElementById('perfLiveSync');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function perfLiveStart(mode){
+  if(_perfLiveChannel) _perfLiveStop();
+  _perfLiveMode = mode;
+  // Get room code from input if follower
+  if(mode==='follower'){
+    const inp = document.getElementById('perfLiveFollowerCode');
+    if(inp && inp.value.trim()) _perfLiveRoomCode = inp.value.trim().toUpperCase();
+  }
+  const channelName = 'pm:' + _perfLiveRoomCode;
+
+  try {
+    const client = getSB();
+    if(!client){ _perfLiveShowErr('Supabase not available'); return; }
+    _perfLiveChannel = client.channel(channelName, {config:{broadcast:{self:false}}});
+
+    if(mode==='follower'){
+      _perfLiveChannel.on('broadcast', {event:'pm_state'}, (payload)=>{
+        _perfLiveApply(payload.payload || payload);
+      });
+    }
+    _perfLiveChannel.subscribe((status)=>{
+      if(status==='SUBSCRIBED'){
+        _perfLiveUpdateBadge(true);
+        closePerfLiveSync();
+        if(mode==='leader') _perfLiveBroadcast();
+      }
+    });
+  } catch(e){
+    _perfLiveShowErr('Error: '+e.message);
+  }
+}
+
+function _perfLiveStop(){
+  if(_perfLiveChannel){
+    try{ _perfLiveChannel.unsubscribe(); } catch(e){}
+    _perfLiveChannel = null;
+  }
+  _perfLiveMode = null;
+  _perfLiveUpdateBadge(false);
+}
+
+function _perfLiveBroadcast(){
+  if(!_perfLiveChannel || _perfLiveMode!=='leader') return;
+  const now = Date.now();
+  if(now - _perfLiveLast < 400) return; // debounce 400ms
+  _perfLiveLast = now;
+  const content = document.getElementById('perfContent');
+  const scrollPct = content ? (content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)) : 0;
+  const sl = getSetlist();
+  const item = sl?.songs?.[perfIdx];
+  try {
+    _perfLiveChannel.send({
+      type:'broadcast', event:'pm_state',
+      payload:{ song_idx: perfIdx, scroll_pct: scrollPct, section: content?._lastHighlightSection||'', song_id: item?.songId||'' }
+    });
+  } catch(e){}
+}
+
+function _perfLiveApply(data){
+  if(!data) return;
+  // Song change
+  if(typeof data.song_idx === 'number' && data.song_idx !== perfIdx){
+    perfIdx = data.song_idx;
+    showPerfSong();
+  }
+  // Scroll sync (after a small delay to allow render)
+  setTimeout(()=>{
+    const content = document.getElementById('perfContent');
+    if(content && typeof data.scroll_pct === 'number'){
+      content.scrollTop = data.scroll_pct * (content.scrollHeight - content.clientHeight);
+    }
+  }, 80);
+}
+
+function _perfLiveUpdateBadge(active){
+  const badge = document.getElementById('perfLiveBadge');
+  const badgeText = document.getElementById('perfLiveBadgeText');
+  const btn = document.getElementById('perfLiveSyncBtn');
+  if(badge) badge.style.display = active ? 'flex' : 'none';
+  if(badgeText) badgeText.textContent = active ? (_perfLiveMode==='leader' ? '📡 LIVE · '+_perfLiveRoomCode : '👁 SYNC') : '';
+  if(btn){
+    btn.style.background = active ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)';
+    btn.title = active ? 'Stop Live Sync' : 'Live Room Sync';
+    btn.onclick = active ? (()=>{ _perfLiveStop(); }) : (()=>{ showPerfLiveSync(); });
+  }
+}
+
+function _perfLiveShowErr(msg){
+  const statusEl = document.getElementById('perfLiveSyncStatus');
+  if(statusEl){ statusEl.textContent = '⚠️ '+msg; statusEl.style.color='#f87171'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 4 — ENERGY-ONSET MIC AUTOSCROLL (Web Audio API)
+// ═══════════════════════════════════════════════════════════
+let _micStream = null;
+let _micContext = null;
+let _micAnalyser = null;
+let _micActive = false;
+let _micSensitivity = 5;
+let _micRafId = null;
+let _micLastEnergy = 0;
+let _micLastScroll = 0;
+let _micEnergyHistory = [];
+
+function toggleMicScroll(){
+  if(_micActive){ _stopMicScroll(); return; }
+  _startMicScroll();
+}
+
+async function _startMicScroll(){
+  const btn = document.getElementById('micScrollBtn');
+  const statusEl = document.getElementById('micStatusText');
+  if(statusEl) statusEl.textContent = '🎙️ Requesting microphone…';
+  try {
+    _micStream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    _micContext = new (window.AudioContext||window.webkitAudioContext)();
+    const source = _micContext.createMediaStreamSource(_micStream);
+    _micAnalyser = _micContext.createAnalyser();
+    _micAnalyser.fftSize = 256;
+    _micAnalyser.smoothingTimeConstant = 0.7;
+    source.connect(_micAnalyser);
+    _micActive = true;
+    if(btn){ btn.textContent='🔴 Stop Mic'; btn.style.background='rgba(239,68,68,0.25)'; btn.style.color='#f87171'; }
+    if(statusEl) statusEl.textContent = '🎙️ Listening — clap or speak to scroll';
+    _micLoop();
+  } catch(e){
+    if(statusEl) statusEl.textContent = '⚠️ Mic access denied';
+    console.warn('Mic error:',e);
+  }
+}
+
+function _stopMicScroll(){
+  _micActive = false;
+  if(_micRafId){ cancelAnimationFrame(_micRafId); _micRafId=null; }
+  if(_micStream) _micStream.getTracks().forEach(t=>t.stop());
+  if(_micContext && _micContext.state!=='closed') _micContext.close();
+  _micStream = null; _micContext = null; _micAnalyser = null;
+  const btn = document.getElementById('micScrollBtn');
+  const statusEl = document.getElementById('micStatusText');
+  const bar = document.getElementById('perfAudioLevel');
+  if(btn){ btn.textContent='🎙️ Start Mic'; btn.style.background='var(--bg3)'; btn.style.color='var(--text2)'; }
+  if(statusEl) statusEl.textContent = '';
+  if(bar) bar.style.width='0%';
+  const audioBar = document.getElementById('perfAudioBar');
+  if(audioBar) audioBar.style.opacity='0';
+}
+
+function _micLoop(){
+  if(!_micActive || !_micAnalyser){ return; }
+  const data = new Uint8Array(_micAnalyser.frequencyBinCount);
+  _micAnalyser.getByteTimeDomainData(data);
+  // RMS energy
+  let sum = 0;
+  for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum+=v*v; }
+  const rms = Math.sqrt(sum/data.length);
+
+  // Update audio level bar
+  const bar = document.getElementById('perfAudioLevel');
+  const audioBar = document.getElementById('perfAudioBar');
+  const pct = Math.min(100, rms * 400);
+  if(bar) bar.style.width = pct+'%';
+  if(audioBar) audioBar.style.opacity = _micActive ? '1' : '0';
+
+  // Keep rolling history (last 8 frames)
+  _micEnergyHistory.push(rms);
+  if(_micEnergyHistory.length > 8) _micEnergyHistory.shift();
+  const avgEnergy = _micEnergyHistory.reduce((a,b)=>a+b,0) / _micEnergyHistory.length;
+
+  // Onset detection: spike above average × sensitivity threshold
+  const sensitivity = (_micSensitivity || 5);
+  const threshold = Math.max(0.015, avgEnergy * (1 + (10 - sensitivity) * 0.4));
+  const now = Date.now();
+  if(rms > threshold && rms > 0.02 && now - _micLastScroll > (1200 - sensitivity*80)){
+    _micLastScroll = now;
+    _micDoScroll();
+  }
+
+  _micRafId = requestAnimationFrame(_micLoop);
+}
+
+function _micDoScroll(){
+  const content = document.getElementById('perfContent');
+  if(!content) return;
+  const stepPx = 60 + _micSensitivity * 8;
+  content.scrollBy({top: stepPx, behavior:'smooth'});
+  // Visual feedback
+  const statusEl = document.getElementById('micStatusText');
+  if(statusEl){ statusEl.textContent='↓ Onset!'; setTimeout(()=>{ if(_micActive && statusEl) statusEl.textContent='🎙️ Listening…'; },600); }
+}
+
+// Sensitivity slider label sync
+document.addEventListener('DOMContentLoaded', ()=>{
+  const slider = document.getElementById('micSensitivitySlider');
+  const label = document.getElementById('micSensLabel');
+  if(slider && label){
+    slider.addEventListener('input', ()=>{ _micSensitivity=Number(slider.value); label.textContent=slider.value; });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 5 — PDF IN PERFORMANCE MODE
+// ═══════════════════════════════════════════════════════════
+let _perfPDFDoc = null;
+let _perfPDFPage = 1;
+let _perfPDFZoom = 1.5;
+let _perfPDFVisible = false;
+let _perfPDFUrl = null;
+
+function togglePerfPDF(){
+  const overlay = document.getElementById('perfPDFOverlay');
+  if(!overlay) return;
+  _perfPDFVisible = !_perfPDFVisible;
+  overlay.style.display = _perfPDFVisible ? 'flex' : 'none';
+  const content = document.getElementById('perfContent');
+  if(content) content.style.display = _perfPDFVisible ? 'none' : '';
+  if(_perfPDFVisible && !_perfPDFDoc && _perfPDFUrl) _loadPerfPDF(_perfPDFUrl);
+}
+
+async function _loadPerfPDF(url){
+  if(!url) return;
+  _perfPDFUrl = url;
+  const canvas = document.getElementById('perfPDFCanvas');
+  const label = document.getElementById('perfPDFPageLabel');
+  if(!canvas) return;
+  try {
+    const pdfjs = await getPDFJS();
+    if(!pdfjs) throw new Error('PDF.js unavailable');
+    _perfPDFDoc = await pdfjs.getDocument({url, cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked:true}).promise;
+    _perfPDFPage = 1;
+    if(label) label.textContent = `1 / ${_perfPDFDoc.numPages}`;
+    _renderPerfPDFPage();
+  } catch(e){
+    console.warn('PDF load error:',e);
+    const loading = document.getElementById('perfPDFLoading');
+    if(loading) loading.textContent = '⚠️ Could not load PDF';
+  }
+}
+
+async function _renderPerfPDFPage(){
+  if(!_perfPDFDoc) return;
+  const canvas = document.getElementById('perfPDFCanvas');
+  const label = document.getElementById('perfPDFPageLabel');
+  const loading = document.getElementById('perfPDFLoading');
+  if(!canvas) return;
+  try {
+    if(loading){ loading.style.display='flex'; }
+    const page = await _perfPDFDoc.getPage(_perfPDFPage);
+    const vp = page.getViewport({scale: _perfPDFZoom});
+    canvas.width = vp.width;
+    canvas.height = vp.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({canvasContext:ctx, viewport:vp}).promise;
+    if(loading) loading.style.display='none';
+    canvas.style.display='block';
+    if(label) label.textContent = `${_perfPDFPage} / ${_perfPDFDoc.numPages}`;
+  } catch(e){
+    if(loading){ loading.textContent='⚠️ Render error'; }
+    console.warn('PDF render error:',e);
+  }
+}
+
+function perfPDFPage(delta){
+  if(!_perfPDFDoc) return;
+  const next = _perfPDFPage + delta;
+  if(next < 1 || next > _perfPDFDoc.numPages) return;
+  _perfPDFPage = next;
+  _renderPerfPDFPage();
+}
+
+function perfPDFZoom(delta){
+  _perfPDFZoom = Math.max(0.5, Math.min(4, _perfPDFZoom + delta));
+  if(_perfPDFDoc) _renderPerfPDFPage();
+}
+
+function _perfPDFUpdateForSong(songId){
+  // PDFS is the global object: {songId: {instrument: url}}
+  const songPDFs = window.PDFS && window.PDFS[songId];
+  const pdfBtn = document.getElementById('perfPDFBtn');
+  // Reset previous doc
+  _perfPDFDoc = null;
+  _perfPDFUrl = null;
+  _perfPDFPage = 1;
+  _perfPDFZoom = 1.5;
+  if(_perfPDFVisible) togglePerfPDF(); // close if open
+
+  if(songPDFs && Object.keys(songPDFs).length > 0){
+    // Use first available PDF (by role if possible)
+    const roleKey = {'guitarist':'guitar','keys':'keys','vocalist':'vocals','drummer':'drums'}[_perfRole] || null;
+    const url = (roleKey && songPDFs[roleKey]) || Object.values(songPDFs)[0];
+    _perfPDFUrl = url;
+    if(pdfBtn) pdfBtn.style.display = 'inline-flex';
+  } else {
+    if(pdfBtn) pdfBtn.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 2–5 HOOKS — wire into existing PM startup
+// ═══════════════════════════════════════════════════════════
+// Patch showPerfSong to also call PDF + live broadcast
+const _origShowPerfSong = typeof showPerfSong === 'function' ? showPerfSong : null;
+// (showPerfSong is defined later; we hook via event at start of PM)
+function _onPerfSongShown(songId){
+  _perfPDFUpdateForSong(songId);
+  _perfLiveBroadcast();
+}
+
+// Broadcast on scroll (called in the scroll/highlight loop)
+function _perfLiveOnScroll(){
+  if(_perfLiveMode==='leader') _perfLiveBroadcast();
+}
+
 function toggleAutoScroll(){
   const btn=document.getElementById('autoScrollBtn');
   if(_autoScrollInterval){
@@ -7613,10 +8442,6 @@ function _launchScroll(content,pxPerSec,btn){
   lyricsEl.appendChild(botSpacer);
   requestAnimationFrame(()=>highlightCurrentLine());
   startLineHighlight();
-  // Progress bar
-  const progressBar=document.getElementById('perfProgressBar');
-  const progressFill=document.getElementById('perfProgressFill');
-  if(progressBar) progressBar.style.display='block';
   // Float accumulator — prevents sub-pixel scroll loss
   let scrollPos=0,last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
@@ -7627,8 +8452,6 @@ function _launchScroll(content,pxPerSec,btn){
     content.removeEventListener('touchstart',onTouch);
     content.removeEventListener('wheel',onWheel);
     clearTimeout(pauseTimer);
-    if(progressBar) progressBar.style.display='none';
-    if(progressFill) progressFill.style.width='0%';
     lyricsEl.querySelector('.perf-top-spacer')?.remove();
     lyricsEl.querySelector('.perf-bot-spacer')?.remove();
   };
@@ -7640,10 +8463,8 @@ function _launchScroll(content,pxPerSec,btn){
       scrollPos+=pxPerSec*dt;
       content.scrollTop=scrollPos;
       const maxScroll=content.scrollHeight-content.clientHeight;
-      if(maxScroll>0&&progressFill) progressFill.style.width=Math.min(100,(scrollPos/maxScroll)*100)+'%';
       if(maxScroll>0&&scrollPos>=maxScroll-5){
         content.scrollTop=maxScroll;
-        if(progressFill) progressFill.style.width='100%';
         const endEl=document.getElementById('perfEndIndicator');
         const endTxt=document.getElementById('perfEndText');
         const isSQ=(_perfLang||currentLang)==='sq';
