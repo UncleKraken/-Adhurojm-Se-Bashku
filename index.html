@@ -3796,10 +3796,6 @@ function renderSong(){
         </div>
         <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?'Hiq nga të preferuarat':'Shto te të preferuarat'}">${isFav?'❤️':'🤍'}</button>
       </div>
-      <div style="display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);margin-bottom:8px;user-select:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 10px">
-        <span style="font-size:13px;letter-spacing:2px">←  →</span>
-        <span style="font-weight:500">${currentLang==='sq'?'Navigo ndërmjet këngëve':'Navigate between songs'}</span>
-      </div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
         ${s.bpm ? `<span class="tag tag-gold">🥁 ${s.bpm} BPM</span>` : ''}
