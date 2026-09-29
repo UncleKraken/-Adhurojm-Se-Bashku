@@ -615,6 +615,86 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 #performanceMode[data-dark="1"] select{
   background:#141720 !important;color:#EEEEFF !important;border-color:#1A1D28 !important;
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PERFORMANCE MODE — LIGHT THEME FIXES
+   Targets site light theme + PM in its default (light) state.
+   All fixes use !important to override inline styles.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfV2HUD {
+  background: linear-gradient(to bottom,rgba(245,247,255,0.97) 0%,rgba(245,247,255,0.84) 68%,transparent 100%) !important;
+}
+/* Every icon-button in the HUD */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfV2HUD button {
+  background: rgba(0,0,0,0.07) !important;
+  color: #1a2040 !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+[data-theme="light"] #performanceMode[data-dark="0"] #perfV2HUD button:hover {
+  background: rgba(0,0,0,0.13) !important;
+}
+/* Panic stays red */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfPanicBtn {
+  background: rgba(180,30,30,0.1) !important;
+  border: 1px solid rgba(180,30,30,0.35) !important;
+  color: #9b1c1c !important;
+}
+/* Song info text */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfSongTitle   { color: #0d1a40 !important; }
+[data-theme="light"] #performanceMode[data-dark="0"] #perfSongMeta    { color: #4a5568 !important; }
+[data-theme="light"] #performanceMode[data-dark="0"] #perfTimerDisplay{ color: #718096 !important; }
+[data-theme="light"] #performanceMode[data-dark="0"] #perfCounter {
+  background: rgba(0,0,0,0.06) !important;
+  border-color: rgba(0,0,0,0.14) !important;
+  color: #2d3748 !important;
+}
+[data-theme="light"] #performanceMode[data-dark="0"] #perfRoleBadge {
+  background: rgba(0,0,0,0.08) !important;
+  color: #4a5568 !important;
+}
+/* Inactive language button */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfLangEN { color: #4a5568 !important; }
+
+/* ── Section cue pills: dark saturated on light bg ── */
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-verse     { background:rgba(37,99,235,0.1);   color:#1d4ed8; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-chorus    { background:rgba(161,98,7,0.12);   color:#92400e; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-bridge    { background:rgba(109,40,217,0.1);  color:#6d28d9; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-prechorus { background:rgba(4,120,87,0.1);    color:#065f46; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-intro     { background:rgba(180,83,9,0.1);    color:#9a3412; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-outro     { background:rgba(180,83,9,0.1);    color:#9a3412; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-interlude { background:rgba(157,23,77,0.1);   color:#9d174d; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-default   { background:rgba(0,0,0,0.06);      color:#718096; }
+
+/* ── Next-section bar at bottom ── */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfNextSectionBar {
+  background: rgba(245,247,255,0.92) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #4a5568 !important;
+}
+[data-theme="light"] #performanceMode[data-dark="0"] #perfNextSectionLabel { color: #1a2040 !important; }
+
+/* ── Section flash & count-in: dark text on light bg ── */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfSectionFlash {
+  color: #0d1a40 !important;
+  text-shadow: 0 1px 16px rgba(0,0,0,0.08) !important;
+}
+[data-theme="light"] #performanceMode[data-dark="0"] #perfCountInNum {
+  color: #0d1a40 !important;
+}
+/* Count-in beat dots */
+[data-theme="light"] #performanceMode[data-dark="0"] .ci-beat-dot {
+  background: rgba(0,0,0,0.12);
+}
+[data-theme="light"] #performanceMode[data-dark="0"] .ci-beat-dot.active {
+  background: var(--gold);
+}
+
+/* ── Read-zone hairline: gold but visible on light ── */
+[data-theme="light"] #performanceMode[data-dark="0"] #perfReadZoneLine {
+  background: linear-gradient(90deg,transparent 0%,rgba(161,98,7,0.5) 20%,rgba(161,98,7,0.5) 80%,transparent 100%);
+}
+
+/* ── Drawer inputs already use var(--bg2)/var(--text) so they're fine ── */
 /* Lyrics smooth rendering */
 #perfLyricsContent{
   -webkit-font-smoothing:antialiased;
@@ -7044,6 +7124,28 @@ function togglePerfDark(){
   showPerfSong();
 }
 
+// Returns true when Performance Mode is effectively on a dark background
+// (either PM is explicitly dark, OR the site itself is in dark theme)
+function _isPerfDark(){
+  const pm=document.getElementById('performanceMode');
+  if(pm&&pm.dataset.dark==='1') return true;
+  return document.documentElement.dataset.theme==='dark';
+}
+// Returns a theme-appropriate foreground color for a section class (sec-verse, sec-chorus, …)
+// Dark mode → bright pastel; light mode → saturated dark hue
+function _perfSectionColor(cls){
+  const dark=_isPerfDark();
+  return (dark ? {
+    'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
+    'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
+    'sec-interlude':'#f9a8d4','sec-default':'rgba(255,255,255,0.75)'
+  } : {
+    'sec-verse':'#1d4ed8','sec-chorus':'#92400e','sec-bridge':'#6d28d9',
+    'sec-prechorus':'#065f46','sec-intro':'#9a3412','sec-outro':'#9a3412',
+    'sec-interlude':'#9d174d','sec-default':'#4a5568'
+  })[cls]||(dark?'rgba(255,255,255,0.75)':'#4a5568');
+}
+
 function showPerfShortcuts(){
   const overlay=document.getElementById('perfShortcutsOverlay');
   const list=document.getElementById('perfShortcutsList');
@@ -7403,7 +7505,7 @@ function showPerfSong(){
           <div id="perfArrChips" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           <button onclick="perfResetArr('${s.id}')" style="padding:1px 7px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;flex-shrink:0">↺</button>
           <span style="font-size:10px;color:var(--text3)">+</span>
-          ${allSections.map(sec=>`<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${sec.color||'var(--blue)'};background:transparent;color:${sec.color||'var(--blue)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`).join('')}
+          ${allSections.map(sec=>{const ac=_perfSectionColor(_sectionClass(sec.label));return `<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${ac};background:transparent;color:${ac};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer">${sec.label}</button>`;}).join('')}
         </div>
         <div id="perfLyricsContent"></div>
         ${nextSong?`<div style="margin-top:28px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--text3)">Tjetër →</span><span style="font-weight:600;color:var(--text2);font-size:13px">${nextSong.title}</span><span class="tag tag-blue" style="font-size:10px">${nextSong.key}</span>${nextSong.capo>0?`<span class="tag tag-gold" style="font-size:10px">Capo ${nextSong.capo}</span>`:''} ${nextSong.bpm?`<span style="font-size:10px;color:var(--text3)">🥁${nextSong.bpm}</span>`:''} ${nextItem.note?`<span style="font-size:11px;color:var(--gold)">📝 ${nextItem.note}</span>`:''}</div>`:''}
@@ -7596,23 +7698,38 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
   if(chipsEl) chipsEl.innerHTML=arrangement.map((label,i)=>{
     const rep=reps[label]||1;
     const cls=_sectionClass(label);
-    const chipColor={
+    const dark=_isPerfDark();
+    const chipColor= dark ? {
       'sec-verse':'rgba(96,165,250,0.22)','sec-chorus':'rgba(240,192,64,0.22)',
       'sec-bridge':'rgba(167,139,250,0.26)','sec-prechorus':'rgba(52,211,153,0.22)',
       'sec-intro':'rgba(251,146,60,0.22)','sec-outro':'rgba(251,146,60,0.22)',
       'sec-interlude':'rgba(244,114,182,0.22)','sec-default':'rgba(255,255,255,0.12)'
-    }[cls]||'rgba(255,255,255,0.12)';
-    const chipText={
+    }[cls]||'rgba(255,255,255,0.12)' : {
+      'sec-verse':'rgba(37,99,235,0.1)','sec-chorus':'rgba(161,98,7,0.1)',
+      'sec-bridge':'rgba(109,40,217,0.1)','sec-prechorus':'rgba(4,120,87,0.1)',
+      'sec-intro':'rgba(180,83,9,0.1)','sec-outro':'rgba(180,83,9,0.1)',
+      'sec-interlude':'rgba(157,23,77,0.1)','sec-default':'rgba(0,0,0,0.06)'
+    }[cls]||'rgba(0,0,0,0.06)';
+    const chipText= dark ? {
       'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
       'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
       'sec-interlude':'#f9a8d4','sec-default':'rgba(255,255,255,0.75)'
-    }[cls]||'rgba(255,255,255,0.75)';
-    const chipBorder={
+    }[cls]||'rgba(255,255,255,0.75)' : {
+      'sec-verse':'#1d4ed8','sec-chorus':'#92400e','sec-bridge':'#6d28d9',
+      'sec-prechorus':'#065f46','sec-intro':'#9a3412','sec-outro':'#9a3412',
+      'sec-interlude':'#9d174d','sec-default':'#4a5568'
+    }[cls]||'#4a5568';
+    const chipBorder= dark ? {
       'sec-verse':'rgba(96,165,250,0.4)','sec-chorus':'rgba(240,192,64,0.4)',
       'sec-bridge':'rgba(167,139,250,0.4)','sec-prechorus':'rgba(52,211,153,0.4)',
       'sec-intro':'rgba(251,146,60,0.4)','sec-outro':'rgba(251,146,60,0.4)',
       'sec-interlude':'rgba(244,114,182,0.4)','sec-default':'rgba(255,255,255,0.2)'
-    }[cls]||'rgba(255,255,255,0.2)';
+    }[cls]||'rgba(255,255,255,0.2)' : {
+      'sec-verse':'rgba(37,99,235,0.3)','sec-chorus':'rgba(161,98,7,0.3)',
+      'sec-bridge':'rgba(109,40,217,0.3)','sec-prechorus':'rgba(4,120,87,0.3)',
+      'sec-intro':'rgba(180,83,9,0.3)','sec-outro':'rgba(180,83,9,0.3)',
+      'sec-interlude':'rgba(157,23,77,0.3)','sec-default':'rgba(0,0,0,0.12)'
+    }[cls]||'rgba(0,0,0,0.12)';
     return `<div onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="display:flex;align-items:center;gap:4px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0">×</button></div>`;
   }).join('');
 
@@ -7749,22 +7866,24 @@ function _flashSection(label){
   const el=document.getElementById('perfSectionFlash');
   const lbl=document.getElementById('perfSectionFlashLabel');
   if(!el||!lbl||!label) return;
-  // Build color for flash label based on section type
+  // Build color for flash label based on section type and current theme
   const cls=_sectionClass(label);
-  const colorMap={
-    'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
-    'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
-    'sec-interlude':'#f9a8d4','sec-default':'rgba(255,255,255,0.8)'
-  };
-  const bgMap={
+  const dark=_isPerfDark();
+  const txtColor=_perfSectionColor(cls);
+  const bgMap= dark ? {
     'sec-verse':'rgba(96,165,250,0.12)','sec-chorus':'rgba(240,192,64,0.14)',
     'sec-bridge':'rgba(167,139,250,0.16)','sec-prechorus':'rgba(52,211,153,0.14)',
     'sec-intro':'rgba(251,146,60,0.14)','sec-outro':'rgba(251,146,60,0.14)',
     'sec-interlude':'rgba(244,114,182,0.14)','sec-default':'rgba(0,0,0,0.4)'
+  } : {
+    'sec-verse':'rgba(37,99,235,0.08)','sec-chorus':'rgba(161,98,7,0.1)',
+    'sec-bridge':'rgba(109,40,217,0.08)','sec-prechorus':'rgba(4,120,87,0.08)',
+    'sec-intro':'rgba(180,83,9,0.08)','sec-outro':'rgba(180,83,9,0.08)',
+    'sec-interlude':'rgba(157,23,77,0.08)','sec-default':'rgba(0,0,0,0.05)'
   };
-  lbl.style.color=colorMap[cls]||'#fff';
-  lbl.style.background=bgMap[cls]||'rgba(0,0,0,0.4)';
-  lbl.style.border=`1px solid ${(colorMap[cls]||'#fff').replace(')',',0.3)').replace('rgb','rgba')}`;
+  lbl.style.color=txtColor;
+  lbl.style.background=bgMap[cls]||(dark?'rgba(0,0,0,0.4)':'rgba(0,0,0,0.05)');
+  lbl.style.border=`1px solid ${txtColor.startsWith('rgba')?txtColor.replace(/[\d.]+\)$/,'0.35)'):txtColor+'55'}`;
   lbl.textContent=label.toUpperCase();
   el.style.display='flex'; el.classList.remove('flash-in','flash-out');
   void el.offsetWidth; el.classList.add('flash-in');
