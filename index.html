@@ -176,6 +176,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:100px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s}
 .search-btn:hover{background:var(--gold-l)}
 .ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:9999;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin}
+#heroAC{position:fixed;z-index:9999;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);box-shadow:var(--shadow-lg)}
 .ac-drop.open{display:block}
 [data-tip]{position:relative}
 [data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.92);color:#fff;font-size:11px;font-family:'Poppins',sans-serif;white-space:nowrap;padding:4px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .18s;z-index:99995;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
@@ -1109,7 +1110,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <div style="color:var(--text);font-weight:700;margin-bottom:4px">A &nbsp; B &nbsp; C &nbsp; D &nbsp; E &nbsp; F &nbsp; G</div>
           <div style="color:var(--text3);font-size:12px">(Në vend të: Do, Re, Mi, Fa, Sol, La, Si)</div>
         </div>
-        <p style="font-size:13px;color:var(--blue-mid);line-height:1.8">Çdo akord mund të ketë variacionе si: <strong>m</strong> (minore), <strong>maj7</strong>, <strong>sus4</strong>, <strong>dim</strong>, etj. — të gjitha sipas shënimit standard.</p>
+        <p style="font-size:13px;color:var(--blue-mid);line-height:1.8">Çdo akord mund të ketë variacione si: <strong>m</strong> (minore), <strong>maj7</strong>, <strong>sus4</strong>, <strong>dim</strong>, etj. — të gjitha sipas shënimit standard.</p>
       </div>
 
       <!-- 3. GUITAR VS PIANO -->
@@ -1206,7 +1207,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <div class="g-block-title">📋 Setlista</div>
         <p style="font-size:13px;color:var(--text2);line-height:1.8">
           Nga faqja e çdo këngë klikoni <strong>+ Shto në Setlist</strong> për ta shtuar. Setlista ruhet automatikisht në pajisjen tuaj.<br><br>
-          Mund të <strong>rrirendisni</strong> këngët me drag &amp; drop, të shtoni shënime dhe të zgjidhni instrumentin për secilin.<br><br>
+          Mund të <strong>rirendisni</strong> këngët me drag &amp; drop, të shtoni shënime dhe të zgjidhni instrumentin për secilin.<br><br>
           <strong>📤 Kopjo Tekst</strong> — Kopjon setlistën si tekst për ta ndarë me të tjerë.<br><br>
           <strong>🔗 Kopjo Link</strong> — Krijon një link të veçantë të setlistës. Kur dikush hap linkun, setlista ngarkohet automatikisht në pajisjen e tyre.
         </p>
@@ -1513,7 +1514,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div class="copy-block">
         <div class="copy-block-title">⚖️ E drejta e Autorit dhe Përdorimi</div>
         <span class="copy-badge">✓ Falas për kishë dhe adhurim</span>
-        <p>Ne besojmë në nderimin e krijuesve që Perëndia ka përdorur për të shkruar këto këngë. Ky projekt është një nismë e <strong>Kisha Kanaan Media Team</strong> dhe shërben si një mjet ndihmës për kishën lokale.</p>
+        <p>Ne besojmë në nderimin e krijuesve që Perëndia ka përdorur për të shkruar këto këngë. Ky projekt është një nismë e <strong>Kishës Kanaan Media Team</strong> dhe shërben si një mjet ndihmës për kishën lokale.</p>
       </div>
       <div class="copy-block">
         <div class="copy-block-title">📌 Detajet</div>
@@ -3269,6 +3270,15 @@ function updateAC(inputId,listId){
     if(listId==='heroAC') doHeroSearch();
     closeAC(listId);
   });
+  // Position #heroAC using fixed coords so it escapes the hero's overflow:hidden
+  if(listId==='heroAC'){
+    const inp2=document.getElementById(inputId);
+    const r=inp2.getBoundingClientRect();
+    list.style.top=(r.bottom+6)+'px';
+    list.style.left=r.left+'px';
+    list.style.width=r.width+'px';
+    list.style.right='auto';
+  }
   list.classList.add('open');
 }
 function closeAC(id){const l=document.getElementById(id);if(l){l.classList.remove('open');acIdx=-1;}}
@@ -6179,6 +6189,8 @@ function getPopularityScore(songId, STATS){
   window.addEventListener('scroll', ()=>{
     if(window.scrollY > 400) btn.classList.add('show');
     else btn.classList.remove('show');
+    // Close heroAC on scroll — fixed dropdown would drift otherwise
+    closeAC('heroAC');
   }, {passive:true});
 })();
 async function sendSongRequest(){
