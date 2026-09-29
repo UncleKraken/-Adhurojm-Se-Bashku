@@ -7104,6 +7104,9 @@ function toggleAutoScroll(){
     if(btn){btn.textContent='▶ Auto';btn.style.background='var(--bg3)';btn.style.color='var(--text2)';}
     return;
   }
+  // Stop any running highlight immediately so it doesn't flash the wrong line
+  // while we wait for the scroll to start (the 80ms timer below)
+  stopLineHighlight();
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx]; if(!item) return;
   const s=SONGS.find(x=>Number(x.id)===Number(item.id)); if(!s) return;
   const bpm=s.bpm||0;
