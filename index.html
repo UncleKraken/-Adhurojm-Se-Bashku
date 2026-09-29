@@ -63,7 +63,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Adhurojmë Së Bashku"/>
-<!-- Google Analytics — REPLACE G-6XGMX9PBY6 with your real Measurement ID from analytics.google.com -->
+<!-- Google Analytics — Measurement ID: G-6XGMX9PBY6 -->
 <!-- To activate: remove the outer comment tags below -->
 <!--
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6XGMX9PBY6"></script>
@@ -178,6 +178,7 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .ac-drop{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-lg);z-index:9999;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin}
 #heroAC{position:fixed;z-index:9999;display:none;max-height:420px;overflow-y:auto;scrollbar-width:thin;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);box-shadow:var(--shadow-lg)}
 .ac-drop.open{display:block}
+#heroAC.open{display:block}
 [data-tip]{position:relative}
 [data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.92);color:#fff;font-size:11px;font-family:'Poppins',sans-serif;white-space:nowrap;padding:4px 9px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .18s;z-index:99995;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 [data-tip]:hover::after{opacity:1}
@@ -2321,7 +2322,10 @@ async function renderStatsDashboard() {
         return sorted.map(([month,count])=>{
           const pct = Math.round((count/maxCount)*100);
           const [y,m] = month.split('-');
-          const label = new Date(Number(y),Number(m)-1).toLocaleDateString('sq-AL',{month:'short',year:'2-digit'});
+          const ALB_MONTHS=['Jan','Shk','Mar','Pri','Maj','Qer','Kor','Gus','Sht','Tet','Nën','Dhj'];
+          const mn=Number(m)-1;
+          const yr=String(Number(y)).slice(-2);
+          const label=`${ALB_MONTHS[mn]||String(mn+1).padStart(2,'0')} '${yr}`;
           return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <span style="font-size:11px;color:var(--text3);min-width:48px;text-align:right">${label}</span>
             <div style="flex:1;background:var(--bg3);border-radius:4px;height:22px;position:relative">
@@ -3730,6 +3734,10 @@ function renderSong(){
         </div>
         <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?'Hiq nga të preferuarat':'Shto te të preferuarat'}">${isFav?'❤️':'🤍'}</button>
       </div>
+      <div style="display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);margin-bottom:8px;user-select:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 10px">
+        <span style="font-size:13px;letter-spacing:2px">←  →</span>
+        <span style="font-weight:500">${currentLang==='sq'?'Navigo ndërmjet këngëve':'Navigate between songs'}</span>
+      </div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
         ${s.bpm ? `<span class="tag tag-gold">🥁 ${s.bpm} BPM</span>` : ''}
@@ -4766,7 +4774,8 @@ function showCopyLyricsMenu(){
     menu.appendChild(div);
   });
   var rect=btn.getBoundingClientRect();
-  menu.style.top=(rect.bottom+window.scrollY+4)+'px';
+  // menu is position:fixed — use viewport coords only, no scrollY offset
+  menu.style.top=(rect.bottom+4)+'px';
   menu.style.left=Math.min(rect.left,window.innerWidth-220)+'px';
   document.body.appendChild(menu);
   setTimeout(function(){
@@ -6630,10 +6639,12 @@ function highlightCurrentLine(){
     if(dist<closest){closest=dist;activeIdx=i;}
   });
   if(activeIdx===-1){
-    const scrollTop=content.scrollTop;
-    const maxScroll=content.scrollHeight-content.clientHeight;
-    activeIdx=scrollTop<maxScroll/2?0:lyricLines.length-1;
+    // Keep the last known line rather than jumping to line 0 or last line
+    // (happens during section-gap transitions when no lyric line is near readZone)
+    const prev=content._lastHighlightIdx;
+    activeIdx=(prev!==undefined)?prev:(content.scrollTop<(content.scrollHeight-content.clientHeight)/2?0:lyricLines.length-1);
   }
+  content._lastHighlightIdx=activeIdx;
   lyricLines.forEach((line,i)=>{
     line.classList.toggle('active-line',i===activeIdx);
     line.classList.toggle('dim-line',i!==activeIdx);
