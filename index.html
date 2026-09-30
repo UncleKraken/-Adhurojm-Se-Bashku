@@ -6631,6 +6631,7 @@ function setChordDiagramType(type, popupEl){
     const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
     const allSections=parseLyricsText(rawText);
     const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+    _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
     renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
   }
 }
@@ -7078,6 +7079,7 @@ function setPerfLang(lang){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7246,6 +7248,7 @@ function toggleSingerMode(){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7419,7 +7422,7 @@ function togglePerfFullscreen(){
 }
 
 function perfKeyHandler(e){
-  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
   resetAutoHide();
   const k=e.key;
 
@@ -7625,11 +7628,18 @@ function showPerfSong(){
             ${allSections.map(sec=>{
               const ac=_perfSectionColor(_sectionClass(sec.label));
               if(sec.isCustom){
-                return `<span style="display:inline-flex;align-items:center"><button onclick="perfAddSection('${s.id}','${sec.label}')" title="Shto ${sec.label} në rend" style="padding:2px 7px;border-radius:100px 0 0 100px;border:1.5px dashed ${ac};border-right:none;background:rgba(139,63,181,0.1);color:${ac};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">✏️${sec.label}</button><button onclick="event.stopPropagation();_perfDeleteCustomSec('${s.id}','${sec.label}')" title="Fshi seksionin ${sec.label}" style="padding:2px 5px;border-radius:0 100px 100px 0;border:1.5px dashed ${ac};border-left:none;background:rgba(139,63,181,0.1);color:${ac};font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;touch-action:manipulation">🗑</button></span>`;
+                // Theme-aware purple so the button is legible in both dark and light mode.
+                // The ✏️ add half uses a soft purple pill; the 🗑 delete half uses red.
+                const isDk=_isPerfDark();
+                const cPurple=isDk?'#d4a8f0':'#6b21a8';
+                const cPurpleBg=isDk?'rgba(180,130,240,0.18)':'rgba(107,33,168,0.10)';
+                const cRed=isDk?'#f87171':'#b91c1c';
+                const cRedBg=isDk?'rgba(248,113,113,0.15)':'rgba(185,28,28,0.08)';
+                return `<span style="display:inline-flex;align-items:center"><button onclick="perfAddSection('${s.id}','${sec.label}')" title="Shto ${sec.label} në rend" style="padding:2px 7px;border-radius:100px 0 0 100px;border:1.5px dashed ${cPurple};border-right:none;background:${cPurpleBg};color:${cPurple};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">✏️${sec.label}</button><button onclick="event.stopPropagation();_perfDeleteCustomSec('${s.id}','${sec.label}')" title="Fshi seksionin ${sec.label}" style="padding:2px 5px;border-radius:0 100px 100px 0;border:1.5px dashed ${cRed};border-left:none;background:${cRedBg};color:${cRed};font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;touch-action:manipulation">🗑</button></span>`;
               }
               return `<button onclick="perfAddSection('${s.id}','${sec.label}')" style="padding:2px 9px;border-radius:100px;border:1.5px solid ${ac};background:transparent;color:${ac};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">${sec.label}</button>`;
             }).join('')}
-            <button onclick="_perfShowCustomForm('${s.id}')" title="Shto seksion instrumental/akorde" style="padding:2px 9px;border-radius:100px;border:1.5px dashed rgba(180,120,220,0.55);background:transparent;color:rgba(180,120,220,0.9);font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;white-space:nowrap;touch-action:manipulation">+ 🎵</button>
+            ${(()=>{const isDk=_isPerfDark();const cP=isDk?'rgba(200,160,255,0.7)':'rgba(107,33,168,0.75)';const cPBg=isDk?'rgba(180,130,240,0.12)':'rgba(107,33,168,0.07)';return `<button onclick="_perfShowCustomForm('${s.id}')" title="Shto seksion instrumental/akorde" style="padding:2px 9px;border-radius:100px;border:1.5px dashed ${cP};background:${cPBg};color:${cP};font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;white-space:nowrap;touch-action:manipulation">+ 🎵</button>`;})()}
           </div>
           <!-- Mini-form to create a custom instrumental section (hidden by default) -->
           <div id="perfCustomSecForm" style="display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:7px">
@@ -7689,6 +7699,7 @@ function changeSectionRep(songId, label, delta){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7802,6 +7813,7 @@ function setPerfFont(size){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id, sectionMap, _perfTranspose?.[s.id]||0, perfInst);
 }
 
@@ -7866,7 +7878,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       'sec-intro':'rgba(180,83,9,0.3)','sec-outro':'rgba(180,83,9,0.3)',
       'sec-interlude':'rgba(157,23,77,0.3)','sec-default':'rgba(0,0,0,0.12)'
     }[cls]||'rgba(0,0,0,0.12)';
-    return `<div onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="display:flex;align-items:center;gap:4px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">${label}${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0">×</button></div>`;
+    return `<div data-chip-idx="${i}" style="display:flex;align-items:center;gap:3px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:2px 8px 2px 5px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:default;transition:box-shadow .12s,opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><span onpointerdown="_perfChipDragStart(event,'${songId}',${i})" style="cursor:grab;font-size:11px;opacity:0.45;padding:0 3px 0 1px;touch-action:none;user-select:none;line-height:1;flex-shrink:0" title="Tërhiq për rirenditje">⠿</span><span onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer">${label}</span>${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0;margin-left:1px;flex-shrink:0">×</button></div>`;
   }).join('');
 
   // Build sections list with repeats expanded
@@ -7950,6 +7962,75 @@ function perfCycleRepeat(songId,label){
   showPerfSong();
 }
 
+// ── ARRANGEMENT CHIP DRAG-TO-REORDER ─────────────────────────────────────────
+// Uses Pointer Events so it works on both desktop (mouse) and mobile (touch).
+// Touch the ⠿ grip handle on any chip, then slide it left/right to reorder.
+let _perfDragState=null;
+function _perfChipDragStart(e,songId,fromIdx){
+  e.preventDefault(); e.stopPropagation();
+  const handle=e.currentTarget;
+  const chip=handle.closest('[data-chip-idx]');
+  if(!chip) return;
+  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+  const cr=chip.getBoundingClientRect();
+  _perfDragState={songId,fromIdx,startX:e.clientX,chipW:cr.width,chipH:cr.height,dragging:false,clone:null,chip,targetIdx:fromIdx};
+
+  function onMove(ev){
+    if(!_perfDragState) return;
+    if(!_perfDragState.dragging && Math.abs(ev.clientX-_perfDragState.startX)>6){
+      _perfDragState.dragging=true;
+      const clone=chip.cloneNode(true);
+      Object.assign(clone.style,{position:'fixed',top:cr.top+'px',left:cr.left+'px',width:cr.width+'px',height:cr.height+'px',opacity:'0.9',pointerEvents:'none',zIndex:'9999',transform:'scale(1.08) translateY(-4px)',boxShadow:'0 8px 24px rgba(0,0,0,0.45)',borderRadius:'100px',transition:'none',margin:'0'});
+      document.body.appendChild(clone);
+      _perfDragState.clone=clone;
+      chip.style.opacity='0.2';
+    }
+    if(_perfDragState.dragging && _perfDragState.clone){
+      _perfDragState.clone.style.left=(ev.clientX-_perfDragState.chipW/2)+'px';
+      // Find which chip the cursor is over (compare against each chip's midpoint)
+      const allChips=[...document.querySelectorAll('#perfArrChips [data-chip-idx]')];
+      let tIdx=fromIdx;
+      for(const c of allChips){
+        const r=c.getBoundingClientRect();
+        if(ev.clientX>=(r.left+r.right)/2) tIdx=parseInt(c.dataset.chipIdx);
+        else break;
+      }
+      _perfDragState.targetIdx=tIdx;
+      // Highlight drop target with a glow ring (doesn't shift layout)
+      allChips.forEach(c=>{ c.style.boxShadow=parseInt(c.dataset.chipIdx)===tIdx&&tIdx!==fromIdx?'0 0 0 2.5px var(--blue-mid)':''; });
+    }
+  }
+
+  function onUp(ev){
+    handle.removeEventListener('pointermove',onMove);
+    handle.removeEventListener('pointerup',onUp);
+    handle.removeEventListener('pointercancel',onUp);
+    if(_perfDragState?.clone) _perfDragState.clone.remove();
+    chip.style.opacity='';
+    document.querySelectorAll('#perfArrChips [data-chip-idx]').forEach(c=>c.style.boxShadow='');
+    const{dragging,targetIdx}=_perfDragState||{};
+    _perfDragState=null;
+    if(!dragging||targetIdx===fromIdx) return;
+    const arr=_perfArrangements?.[`perf_arr_${songId}`];
+    if(!arr) return;
+    // "Insert before target chip" — account for the index shift after removal
+    const insertAt=targetIdx>fromIdx?targetIdx-1:targetIdx;
+    arr.splice(insertAt,0,arr.splice(fromIdx,1)[0]);
+    // Re-render arrangement (lightweight — no full showPerfSong scroll reset)
+    const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+    const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+    const pi=item.instrument||s.instruments?.[0]||'Guitar';
+    const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
+    const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
+    _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+    renderPerfArrangement(s.id,sm,_perfTranspose?.[s.id]||0,pi);
+  }
+
+  handle.addEventListener('pointermove',onMove);
+  handle.addEventListener('pointerup',onUp);
+  handle.addEventListener('pointercancel',onUp);
+}
+
 function perfRemoveSection(songId,idx){
   _perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
 }
@@ -7991,7 +8072,8 @@ function _perfCreateCustomSec(songId){
   const labelEl=document.getElementById('perfCustomSecLabel');
   const chordsEl=document.getElementById('perfCustomSecChords');
   const type=(typeEl?.value||'INST').toUpperCase();
-  let rawLabel=(labelEl?.value||'').trim().toUpperCase();
+  // Strip anything that isn't alphanumeric or underscore — prevents onclick breakage
+  let rawLabel=(labelEl?.value||'').trim().toUpperCase().replace(/[^A-Z0-9_]/g,'').slice(0,12);
   let label=rawLabel||type;
   // Ensure label is unique for this song
   const existing=_perfCustomSecs(songId).map(s=>s.label);
