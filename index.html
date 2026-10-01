@@ -1397,9 +1397,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   </div>
 
   <!-- ── NEXT SECTION preview strip ── -->
-  <div id="perfNextSectionBar" style="display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:7px;white-space:nowrap">
+  <div id="perfNextSectionBar" style="display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);align-items:center;gap:7px;white-space:nowrap">
     <span style="opacity:0.5;font-size:10px">▼ Next</span>
     <span id="perfNextSectionLabel" style="font-weight:600;color:rgba(255,255,255,0.85)"></span>
+  </div>
+
+  <!-- ── QUEUE preview strip — shown to followers when leader moves to new song ── -->
+  <div id="perfQueueBar" style="display:none;position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(74,222,128,0.1);backdrop-filter:blur(6px);border:1px solid rgba(74,222,128,0.25);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(74,222,128,0.8);align-items:center;gap:7px;white-space:nowrap;opacity:1;transition:opacity 1s">
+    <span style="opacity:0.6;font-size:10px">🎵 Up next</span>
+    <span id="perfQueueLabel" style="font-weight:700"></span>
   </div>
 
   <!-- ── CONFIDENCE MONITOR overlay (vocalist view) ── -->
@@ -7970,6 +7976,7 @@ function perfTransposeActive(dir){
   // Persist per-song PM transpose silently
   try{ _perfTranspose[s.id]===0 ? localStorage.removeItem(`aa_perf_tp_${s.id}`) : localStorage.setItem(`aa_perf_tp_${s.id}`,_perfTranspose[s.id]); }catch(e){}
   _perfTransposeLightUpdate(s, item);
+  _perfBroadcastTranspose(s.id, _perfTranspose[s.id]);
 }
 function perfTransposeResetActive(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
@@ -7979,6 +7986,12 @@ function perfTransposeResetActive(){
   // Clear persisted PM transpose on reset
   try{ localStorage.removeItem(`aa_perf_tp_${s.id}`); }catch(e){}
   _perfTransposeLightUpdate(s, item);
+  _perfBroadcastTranspose(s.id, 0);
+}
+// Broadcast current transpose to followers
+function _perfBroadcastTranspose(songId, steps){
+  if(!_perfLiveChannel || _perfLiveMode!=='leader') return;
+  try{ _perfLiveChannel.send({type:'broadcast',event:'pm_transpose',payload:{song_id:String(songId),steps:steps||0}}); }catch(e){}
 }
 // Lightweight transpose update: re-renders lyrics+chords WITHOUT resetting scroll.
 // Calling showPerfSong() would reset scrollTop=0 and break autoscroll mid-song.
@@ -8324,12 +8337,36 @@ function _perfAnimateSongChange(dir, cb){
   },150);
 }
 
+// Show the "Up next" green strip for 8s, then fade out.
+// afterIdx = index of the song AFTER the one just navigated to.
+function _perfShowQueueBar(afterIdx){
+  const queueBar=document.getElementById('perfQueueBar');
+  const queueLabel=document.getElementById('perfQueueLabel');
+  if(!queueBar||!queueLabel) return;
+  const sl=getSetlist();
+  const afterSong=sl?.songs?.[afterIdx];
+  if(afterSong){
+    queueLabel.textContent=afterSong.title||afterSong.songId||'—';
+    queueBar.style.display='flex'; queueBar.style.opacity='1';
+    clearTimeout(queueBar._hideTimer);
+    queueBar._hideTimer=setTimeout(()=>{
+      queueBar.style.opacity='0';
+      setTimeout(()=>{ queueBar.style.display='none'; },1000);
+    },8000);
+  } else {
+    // Last song in setlist — hide strip
+    queueBar.style.opacity='0';
+    clearTimeout(queueBar._hideTimer);
+    queueBar._hideTimer=setTimeout(()=>{ queueBar.style.display='none'; },1000);
+  }
+}
+
 function prevPerformanceSong(){
-  if(perfIdx>0){ _perfAnimateSongChange(-1,()=>{ perfIdx--; showPerfSong(); }); }
+  if(perfIdx>0){ _perfAnimateSongChange(-1,()=>{ perfIdx--; showPerfSong(); _perfShowQueueBar(perfIdx+1); }); }
 }
 function nextPerformanceSong(){
   const sl=getSetlist();
-  if(perfIdx<sl.songs.length-1){ _perfAnimateSongChange(1,()=>{ perfIdx++; showPerfSong(); }); }
+  if(perfIdx<sl.songs.length-1){ _perfAnimateSongChange(1,()=>{ perfIdx++; showPerfSong(); _perfShowQueueBar(perfIdx+1); }); }
 }
 
 // Starts or stops BPM-based autoscroll.
@@ -8958,6 +8995,7 @@ let _perfHeartbeatTimer   = null;  // leader: sends heartbeat every 5s
 let _perfLeaderWatchTimer = null;  // follower: checks for stale heartbeat
 let _perfLeaderLastSeen   = 0;     // follower: timestamp of last heartbeat
 let _perfLeaderOnline     = true;  // follower: current signal state
+let _perfLatencyMs        = 0;     // follower: last measured round-trip ms
 
 function showPerfLiveSync(){
   const overlay = document.getElementById('perfLiveSync');
@@ -9010,12 +9048,28 @@ function perfLiveStart(mode){
       _perfLiveChannel.on('broadcast', {event:'pm_section'}, ({payload})=>{
         if(payload?.label) perfJumpToSection(payload.label);
       });
-      // Heartbeat: passive sync + leader-online tracking
+      // Heartbeat: passive sync + leader-online tracking + latency
       _perfLiveChannel.on('broadcast', {event:'pm_heartbeat'}, ({payload})=>{
         _perfLeaderLastSeen=Date.now();
+        if(payload?.ts) _perfLatencyMs=Date.now()-payload.ts;
         const wasOnline=_perfLeaderOnline; _perfLeaderOnline=true;
         if(!wasOnline) _perfUpdateLeaderStatus(); // recover badge immediately
+        else _perfUpdateLatencyBadge();
         if(payload) _perfLiveApply(payload);
+      });
+      // Transpose: leader changed song key — re-render chords on this device
+      _perfLiveChannel.on('broadcast', {event:'pm_transpose'}, ({payload})=>{
+        if(!payload?.song_id) return;
+        if(!_perfTranspose) _perfTranspose={};
+        _perfTranspose[payload.song_id]=payload.steps||0;
+        // Only re-render if this is the current song
+        const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+        const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+        if(s && String(s.id)===String(payload.song_id)){
+          _perfTransposeLightUpdate(s,item);
+          const stepVal=payload.steps||0;
+          showToast(stepVal===0?'↺ Key reset':'🎵 Key '+(stepVal>0?'+':'')+stepVal,'info',1800);
+        }
       });
       // Hold signal: leader freezes/releases all follower screens
       _perfLiveChannel.on('broadcast', {event:'pm_hold'}, ({payload})=>{
@@ -9197,7 +9251,7 @@ function _perfLiveBroadcast(){
   try {
     _perfLiveChannel.send({
       type:'broadcast', event:'pm_state',
-      payload:{ song_idx: perfIdx, scroll_pct: scrollPct, section: content?._lastHighlightSection||'', song_id: item?.songId||'' }
+      payload:{ song_idx: perfIdx, scroll_pct: scrollPct, section: content?._lastHighlightSection||'', song_id: item?.songId||'', transpose: _perfTranspose||{} }
     });
   } catch(e){}
 }
@@ -9211,7 +9265,7 @@ function _perfSendHeartbeat(){
   try{
     _perfLiveChannel.send({
       type:'broadcast', event:'pm_heartbeat',
-      payload:{ song_idx:perfIdx, scroll_pct:scrollPct, section:content?._lastHighlightSection||'', song_id:item?.songId||'', ts:Date.now() }
+      payload:{ song_idx:perfIdx, scroll_pct:scrollPct, section:content?._lastHighlightSection||'', song_id:item?.songId||'', ts:Date.now(), transpose: _perfTranspose||{} }
     });
   }catch(e){}
 }
@@ -9243,10 +9297,32 @@ function _perfUpdateLeaderStatus(){
   }
 }
 
+function _perfUpdateLatencyBadge(){
+  if(_perfLiveMode!=='follower') return;
+  const badgeText=document.getElementById('perfLiveBadgeText');
+  if(!badgeText||!_perfLeaderOnline) return;
+  const ms=_perfLatencyMs;
+  const sig=ms<200?'🟢':ms<600?'🟡':'🔴';
+  badgeText.textContent='👁 SYNC · '+sig+' '+ms+'ms';
+}
+
 function _perfLiveApply(data){
   if(!data) return;
-  // Song change: notify follower which song is coming up
+  // Apply transpose map from heartbeat payload
+  if(data.transpose && typeof data.transpose === 'object'){
+    const wasTranspose = JSON.stringify(_perfTranspose||{});
+    _perfTranspose = Object.assign({}, _perfTranspose||{}, data.transpose);
+    if(JSON.stringify(_perfTranspose) !== wasTranspose){
+      // Re-render current song if its key changed
+      const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+      const s=item && SONGS.find(x=>Number(x.id)===Number(item.id));
+      if(s) _perfTransposeLightUpdate(s,item);
+    }
+  }
+  // Song change: navigate follower to leader's current song
+  let songChanged = false;
   if(typeof data.song_idx === 'number' && data.song_idx !== perfIdx){
+    songChanged = true;
     const sl=getSetlist();
     const nextSong = sl?.songs?.[data.song_idx];
     perfIdx = data.song_idx;
@@ -9255,14 +9331,19 @@ function _perfLiveApply(data){
       const title = nextSong.title || nextSong.songId || 'Next song';
       showToast('🎵 '+ title, 'info', 3500);
     }
+    // Show queue bar — what comes after the new current song
+    _perfShowQueueBar(data.song_idx + 1);
   }
-  // Scroll sync (after a small delay to allow render)
-  setTimeout(()=>{
-    const content = document.getElementById('perfContent');
-    if(content && typeof data.scroll_pct === 'number'){
-      content.scrollTop = data.scroll_pct * (content.scrollHeight - content.clientHeight);
-    }
-  }, 80);
+  // Scroll sync — skip on song change (showPerfSong resets to top; applying
+  // a stale scroll_pct would dump the follower mid-song instead of the top)
+  if(!songChanged){
+    setTimeout(()=>{
+      const content = document.getElementById('perfContent');
+      if(content && typeof data.scroll_pct === 'number'){
+        content.scrollTop = data.scroll_pct * (content.scrollHeight - content.clientHeight);
+      }
+    }, 80);
+  }
 }
 
 function _perfLiveUpdateBadge(active){
