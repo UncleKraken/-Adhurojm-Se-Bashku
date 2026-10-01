@@ -1251,6 +1251,17 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <button id="perfDrawerNoteShowBtn" onclick="(function(){const sl=getSetlist();const item=sl.songs[perfIdx];if(item?.note)_showStageNote(item.note);})()" style="display:none;width:100%;margin-top:6px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);border-radius:8px;padding:7px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#f0c040">▲ Show Note on Screen</button>
       </div>
 
+      <!-- IEM Section Cue — voice announces section name on jump -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎧 IEM Section Cues</div>
+        <button id="perfCueBtn" onclick="togglePerfCue()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🔇 Section Cues Off <span id="perfCueStatus" style="opacity:.5;font-size:10px;float:right">Off</span></button>
+        <div style="margin-top:7px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3);flex-shrink:0">Volume</span>
+          <input type="range" min="0" max="1" step="0.05" value="0.8" id="perfCueVolSlider" oninput="_perfCueVol=Number(this.value);localStorage.setItem('aa_perf_cue_vol',this.value)" style="flex:1;accent-color:var(--blue-mid)"/>
+          <button onclick="closePerfDrawer();_perfTestCue()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif;flex-shrink:0">Test</button>
+        </div>
+      </div>
+
       <!-- PDF Chord Chart — shown in drawer on mobile where HUD button is hidden -->
       <div id="perfPDFDrawerRow" style="margin-bottom:18px;display:none">
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Chord Chart</div>
@@ -1261,6 +1272,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div style="margin-bottom:18px">
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Live Sync</div>
         <button id="perfLiveSyncDrawerBtn" onclick="showPerfLiveSync()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">📡 Live Room Sync <span id="perfLiveSyncDrawerStatus" style="opacity:.5;font-size:10px;float:right">Off</span></button>
+        <!-- Leader: Hold All / Release; Follower: Take Over as Leader -->
+        <button id="perfHoldBtn" onclick="togglePerfHold()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⏸ Hold All Screens</button>
+        <button id="perfBlackoutBtn" onclick="togglePerfBlackout()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⚫ Blackout</button>
+        <button id="perfTakeOverBtn" onclick="perfLiveTakeOver()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">🎙️ Take Over as Leader</button>
       </div>
 
       <!-- Shortcuts -->
@@ -1324,6 +1339,11 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <button onclick="perfLiveStart('leader')" style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.45);border-radius:12px;padding:14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:#93c5fd">
           🎙️ Start as Leader<div style="font-size:10px;font-weight:400;opacity:.7;margin-top:3px">Room code: <span id="perfLiveRoomCode" style="letter-spacing:3px;font-weight:800">------</span></div>
         </button>
+        <!-- QR code — shown after leader starts, lets musicians scan to join -->
+        <div id="perfLiveSyncQRWrap" style="display:none;padding:12px 0 4px;display:none;flex-direction:column;align-items:center;gap:8px">
+          <div id="perfLiveSyncQR" style="background:#fff;border-radius:10px;padding:10px;display:inline-block"></div>
+          <div style="font-family:'Poppins',sans-serif;font-size:10px;color:rgba(255,255,255,0.35)">Scan to join on any device</div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="perfLiveFollowerCode" type="text" maxlength="6" placeholder="Room code" style="flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:#fff;font-family:'Roboto Mono',monospace;font-size:16px;font-weight:700;text-align:center;letter-spacing:4px;outline:none;text-transform:uppercase">
           <button onclick="perfLiveStart('follower')" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);border-radius:10px;padding:11px 16px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#6ee7b7;white-space:nowrap">Join →</button>
@@ -1334,9 +1354,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     </div>
   </div>
 
-  <!-- ── LIVE SYNC status badge ── -->
-  <div id="perfLiveBadge" style="display:none;position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.6);border:1px solid rgba(96,165,250,0.4);backdrop-filter:blur(6px);border-radius:20px;padding:4px 12px;display:none;align-items:center;gap:6px;pointer-events:none">
-    <span style="width:6px;height:6px;border-radius:50%;background:#93c5fd;display:inline-block;animation:pulse 1.2s infinite"></span>
+  <!-- ── LIVE SYNC status badge (tappable on follower for manual sync) ── -->
+  <div id="perfLiveBadge" style="display:none;position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,0.65);border:1px solid rgba(96,165,250,0.4);backdrop-filter:blur(8px);border-radius:20px;padding:5px 14px;display:none;align-items:center;gap:7px;pointer-events:none;transition:border-color .3s">
+    <span id="perfLiveDot" style="width:6px;height:6px;border-radius:50%;background:#93c5fd;display:inline-block;animation:pulse 1.2s infinite;transition:background .3s;flex-shrink:0"></span>
     <span id="perfLiveBadgeText" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;color:#93c5fd"></span>
   </div>
 
@@ -1403,6 +1423,17 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:30;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
     <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif">Tap për të kthyer</div>
   </div>
+
+  <!-- ── HOLD overlay — follower sees this when leader calls Hold ── -->
+  <div id="perfHoldOverlay" style="display:none;position:absolute;inset:0;z-index:29;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+    <div style="font-size:52px;line-height:1">⏸</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:rgba(255,255,255,0.75);letter-spacing:5px">HOLD</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">Waiting for leader…</div>
+  </div>
+
+  <!-- ── BLACKOUT overlay — pure black, leader can send this to kill all follower screens ── -->
+  <!-- z-index 55 > section sidebar (50) so it covers everything including the sidebar chips -->
+  <div id="perfBlackoutOverlay" style="display:none;position:absolute;inset:0;z-index:55;background:#000;pointer-events:none"></div>
 
   <!-- ── SHORTCUTS OVERLAY ── -->
   <div id="perfShortcutsOverlay" onclick="this.style.display='none'" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:35;align-items:center;justify-content:center">
@@ -5229,18 +5260,23 @@ async function refreshSiteData(){
 // Toast queue — messages line up instead of overwriting each other.
 // Each toast shows for 2.8s with a 300ms gap between them.
 const _toastQueue=[];let _toastRunning=false;
-function showToast(msg,type=''){
-  _toastQueue.push({msg,type});
+function showToast(msg,type='',duration=2800){
+  _toastQueue.push({msg,type,duration});
   if(!_toastRunning) _runToast();
 }
 function _runToast(){
   if(!_toastQueue.length){_toastRunning=false;return;}
   _toastRunning=true;
-  const {msg,type}=_toastQueue.shift();
+  const {msg,type,duration}=_toastQueue.shift();
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast'+(type?' '+type:'');
   t.classList.add('show');
-  setTimeout(()=>{t.classList.remove('show');setTimeout(_runToast,300);},2800);
+  if(duration===0){
+    // Permanent — stays until next toast or explicit clear; don't advance queue
+    _toastRunning=false;
+  } else {
+    setTimeout(()=>{t.classList.remove('show');setTimeout(_runToast,300);},duration);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -7370,6 +7406,11 @@ function openPerfDrawer(){
   const backdrop = document.getElementById('perfDrawerBackdrop');
   if(drawer) drawer.style.transform = 'translateX(0%)';
   if(backdrop){ backdrop.style.display='block'; }
+  // Hide section sidebar so it doesn't peek out behind the drawer
+  const sidebar = document.getElementById('perfSectionSidebar');
+  if(sidebar) sidebar.style.visibility = 'hidden';
+  // Sync IEM cue button state
+  _syncPerfCueBtn();
   showPerfControls(); clearTimeout(_perfAutoHideTimer);
 }
 function closePerfDrawer(){
@@ -7377,6 +7418,9 @@ function closePerfDrawer(){
   const backdrop = document.getElementById('perfDrawerBackdrop');
   if(drawer) drawer.style.transform = 'translateX(100%)';
   if(backdrop) backdrop.style.display='none';
+  // Restore section sidebar
+  const sidebar = document.getElementById('perfSectionSidebar');
+  if(sidebar) sidebar.style.visibility = '';
 }
 
 // ── V2 SETLIST DRAWER ──
@@ -7386,6 +7430,9 @@ function openSetlistDrawer(){
   const backdrop = document.getElementById('perfDrawerBackdrop');
   if(drawer) drawer.style.transform = 'translateX(0%)';
   if(backdrop) backdrop.style.display='block';
+  // Hide section sidebar so it doesn't peek behind the setlist drawer
+  const sidebar = document.getElementById('perfSectionSidebar');
+  if(sidebar) sidebar.style.visibility = 'hidden';
   showPerfControls(); clearTimeout(_perfAutoHideTimer);
 }
 function closeSetlistDrawer(){
@@ -7393,6 +7440,9 @@ function closeSetlistDrawer(){
   const backdrop = document.getElementById('perfDrawerBackdrop');
   if(drawer) drawer.style.transform = 'translateX(-100%)';
   if(backdrop) backdrop.style.display='none';
+  // Restore section sidebar
+  const sidebar = document.getElementById('perfSectionSidebar');
+  if(sidebar) sidebar.style.visibility = '';
 }
 
 // ── CURRENT LINE HIGHLIGHT ──
@@ -7547,6 +7597,8 @@ function _perfJumpSection(dir){
 function showPerfSong(){
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  // Reset IEM cue debounce so first section of new song always announces
+  _perfCueLastSec = '';
   // Stop scroll and highlight when changing songs
   stopAutoScroll();
   // Only reset highlight if NOT in auto-scroll mode
@@ -8300,11 +8352,123 @@ function _sectionClass(label){
   return 'sec-default';
 }
 
+// ── IEM SECTION CUE ENGINE ───────────────────────────────────────────────────
+// Announces section names via Web Speech API with a click tone — IEM / stage monitor style.
+// Persisted: aa_perf_cue (enabled), aa_perf_cue_vol (volume 0–1)
+let _perfCueEnabled = !!localStorage.getItem('aa_perf_cue');
+let _perfCueVol     = Number(localStorage.getItem('aa_perf_cue_vol') || 0.8);
+let _perfCueLastSec = '';  // debounce: don't re-announce same section twice in a row
+let _perfCueCtx     = null;
+
+function _perfCueGetCtx(){
+  if(!_perfCueCtx || _perfCueCtx.state==='closed'){
+    try{ _perfCueCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ _perfCueCtx=null; }
+  }
+  return _perfCueCtx;
+}
+
+function _perfPlayClick(vol, accent=false){
+  const ctx=_perfCueGetCtx(); if(!ctx) return;
+  const t=ctx.currentTime;
+  const freq=accent?900:650;
+  // Triangle wave body — woodblock tone with hard transient
+  const osc=ctx.createOscillator(), gn=ctx.createGain();
+  osc.connect(gn); gn.connect(ctx.destination);
+  osc.type='triangle'; osc.frequency.value=freq;
+  gn.gain.setValueAtTime(vol*(accent?0.80:0.58), t);
+  gn.gain.exponentialRampToValueAtTime(0.0001, t+0.042);
+  osc.start(t); osc.stop(t+0.05);
+  // Short noise burst for snap/attack transient
+  const bufLen=Math.ceil(ctx.sampleRate*0.014);
+  const buf=ctx.createBuffer(1,bufLen,ctx.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<bufLen;i++) d[i]=(Math.random()*2-1);
+  const ns=ctx.createBufferSource(), nGain=ctx.createGain();
+  const bpf=ctx.createBiquadFilter();
+  bpf.type='bandpass'; bpf.frequency.value=freq*1.9; bpf.Q.value=1.4;
+  ns.buffer=buf; ns.connect(bpf); bpf.connect(nGain); nGain.connect(ctx.destination);
+  nGain.gain.setValueAtTime(vol*(accent?0.50:0.34), t);
+  nGain.gain.exponentialRampToValueAtTime(0.0001, t+0.011);
+  ns.start(t); ns.stop(t+0.015);
+}
+
+// Soft two-tone advance ping (distinct from the woodblock section-arrival click)
+function _perfPlayAdvancePing(vol){
+  const ctx=_perfCueGetCtx(); if(!ctx) return;
+  const t=ctx.currentTime;
+  [0, 0.065].forEach((dt,i)=>{
+    const osc=ctx.createOscillator(), gn=ctx.createGain();
+    osc.connect(gn); gn.connect(ctx.destination);
+    osc.type='sine'; osc.frequency.value=i===0?1047:784; // C6 → G5
+    gn.gain.setValueAtTime(vol, t+dt);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t+dt+0.11);
+    osc.start(t+dt); osc.stop(t+dt+0.12);
+  });
+}
+
+function _perfAnnounceCue(label){
+  if(!_perfCueEnabled || !label) return;
+  if(label===_perfCueLastSec) return; // same section — skip
+  _perfCueLastSec = label;
+
+  // Play click tone first
+  _perfPlayClick(_perfCueVol);
+
+  // Speak after 160 ms (after the two clicks)
+  setTimeout(()=>{
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(label);
+    utter.volume = _perfCueVol;
+    utter.rate   = 1.05;
+    utter.pitch  = 1.0;
+    // Pick a voice: prefer a local one matching UI lang, fall back to default
+    const voices = window.speechSynthesis.getVoices();
+    const lang   = (_perfLang||currentLang)==='sq' ? 'sq' : 'en';
+    const preferred = voices.find(v=>v.lang.startsWith(lang==='sq'?'sq':'en') && v.localService)
+                   || voices.find(v=>v.lang.startsWith('en') && v.localService)
+                   || voices[0];
+    if(preferred) utter.voice = preferred;
+    window.speechSynthesis.speak(utter);
+  }, 160);
+}
+
+function _perfTestCue(){
+  const label = (_perfLang||currentLang)==='sq' ? 'Kori' : 'Chorus';
+  _perfCueLastSec=''; // reset debounce so test always fires
+  _perfAnnounceCue(label);
+}
+
+function togglePerfCue(){
+  _perfCueEnabled = !_perfCueEnabled;
+  try{ _perfCueEnabled ? localStorage.setItem('aa_perf_cue','1') : localStorage.removeItem('aa_perf_cue'); }catch(e){}
+  _perfCueLastSec = ''; // reset debounce on toggle
+  _syncPerfCueBtn();
+  if(_perfCueEnabled) _perfTestCue(); // demo it on enable
+}
+
+function _syncPerfCueBtn(){
+  const btn    = document.getElementById('perfCueBtn');
+  const status = document.getElementById('perfCueStatus');
+  const vol    = document.getElementById('perfCueVolSlider');
+  if(btn){
+    btn.style.background   = _perfCueEnabled ? 'rgba(96,165,250,0.15)' : 'var(--bg3)';
+    btn.style.borderColor  = _perfCueEnabled ? 'rgba(96,165,250,0.5)'  : 'var(--border)';
+    btn.style.color        = _perfCueEnabled ? '#93c5fd' : 'var(--text2)';
+    btn.childNodes[0].textContent = _perfCueEnabled ? '🎧 Section Cues On ' : '🔇 Section Cues Off ';
+  }
+  if(status) status.textContent = _perfCueEnabled ? 'On' : 'Off';
+  if(vol) vol.value = _perfCueVol;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Flash section name on screen for 1.5s
 function _flashSection(label){
   const el=document.getElementById('perfSectionFlash');
   const lbl=document.getElementById('perfSectionFlashLabel');
   if(!el||!lbl||!label) return;
+  // IEM cue: announce section name via voice + click tone
+  _perfAnnounceCue(label);
   // Build color for flash label based on section type and current theme
   const cls=_sectionClass(label);
   const dark=_isPerfDark();
@@ -8331,6 +8495,12 @@ function _flashSection(label){
     el.classList.remove('flash-in'); el.classList.add('flash-out');
     setTimeout(()=>{ el.style.display='none'; el.classList.remove('flash-out'); },320);
   },1200);
+  // Live Sync: broadcast section jump to followers instantly
+  if(_perfLiveMode==='leader' && _perfLiveChannel){
+    try{ _perfLiveChannel.send({type:'broadcast',event:'pm_section',payload:{label}}); }catch(e){}
+  }
+  // Vibration cue for followers (silent IEM alternative on mobile)
+  if(_perfLiveMode==='follower' && navigator.vibrate) navigator.vibrate(40);
 }
 
 // ── COUNT-IN before autoscroll ──
@@ -8360,6 +8530,8 @@ function _runCountIn(bpm, beats, cb){
       overlay.style.display='none';
       cb(); return;
     }
+    // Audio click on every beat — accent (louder, higher) on beat 1
+    _perfPlayClick(0.72, current===0);
     // Highlight current dot
     document.querySelectorAll('.ci-beat-dot').forEach((d,i)=>{
       d.classList.toggle('active', i===current);
@@ -8374,8 +8546,53 @@ function _runCountIn(bpm, beats, cb){
   tick();
 }
 
-// ── NEXT SECTION PREVIEW ──
+// ── NEXT SECTION PREVIEW + ADVANCE CUES ──
 let _perfNextSectionLabel='';
+let _perfLastSectionWarned=''; // debounce last-section warning
+
+// Speak "Next: [label]" quietly — fires when next-section preview changes
+function _perfSpeakAdvance(label){
+  if(!window.speechSynthesis||!_perfCueEnabled) return;
+  const lang=(_perfLang||currentLang)==='sq'?'sq':'en';
+  const prefix=lang==='sq'?'Tjetri: ':'Next: ';
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(prefix+label);
+  u.volume=_perfCueVol*0.62; u.rate=1.1; u.pitch=1.15;
+  const voices=window.speechSynthesis.getVoices();
+  const preferred=voices.find(v=>v.lang.startsWith(lang==='sq'?'sq':'en')&&v.localService)
+                ||voices.find(v=>v.lang.startsWith('en')&&v.localService)||voices[0];
+  if(preferred) u.voice=preferred;
+  window.speechSynthesis.speak(u);
+}
+
+// Triple descending ping + "Last section" — fires when no next section exists
+function _perfSpeakLastSection(){
+  if(!window.speechSynthesis||!_perfCueEnabled) return;
+  const lang=(_perfLang||currentLang)==='sq'?'sq':'en';
+  const msg=lang==='sq'?'Seksioni i fundit':'Last section';
+  const ctx=_perfCueGetCtx();
+  if(ctx){
+    [0,0.13,0.26].forEach((dt)=>{
+      const osc=ctx.createOscillator(), gn=ctx.createGain();
+      osc.connect(gn); gn.connect(ctx.destination);
+      osc.type='sine'; osc.frequency.value=523; // C5 — three even pings
+      gn.gain.setValueAtTime(_perfCueVol*0.45, ctx.currentTime+dt);
+      gn.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dt+0.09);
+      osc.start(ctx.currentTime+dt); osc.stop(ctx.currentTime+dt+0.1);
+    });
+  }
+  setTimeout(()=>{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(msg);
+    u.volume=_perfCueVol; u.rate=0.93; u.pitch=0.88;
+    const voices=window.speechSynthesis.getVoices();
+    const preferred=voices.find(v=>v.lang.startsWith(lang==='sq'?'sq':'en')&&v.localService)
+                  ||voices.find(v=>v.lang.startsWith('en')&&v.localService)||voices[0];
+    if(preferred) u.voice=preferred;
+    window.speechSynthesis.speak(u);
+  }, 420);
+}
+
 function _updateNextSectionPreview(currentSectionLabel, sections){
   const bar=document.getElementById('perfNextSectionBar');
   const lbl=document.getElementById('perfNextSectionLabel');
@@ -8383,13 +8600,25 @@ function _updateNextSectionPreview(currentSectionLabel, sections){
   // Find next section after current
   const idx=sections.findIndex(s=>s.label===currentSectionLabel);
   const next=sections[idx+1];
+  const prevNext=_perfNextSectionLabel;
   if(next && next.label!==currentSectionLabel){
     lbl.textContent=next.label;
     bar.style.display='flex';
     _perfNextSectionLabel=next.label;
+    // Advance cue: soft ping + "Next: [label]" when upcoming section changes
+    if(_perfCueEnabled && next.label!==prevNext){
+      _perfPlayAdvancePing(_perfCueVol*0.52);
+      setTimeout(()=>_perfSpeakAdvance(next.label), 90);
+    }
+    _perfLastSectionWarned=''; // reset last-section debounce
   } else {
     bar.style.display='none';
     _perfNextSectionLabel='';
+    // Last section warning: fire once per entry into the final section
+    if(_perfCueEnabled && currentSectionLabel && currentSectionLabel!==_perfLastSectionWarned){
+      _perfLastSectionWarned=currentSectionLabel;
+      setTimeout(()=>_perfSpeakLastSection(), 620); // after section-arrival cue
+    }
   }
 }
 
@@ -8724,6 +8953,11 @@ let _perfLiveChannel = null;
 let _perfLiveMode = null;   // 'leader' | 'follower'
 let _perfLiveRoomCode = null;
 let _perfLiveLast = 0;       // debounce broadcast timestamp
+// Reliability layer
+let _perfHeartbeatTimer   = null;  // leader: sends heartbeat every 5s
+let _perfLeaderWatchTimer = null;  // follower: checks for stale heartbeat
+let _perfLeaderLastSeen   = 0;     // follower: timestamp of last heartbeat
+let _perfLeaderOnline     = true;  // follower: current signal state
 
 function showPerfLiveSync(){
   const overlay = document.getElementById('perfLiveSync');
@@ -8734,6 +8968,14 @@ function showPerfLiveSync(){
   }
   const codeEl = document.getElementById('perfLiveRoomCode');
   if(codeEl) codeEl.textContent = _perfLiveRoomCode;
+  // Pre-fill follower input from URL param if present
+  const urlRoom = new URLSearchParams(location.search).get('pm_room');
+  if(urlRoom){
+    const inp=document.getElementById('perfLiveFollowerCode');
+    if(inp && !inp.value) inp.value=urlRoom.toUpperCase();
+  }
+  // If already leader, show QR for current room
+  if(_perfLiveMode==='leader') _perfRenderQR(_perfLiveRoomCode);
   // If already live show status
   const statusEl = document.getElementById('perfLiveSyncStatus');
   if(statusEl) statusEl.textContent = _perfLiveChannel ? `🟢 Live as ${_perfLiveMode}` : '';
@@ -8764,12 +9006,81 @@ function perfLiveStart(mode){
       _perfLiveChannel.on('broadcast', {event:'pm_state'}, (payload)=>{
         _perfLiveApply(payload.payload || payload);
       });
+      // Section jump: leader tapped a section chip — jump here instantly
+      _perfLiveChannel.on('broadcast', {event:'pm_section'}, ({payload})=>{
+        if(payload?.label) perfJumpToSection(payload.label);
+      });
+      // Heartbeat: passive sync + leader-online tracking
+      _perfLiveChannel.on('broadcast', {event:'pm_heartbeat'}, ({payload})=>{
+        _perfLeaderLastSeen=Date.now();
+        const wasOnline=_perfLeaderOnline; _perfLeaderOnline=true;
+        if(!wasOnline) _perfUpdateLeaderStatus(); // recover badge immediately
+        if(payload) _perfLiveApply(payload);
+      });
+      // Hold signal: leader freezes/releases all follower screens
+      _perfLiveChannel.on('broadcast', {event:'pm_hold'}, ({payload})=>{
+        const overlay=document.getElementById('perfHoldOverlay');
+        if(!overlay) return;
+        const holding=!!payload?.hold;
+        overlay.style.display=holding?'flex':'none';
+        if(holding) showToast('⏸ Hold — waiting for leader…','info',0);
+        else{ showToast('▶ Released','success'); }
+      });
+      // Panic/blackout: leader sends pure black to all followers
+      _perfLiveChannel.on('broadcast', {event:'pm_panic'}, ({payload})=>{
+        const overlay=document.getElementById('perfBlackoutOverlay');
+        if(!overlay) return;
+        const blacking=!!payload?.blackout;
+        overlay.style.display=blacking?'block':'none';
+        if(navigator.vibrate) navigator.vibrate(blacking?[60,40,60]:30);
+      });
     }
+    // Presence: track device count (all modes)
+    _perfLiveChannel.on('presence',{event:'sync'},()=>{
+      const state=_perfLiveChannel.presenceState();
+      _perfPresenceCount=Object.keys(state).length;
+      _perfLiveUpdateBadge(true);
+    });
     _perfLiveChannel.subscribe((status)=>{
       if(status==='SUBSCRIBED'){
         _perfLiveUpdateBadge(true);
         closePerfLiveSync();
-        if(mode==='leader') _perfLiveBroadcast();
+        // Track presence
+        try{ _perfLiveChannel.track({mode, joined_at:Date.now()}); }catch(e){}
+        if(mode==='leader'){
+          // Render QR so musicians can scan to join
+          _perfRenderQR(_perfLiveRoomCode);
+          _perfLiveBroadcast();
+          // Heartbeat: send full state every 5s so followers always have fresh data
+          _perfHeartbeatTimer = setInterval(_perfSendHeartbeat, 5000);
+          // Respond instantly to any follower's sync request
+          _perfLiveChannel.on('broadcast',{event:'sync_request'},()=>_perfSendHeartbeat());
+        } else {
+          // Give grace window so watch-timer doesn't instantly fire on fresh join
+          _perfLeaderLastSeen = Date.now();
+          // Ask leader for current state immediately
+          setTimeout(_perfFollowerSyncRequest, 600);
+          // Watch for leader going offline
+          _perfLeaderWatchTimer = setInterval(()=>{
+            if(_perfLiveMode!=='follower'||!_perfLiveChannel) return;
+            const wasOnline=_perfLeaderOnline;
+            _perfLeaderOnline = _perfLeaderLastSeen>0 ? (Date.now()-_perfLeaderLastSeen)<9000 : true;
+            if(wasOnline!==_perfLeaderOnline) _perfUpdateLeaderStatus();
+          }, 2000);
+        }
+      } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+        // Auto-reconnect: save state, tear down, rebuild after 3s
+        const savedMode=_perfLiveMode, savedRoom=_perfLiveRoomCode;
+        const badgeText=document.getElementById('perfLiveBadgeText');
+        if(badgeText) badgeText.textContent='⚠️ Reconnecting…';
+        if(_perfHeartbeatTimer){clearInterval(_perfHeartbeatTimer);_perfHeartbeatTimer=null;}
+        if(_perfLeaderWatchTimer){clearInterval(_perfLeaderWatchTimer);_perfLeaderWatchTimer=null;}
+        setTimeout(()=>{
+          if(!savedMode||!savedRoom) return;
+          try{_perfLiveChannel?.unsubscribe();}catch(e){}
+          _perfLiveChannel=null; _perfLiveMode=savedMode; _perfLiveRoomCode=savedRoom;
+          perfLiveStart(savedMode);
+        }, 3000);
       }
     });
   } catch(e){
@@ -8777,11 +9088,99 @@ function perfLiveStart(mode){
   }
 }
 
+let _perfHoldActive = false;
+let _perfPresenceCount = 0;
+
+// ── Leader: toggle Hold — freezes all follower screens ──
+function togglePerfHold(){
+  _perfHoldActive=!_perfHoldActive;
+  if(_perfLiveChannel && _perfLiveMode==='leader'){
+    try{ _perfLiveChannel.send({type:'broadcast',event:'pm_hold',payload:{hold:_perfHoldActive}}); }catch(e){}
+  }
+  const btn=document.getElementById('perfHoldBtn');
+  if(btn){
+    btn.textContent=_perfHoldActive?'▶ Release Hold':'⏸ Hold All Screens';
+    btn.style.background=_perfHoldActive?'rgba(251,146,60,0.15)':'var(--bg3)';
+    btn.style.borderColor=_perfHoldActive?'rgba(251,146,60,0.5)':'var(--border)';
+    btn.style.color=_perfHoldActive?'#fdba74':'var(--text2)';
+  }
+  showToast(_perfHoldActive?'⏸ All screens paused':'▶ Screens released', _perfHoldActive?'':'success');
+}
+
+// ── Leader: toggle Blackout — pure black on all follower screens ──
+let _perfBlackoutActive = false;
+function togglePerfBlackout(){
+  _perfBlackoutActive=!_perfBlackoutActive;
+  if(_perfLiveChannel && _perfLiveMode==='leader'){
+    try{ _perfLiveChannel.send({type:'broadcast',event:'pm_panic',payload:{blackout:_perfBlackoutActive}}); }catch(e){}
+  }
+  const btn=document.getElementById('perfBlackoutBtn');
+  if(btn){
+    btn.textContent=_perfBlackoutActive?'⬜ Restore Screens':'⚫ Blackout';
+    btn.style.background=_perfBlackoutActive?'rgba(0,0,0,0.7)':'var(--bg3)';
+    btn.style.borderColor=_perfBlackoutActive?'rgba(255,255,255,0.25)':'var(--border)';
+    btn.style.color=_perfBlackoutActive?'#fff':'var(--text2)';
+  }
+  showToast(_perfBlackoutActive?'⚫ All screens blacked out':'⬜ Screens restored', 'info');
+}
+
+// ── QR code: render room join URL into the Live Sync panel ──
+function _perfRenderQR(code){
+  const wrap=document.getElementById('perfLiveSyncQRWrap');
+  const container=document.getElementById('perfLiveSyncQR');
+  if(!wrap||!container||!code) return;
+  container.innerHTML='';
+  const joinUrl=location.origin+location.pathname+'?pm_room='+code;
+  if(typeof QRCode !== 'undefined'){
+    try{
+      new QRCode(container,{text:joinUrl,width:140,height:140,correctLevel:QRCode.CorrectLevel.M});
+      wrap.style.display='flex';
+    }catch(e){ wrap.style.display='none'; }
+  } else {
+    // Deferred script not ready yet — retry once after 1s
+    setTimeout(()=>_perfRenderQR(code), 1000);
+  }
+}
+
+// ── Follower: promote self to leader (emergency takeover) ──
+function perfLiveTakeOver(){
+  if(_perfLiveMode==='leader') return;
+  const code=_perfLiveRoomCode;
+  if(!code){ showToast('Not in a room','error'); return; }
+  _perfLiveStop();
+  _perfLiveRoomCode=code;
+  perfLiveStart('leader');
+  closePerfDrawer();
+  showToast('🎙️ You are now the Leader — room '+code,'success');
+}
+
 function _perfLiveStop(){
+  if(_perfHeartbeatTimer){clearInterval(_perfHeartbeatTimer);_perfHeartbeatTimer=null;}
+  if(_perfLeaderWatchTimer){clearInterval(_perfLeaderWatchTimer);_perfLeaderWatchTimer=null;}
+  _perfLeaderLastSeen=0; _perfLeaderOnline=true;
+  _perfPresenceCount=0;
+  // Clear QR panel
+  const qrWrap=document.getElementById('perfLiveSyncQRWrap');
+  if(qrWrap) qrWrap.style.display='none';
   if(_perfLiveChannel){
+    // Release followers from hold/blackout BEFORE clearing local flags (flags still true here)
+    if(_perfLiveMode==='leader'){
+      if(_perfHoldActive)
+        try{ _perfLiveChannel.send({type:'broadcast',event:'pm_hold',payload:{hold:false}}); }catch(e){}
+      if(_perfBlackoutActive)
+        try{ _perfLiveChannel.send({type:'broadcast',event:'pm_panic',payload:{blackout:false}}); }catch(e){}
+    }
+    try{ _perfLiveChannel.untrack(); } catch(e){}
     try{ _perfLiveChannel.unsubscribe(); } catch(e){}
     _perfLiveChannel = null;
   }
+  // Now clear local hold/blackout state and overlays
+  _perfHoldActive=false;
+  const holdOverlay=document.getElementById('perfHoldOverlay');
+  if(holdOverlay) holdOverlay.style.display='none';
+  _perfBlackoutActive=false;
+  const blackoutOverlay=document.getElementById('perfBlackoutOverlay');
+  if(blackoutOverlay) blackoutOverlay.style.display='none';
   _perfLiveMode = null;
   _perfLiveUpdateBadge(false);
 }
@@ -8803,12 +9202,59 @@ function _perfLiveBroadcast(){
   } catch(e){}
 }
 
+// ── Heartbeat: always-fresh state snapshot from leader (no debounce) ──
+function _perfSendHeartbeat(){
+  if(!_perfLiveChannel||_perfLiveMode!=='leader') return;
+  const content=document.getElementById('perfContent');
+  const scrollPct=content?(content.scrollTop/Math.max(1,content.scrollHeight-content.clientHeight)):0;
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  try{
+    _perfLiveChannel.send({
+      type:'broadcast', event:'pm_heartbeat',
+      payload:{ song_idx:perfIdx, scroll_pct:scrollPct, section:content?._lastHighlightSection||'', song_id:item?.songId||'', ts:Date.now() }
+    });
+  }catch(e){}
+}
+
+// ── Follower: request leader to broadcast current state ──
+function _perfFollowerSyncRequest(){
+  if(!_perfLiveChannel||_perfLiveMode!=='follower') return;
+  try{ _perfLiveChannel.send({type:'broadcast',event:'sync_request',payload:{ts:Date.now()}}); }catch(e){}
+}
+
+// ── Follower: update badge color/text when leader goes online/offline ──
+function _perfUpdateLeaderStatus(){
+  const badge=document.getElementById('perfLiveBadge');
+  const badgeText=document.getElementById('perfLiveBadgeText');
+  const dot=badge?.querySelector('span');
+  if(!badge||_perfLiveMode!=='follower') return;
+  if(!_perfLeaderOnline){
+    badge.style.borderColor='rgba(239,68,68,0.55)';
+    badge.style.cursor='pointer'; badge.style.pointerEvents='auto';
+    if(dot) dot.style.background='#f87171';
+    if(badgeText) badgeText.textContent='⚠️ No signal — tap to sync';
+    badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Sync request sent…','info',2000); };
+  } else {
+    badge.style.borderColor='rgba(96,165,250,0.4)';
+    badge.style.cursor='default'; badge.style.pointerEvents='none';
+    if(dot) dot.style.background='#93c5fd';
+    if(badgeText) badgeText.textContent='👁 SYNC';
+    badge.onclick=null;
+  }
+}
+
 function _perfLiveApply(data){
   if(!data) return;
-  // Song change
+  // Song change: notify follower which song is coming up
   if(typeof data.song_idx === 'number' && data.song_idx !== perfIdx){
+    const sl=getSetlist();
+    const nextSong = sl?.songs?.[data.song_idx];
     perfIdx = data.song_idx;
     showPerfSong();
+    if(nextSong){
+      const title = nextSong.title || nextSong.songId || 'Next song';
+      showToast('🎵 '+ title, 'info', 3500);
+    }
   }
   // Scroll sync (after a small delay to allow render)
   setTimeout(()=>{
@@ -8822,9 +9268,31 @@ function _perfLiveApply(data){
 function _perfLiveUpdateBadge(active){
   const badge = document.getElementById('perfLiveBadge');
   const badgeText = document.getElementById('perfLiveBadgeText');
+  const dot = document.getElementById('perfLiveDot');
   const btn = document.getElementById('perfLiveSyncBtn');
   if(badge) badge.style.display = active ? 'flex' : 'none';
-  if(badgeText) badgeText.textContent = active ? (_perfLiveMode==='leader' ? '📡 LIVE · '+_perfLiveRoomCode : '👁 SYNC') : '';
+
+  if(active && _perfLiveMode==='follower'){
+    // If leader is offline, let _perfUpdateLeaderStatus paint the red warning — don't overwrite it
+    if(!_perfLeaderOnline){ _perfUpdateLeaderStatus(); return; }
+    // Follower badge: tappable for manual sync
+    badge.style.pointerEvents='auto'; badge.style.cursor='pointer';
+    badge.style.borderColor='rgba(96,165,250,0.4)';
+    if(dot) dot.style.background='#93c5fd';
+    badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Sync request sent…','info',2000); };
+    if(badgeText) badgeText.textContent='👁 SYNC · tap to pull';
+  } else if(active && _perfLiveMode==='leader'){
+    badge.style.pointerEvents='none'; badge.style.cursor='default';
+    badge.style.borderColor='rgba(74,222,128,0.4)';
+    if(dot) dot.style.background='#4ade80';
+    badge.onclick=null;
+    // Show device count if we have presence data
+    const devStr = _perfPresenceCount>1 ? ` · ${_perfPresenceCount} devices` : '';
+    if(badgeText) badgeText.textContent = '📡 LIVE · '+(_perfLiveRoomCode||'')+devStr;
+  } else if(badgeText){
+    badgeText.textContent = '';
+  }
+
   if(btn){
     btn.style.background = active ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)';
     btn.title = active ? 'Stop Live Sync' : 'Live Room Sync';
@@ -8840,6 +9308,16 @@ function _perfLiveUpdateBadge(active){
     drawerBtn.onclick = active ? (()=>{ _perfLiveStop(); closePerfDrawer(); }) : (()=>{ closePerfDrawer(); showPerfLiveSync(); });
   }
   if(drawerStatus) drawerStatus.textContent = active ? (_perfLiveMode==='leader' ? 'LIVE 📡' : 'SYNC 👁') : 'Off';
+
+  // Show/hide Hold and TakeOver drawer buttons based on live mode
+  const holdBtn = document.getElementById('perfHoldBtn');
+  const blackoutBtn = document.getElementById('perfBlackoutBtn');
+  const takeOverBtn = document.getElementById('perfTakeOverBtn');
+  const isLeader = active && _perfLiveMode==='leader';
+  const isFollower = active && _perfLiveMode==='follower';
+  if(holdBtn) holdBtn.style.display = isLeader ? 'block' : 'none';
+  if(blackoutBtn) blackoutBtn.style.display = isLeader ? 'block' : 'none';
+  if(takeOverBtn) takeOverBtn.style.display = isFollower ? 'block' : 'none';
 }
 
 function _perfLiveShowErr(msg){
@@ -8952,6 +9430,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const label = document.getElementById('micSensLabel');
   if(slider && label){
     slider.addEventListener('input', ()=>{ _micSensitivity=Number(slider.value); label.textContent=slider.value; });
+  }
+  // Auto-fill room code from URL — ?pm_room=XXXXXX lets musicians scan QR and land in join mode
+  const urlRoom = new URLSearchParams(location.search).get('pm_room');
+  if(urlRoom){
+    // Pre-fill follower input; if PM is already open, we'll also show the join panel
+    const inp=document.getElementById('perfLiveFollowerCode');
+    if(inp) inp.value=urlRoom.toUpperCase();
+    // If performance mode is active, open the Live Sync panel automatically
+    const perfEl=document.getElementById('perfV2');
+    if(perfEl && perfEl.style.display!=='none'){
+      setTimeout(()=>showPerfLiveSync(),400);
+    }
   }
 });
 
