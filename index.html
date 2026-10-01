@@ -750,12 +750,24 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 #perfSongList button.perf-song-active{background:var(--blue-mid);color:#fff;font-weight:700;}
 
 /* ── ROLE PICKER cards ── */
-.perf-role-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 12px;cursor:pointer;transition:all .18s;font-family:'Poppins',sans-serif;color:#fff;}
+.perf-role-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 12px;cursor:pointer;transition:all .18s;font-family:'Poppins',sans-serif;color:#fff;touch-action:manipulation;}
 .perf-role-card:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);transform:translateY(-2px);}
+.perf-role-card:active{transform:scale(0.96);background:rgba(255,255,255,0.12);}
 .perf-role-card.selected{border-color:var(--gold);background:rgba(240,192,64,0.12);}
 .perf-role-card .role-icon{font-size:28px;line-height:1;}
 .perf-role-card .role-name{font-size:12px;font-weight:700;letter-spacing:.02em;}
 .perf-role-card .role-desc{font-size:10px;color:rgba(255,255,255,0.45);text-align:center;line-height:1.4;}
+/* category cards (level 1) are a bit taller */
+.perf-role-cat-card{min-height:96px;}
+/* sub-role screen slide animation */
+#perfRoleSubScreen{animation:slideInRight .2s ease;}
+@keyframes slideInRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+#perfRoleCatScreen{animation:fadeInPicker .18s ease;}
+@keyframes fadeInPicker{from{opacity:0}to{opacity:1}}
+/* role picker grid: 3 cols on wide, 2 on narrow phones */
+#perfRoleCatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+#perfRoleSubGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(max-width:400px){#perfRoleCatGrid{grid-template-columns:repeat(2,1fr);}}
 
 /* ── MIC SCROLL beat dots ── */
 #perfAudioBar{transition:opacity .3s;}
@@ -1245,18 +1257,32 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- progress bar removed — lyric line highlight is the position indicator -->
 
   <!-- ── ROLE PICKER overlay ── -->
-  <div id="perfRolePicker" style="display:none;position:absolute;inset:0;z-index:40;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;padding:24px">
-    <div style="max-width:420px;width:100%">
-      <div style="text-align:center;margin-bottom:24px">
-        <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">What's your role today?</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif">Your view will adapt to help you serve better</div>
+  <div id="perfRolePicker" style="display:none;position:absolute;inset:0;z-index:40;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="max-width:460px;width:100%">
+      <!-- SCREEN 1: Category picker -->
+      <div id="perfRoleCatScreen">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">What's your role today?</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif">Your view will adapt to help you serve better</div>
+        </div>
+        <div id="perfRoleCatGrid" style="margin-bottom:18px"></div>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:14px">
+          <input type="checkbox" id="perfRoleRemember" style="accent-color:var(--gold);width:14px;height:14px">
+          <label for="perfRoleRemember" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Remember my role on this device</label>
+        </div>
+        <button onclick="setPerfRole('operator')" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35);touch-action:manipulation">Skip — use full operator view</button>
       </div>
-      <div id="perfRoleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
-      <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:16px">
-        <input type="checkbox" id="perfRoleRemember" style="accent-color:var(--gold);width:14px;height:14px">
-        <label for="perfRoleRemember" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Remember my role on this device</label>
+      <!-- SCREEN 2: Sub-role picker (slides in from right) -->
+      <div id="perfRoleSubScreen" style="display:none">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
+          <button onclick="goBackToRoleCategories()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">←</button>
+          <div>
+            <div id="perfRoleSubTitle" style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:800;color:#fff"></div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Poppins',sans-serif">Choose your specific role</div>
+          </div>
+        </div>
+        <div id="perfRoleSubGrid" style="margin-bottom:16px"></div>
       </div>
-      <button onclick="setPerfRole('operator')" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35)">Skip — use full operator view</button>
     </div>
   </div>
 
@@ -2306,6 +2332,39 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <div style="text-align:center;padding:40px;color:var(--text3)">⏳ Duke ngarkuar statistikat...</div>
         </div>
       </div>
+      <!-- Full Per-Song Analytics Table (moved from Tools tab) -->
+      <div style="padding:0 18px 24px">
+        <div class="admin-form" style="padding:0;overflow:hidden">
+          <div style="padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">📋 Të Gjitha Këngët — Statistikat</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="toolsStatsSearch" class="form-input" placeholder="🔍 Kërko..." oninput="renderSongStatsTable()" style="padding:6px 12px;border-radius:100px;font-size:12px;width:160px"/>
+              <select id="toolsStatsSort" class="form-select" onchange="renderSongStatsTable()" style="font-size:12px;padding:6px 10px;border-radius:8px">
+                <option value="views">👁 Shikime ↓</option>
+                <option value="downloads">⬇ Shkarkime ↓</option>
+                <option value="score">⭐ Score ↓</option>
+                <option value="title">Az Titull</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:var(--bg3);text-align:left">
+                  <th style="padding:10px 18px;font-weight:600;color:var(--text2)">Kënga</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">👁</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⬇</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⭐</th>
+                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">PDF</th>
+                </tr>
+              </thead>
+              <tbody id="songStatsTableBody">
+                <tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">⏳ Duke ngarkuar...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── TAB: BULK CATEGORIES ── -->
@@ -2372,38 +2431,6 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Verifikon nëse <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">sitemap.xml</code> dhe <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">robots.txt</code> janë të ngarkuara në GitHub Pages.</p>
           <button class="btn btn-primary btn-sm" onclick="runSitemapCheck()">🔍 Kontrollo tani</button>
           <div id="sitemapCheckResults" style="margin-top:14px;font-size:13px;line-height:2"></div>
-        </div>
-
-        <!-- Full Per-Song Analytics Table -->
-        <div class="admin-form" style="padding:0;overflow:hidden">
-          <div style="padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div style="font-size:14px;font-weight:700;color:var(--text)">📊 Të Gjitha Këngët — Statistikat</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="toolsStatsSearch" class="form-input" placeholder="🔍 Kërko..." oninput="renderSongStatsTable()" style="padding:6px 12px;border-radius:100px;font-size:12px;width:160px"/>
-              <select id="toolsStatsSort" class="form-select" onchange="renderSongStatsTable()" style="font-size:12px;padding:6px 10px;border-radius:8px">
-                <option value="views">👁 Shikime ↓</option>
-                <option value="downloads">⬇ Shkarkime ↓</option>
-                <option value="score">⭐ Score ↓</option>
-                <option value="title">Az Titull</option>
-              </select>
-            </div>
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
-              <thead>
-                <tr style="background:var(--bg3);text-align:left">
-                  <th style="padding:10px 18px;font-weight:600;color:var(--text2)">Kënga</th>
-                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">👁</th>
-                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⬇</th>
-                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">⭐</th>
-                  <th style="padding:10px 12px;font-weight:600;color:var(--text2);text-align:center">PDF</th>
-                </tr>
-              </thead>
-              <tbody id="songStatsTableBody">
-                <tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3)">⏳ Duke ngarkuar...</td></tr>
-              </tbody>
-            </table>
-          </div>
         </div>
 
       </div>
@@ -4515,7 +4542,7 @@ async function renderSongStatsTable(){
 async function runPDFLinkCheck(){
   const container = document.getElementById('pdfCheckResults');
   if(!container) return;
-  const allPDFs = window.PDFS || {};
+  const allPDFs = PDFS || {};
   const entries = [];
   Object.entries(allPDFs).forEach(([songId, instMap]) => {
     const song = SONGS.find(s=>String(s.id)===String(songId));
@@ -4811,10 +4838,10 @@ function switchAdminTab(tab,el){
   if(tab==='songs') refreshAdminSongs();
   if(tab==='social'){ loadSocialAdminForm(); }
   if(tab==='requests'){ setTimeout(loadSongRequests,100); const b=document.getElementById('requestsBadge'); if(b) b.style.display='none'; }
-  if(tab==='stats') renderStatsDashboard();
+  if(tab==='stats'){ renderStatsDashboard(); renderSongStatsTable(); }
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
-  if(tab==='tools') initToolsTab();
+  if(tab==='tools'){}
   if(tab==='addSong'){ 
     const dl=document.getElementById('artistDatalist');
     if(dl){ dl.innerHTML=''; ARTISTS.forEach(a=>{const o=document.createElement('option');o.value=a;dl.appendChild(o);}); }
@@ -5930,7 +5957,7 @@ function _runBeatDetection(){
   const confEl=document.getElementById('beatConfidence');
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-  const perfInst=item?.instrument||s?.instruments?.[0]||'Guitar';
+  const perfInst=_perfGetInst(item,s);
   const rawText=s?.lyricsRaw?.[perfInst]||s?.lyricsRaw?.Guitar||'';
   const songChords=[...new Set((rawText.match(/[A-G][#b]?m?(?:maj7|sus[24]|dim|aug|7)?/g)||[])
     .map(c=>c.split('/')[0].trim()).filter(c=>CHROMA_TEMPLATES[c]))];
@@ -6627,7 +6654,7 @@ function setChordDiagramType(type, popupEl){
   if(_perfShowChords && document.getElementById('performanceMode')?.style.display==='flex'){
     const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
     const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-    const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+    const perfInst=_perfGetInst(item,s);
     const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
     const allSections=parseLyricsText(rawText);
     const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
@@ -7052,6 +7079,17 @@ let _perfFontSize = Number(localStorage.getItem('aa_perf_font')||18);
 let _perfLang = null;
 let _perfTranspose = {};
 let _perfArrangements = {};
+// ── Arrangement persistence helpers ──────────────────────────────────────────
+// Saves / loads the current chip order to localStorage so it survives a reload.
+// Key: aa_arr_<songId>  Value: JSON array of section label strings.
+function _saveArr(songId){
+  const arr=_perfArrangements?.[`perf_arr_${songId}`];
+  if(!arr) return;
+  try{ localStorage.setItem(`aa_arr_${songId}`,JSON.stringify(arr)); }catch(e){}
+}
+function _loadArr(songId){
+  try{ const r=localStorage.getItem(`aa_arr_${songId}`); return r?JSON.parse(r):null; }catch(e){ return null; }
+}
 let _perfShowChords = false;
 let _perfMusicianMode = true;  // true = chords visible, false = singer mode (lyrics only)
 let _perfAutoHideTimer = null; // auto-hide controls timer
@@ -7075,7 +7113,7 @@ function setPerfLang(lang){
   // Re-render lyrics
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
@@ -7244,7 +7282,7 @@ function toggleSingerMode(){
   });
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
@@ -7494,7 +7532,7 @@ function showPerfSong(){
 
   if(!_perfTranspose) _perfTranspose={};
   if(_perfTranspose[s.id]===undefined) _perfTranspose[s.id]=0;
-  const perfInst = item.instrument || s.instruments?.[0] || 'Guitar';
+  const perfInst = _perfGetInst(item, s);
   const steps=_perfTranspose[s.id]||0;
   const origKeyIdx=noteToIdx((s.key||'').replace('m',''))||0;
   const tIdx=((origKeyIdx+steps)%12+12)%12;
@@ -7550,7 +7588,11 @@ function showPerfSong(){
   const allSections=parseLyricsText(rawText);
   const arrKey=`perf_arr_${s.id}`;
   if(!_perfArrangements) _perfArrangements={};
-  if(!_perfArrangements[arrKey]) _perfArrangements[arrKey]=allSections.map(sec=>sec.label);
+  if(!_perfArrangements[arrKey]){
+    // Prefer a saved order from localStorage; fall back to the default section order
+    const saved=_loadArr(s.id);
+    _perfArrangements[arrKey]=saved||allSections.map(sec=>sec.label);
+  }
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
   // Merge user-defined custom sections (per-device localStorage, chords persist across reloads)
   _perfCustomSecs(s.id).forEach(cs=>{
@@ -7658,6 +7700,8 @@ function showPerfSong(){
       </div>
     </div>`;
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
+  // Apply role-based view (chord visibility, percussion panel, font) after every song render
+  _applyPerfRole();
   setTimeout(addChordInteraction, 80);
   const mbi=document.getElementById('metroBpmInput');
   if(mbi&&s.bpm) mbi.value=s.bpm;
@@ -7695,7 +7739,7 @@ function changeSectionRep(songId, label, delta){
   // Re-render arrangement to reflect new repeat counts
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
@@ -7809,7 +7853,7 @@ function setPerfFont(size){
   // Re-render lyrics with new size without full reload
   const sl=getSetlist(); const item=sl.songs[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const perfInst=item.instrument||s.instruments?.[0]||'Guitar';
+  const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
@@ -7878,7 +7922,7 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       'sec-intro':'rgba(180,83,9,0.3)','sec-outro':'rgba(180,83,9,0.3)',
       'sec-interlude':'rgba(157,23,77,0.3)','sec-default':'rgba(0,0,0,0.12)'
     }[cls]||'rgba(0,0,0,0.12)';
-    return `<div data-chip-idx="${i}" style="display:flex;align-items:center;gap:3px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:2px 8px 2px 5px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:default;transition:box-shadow .12s,opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><span onpointerdown="_perfChipDragStart(event,'${songId}',${i})" style="cursor:grab;font-size:11px;opacity:0.45;padding:0 3px 0 1px;touch-action:none;user-select:none;line-height:1;flex-shrink:0" title="Tërhiq për rirenditje">⠿</span><span onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer">${label}</span>${rep>1?`<span style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px">×${rep}</span>`:''}<button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0;margin-left:1px;flex-shrink:0">×</button></div>`;
+    return `<div data-chip-idx="${i}" style="display:flex;align-items:center;gap:3px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:2px 8px 2px 5px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:default;transition:box-shadow .12s,opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><span onpointerdown="_perfChipDragStart(event,'${songId}',${i})" style="cursor:grab;font-size:11px;opacity:0.45;padding:0 3px 0 1px;touch-action:none;user-select:none;line-height:1;flex-shrink:0" title="Tërhiq për rirenditje">⠿</span><span onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer">${label}</span><span onclick="event.stopPropagation();perfCycleRepeat('${songId}','${label}')" title="Kliko për të ndryshuar përsëritjet" style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px;cursor:pointer;user-select:none">${rep>1?`×${rep}`:'×1'}</span><button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0;margin-left:1px;flex-shrink:0">×</button></div>`;
   }).join('');
 
   // Build sections list with repeats expanded
@@ -7949,17 +7993,26 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
 function perfAddSection(songId,label){
   const key=`perf_arr_${songId}`;
   if(!_perfArrangements) _perfArrangements={};
-  _perfArrangements[key].push(label); showPerfSong();
+  _perfArrangements[key].push(label);
+  _saveArr(songId);
+  showPerfSong();
 }
 // Cycles the repeat count for a section chip: 1→2→3→1.
 // Clicking the chip body toggles repeat; the ✕ button removes it.
 function perfCycleRepeat(songId,label){
   if(!window._perfSectionRepeats) window._perfSectionRepeats={};
-  const key=songId+'_reps';
+  const key=`rep_${songId}`; // must match the read key in renderPerfArrangement
   if(!window._perfSectionRepeats[key]) window._perfSectionRepeats[key]={};
   const cur=window._perfSectionRepeats[key][label]||1;
   window._perfSectionRepeats[key][label]=cur>=3?1:cur+1;
-  showPerfSong();
+  // Lightweight re-render — only chips + lyrics, no full song rebuild
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
+  const pi=item.instrument||s.instruments?.[0]||'Guitar';
+  const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
+  const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
+  _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+  renderPerfArrangement(s.id,sm,_perfTranspose?.[s.id]||0,pi);
 }
 
 // ── ARRANGEMENT CHIP DRAG-TO-REORDER ─────────────────────────────────────────
@@ -8016,6 +8069,7 @@ function _perfChipDragStart(e,songId,fromIdx){
     // "Insert before target chip" — account for the index shift after removal
     const insertAt=targetIdx>fromIdx?targetIdx-1:targetIdx;
     arr.splice(insertAt,0,arr.splice(fromIdx,1)[0]);
+    _saveArr(songId); // Persist the new order so it survives a page reload
     // Re-render arrangement (lightweight — no full showPerfSong scroll reset)
     const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
     const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
@@ -8032,10 +8086,15 @@ function _perfChipDragStart(e,songId,fromIdx){
 }
 
 function perfRemoveSection(songId,idx){
-  _perfArrangements[`perf_arr_${songId}`].splice(idx,1); showPerfSong();
+  _perfArrangements[`perf_arr_${songId}`].splice(idx,1);
+  _saveArr(songId);
+  showPerfSong();
 }
 function perfResetArr(songId){
-  delete _perfArrangements[`perf_arr_${songId}`]; showPerfSong();
+  // Delete in-memory order AND the persisted copy so reset is truly clean
+  delete _perfArrangements[`perf_arr_${songId}`];
+  try{ localStorage.removeItem(`aa_arr_${songId}`); }catch(e){}
+  showPerfSong();
 }
 
 // ── CUSTOM SECTIONS — user-defined instrumental/chord blocks (per-device, per-song) ──
@@ -8312,30 +8371,131 @@ function _syncAutoScrollBtns(active,label){
 // ═══════════════════════════════════════════════════════════
 let _perfRole = localStorage.getItem('perfRole') || 'operator';
 
-const PERF_ROLES = [
-  { id:'vocalist',      icon:'🎤', name:'Vocalist',      desc:'Large lyrics, no chords' },
-  { id:'guitarist',     icon:'🎸', name:'Guitarist',     desc:'Chords + lyrics visible' },
-  { id:'keys',          icon:'🎹', name:'Keys',          desc:'Chords + lyrics visible' },
-  { id:'drummer',       icon:'🥁', name:'Drummer',       desc:'Section cues + arrangement' },
-  { id:'worship_leader',icon:'🙏', name:'Worship Leader',desc:'Full view + Confidence Monitor' },
-  { id:'operator',      icon:'🎛️', name:'Operator',      desc:'Full control view' },
+// ── Two-level role picker ────────────────────────────────────────────────────
+// Level 1: instrument categories  →  Level 2: specific sub-role
+const PERF_ROLE_CATEGORIES = [
+  { id:'guitar',     icon:'🎸', name:'Guitar',      desc:'Acoustic · Electric · Bass · Uke',
+    roles:[
+      { id:'acoustic', icon:'🪕', name:'Acoustic',  desc:'Capo chart + lyrics',          sheet:'Guitar' },
+      { id:'electric', icon:'⚡', name:'Electric',  desc:'Concert pitch, no capo',        sheet:'Piano'  },
+      { id:'bass',     icon:'🎚️', name:'Bass',      desc:'Root notes per section',        sheet:'Piano'  },
+      { id:'ukulele',  icon:'🪗', name:'Ukulele',   desc:'Concert pitch chords',          sheet:'Piano'  },
+    ]
+  },
+  { id:'keys',       icon:'🎹', name:'Keys',        desc:'Piano / Keyboard',
+    roles:[
+      { id:'keys',     icon:'🎹', name:'Piano / Keys', desc:'Concert pitch chords + lyrics', sheet:'Piano' },
+    ]
+  },
+  { id:'percussion', icon:'🥁', name:'Percussion',  desc:'Drums or Cajon',
+    roles:[
+      { id:'drummer',  icon:'🥁', name:'Drums',     desc:'BPM + section cues',            sheet:null },
+      { id:'cajon',    icon:'🪘', name:'Cajon',     desc:'BPM + section cues',            sheet:null },
+    ]
+  },
+  { id:'vocals',     icon:'🎤', name:'Vocals',      desc:'Singer or Choir',
+    roles:[
+      { id:'vocalist', icon:'🎤', name:'Vocalist',  desc:'Large lyrics, no chords',       sheet:'Piano' },
+      { id:'choir',    icon:'🎵', name:'Choir',     desc:'Large lyrics, harmonies',       sheet:'Piano' },
+    ]
+  },
+  { id:'leadership', icon:'🎛️', name:'Leadership', desc:'Worship Leader · Operator',
+    roles:[
+      { id:'worship_leader', icon:'🙏', name:'Worship Leader', desc:'Full view + Monitor', sheet:'Piano' },
+      { id:'operator',       icon:'🎛️', name:'Operator',       desc:'Full control view',   sheet:null    },
+    ]
+  },
 ];
 
+// Flat list for lookups
+const PERF_ALL_ROLES = PERF_ROLE_CATEGORIES.flatMap(c=>c.roles);
+
+// Which lyricsRaw key each role uses (null = use item.instrument default / hide lyrics)
+const ROLE_SHEET_MAP = Object.fromEntries(PERF_ALL_ROLES.map(r=>[r.id, r.sheet]));
+
+// Returns which lyricsRaw key to use for the current role
+function _perfGetInst(item, song){
+  const sheet = ROLE_SHEET_MAP[_perfRole];
+  // sheet is undefined if role not found → use default
+  if(sheet !== undefined && sheet !== null) return sheet;
+  // null = percussion (lyrics hidden) or operator / unknown → use setlist instrument
+  return item?.instrument || song?.instruments?.[0] || 'Guitar';
+}
+
+// Returns the full role info object for the current role
+function _perfRoleInfo(){
+  return PERF_ALL_ROLES.find(r=>r.id===_perfRole)
+    || PERF_ROLE_CATEGORIES[4].roles[1]; // fallback: operator
+}
+
+// ── Picker: Level 1 — show category grid ────────────────────────────────────
 function showRolePicker(){
   const overlay = document.getElementById('perfRolePicker');
   if(!overlay) return;
-  const grid = document.getElementById('perfRoleGrid');
+  // Always start at category screen
+  const catScreen = document.getElementById('perfRoleCatScreen');
+  const subScreen = document.getElementById('perfRoleSubScreen');
+  if(catScreen) catScreen.style.display = '';
+  if(subScreen) subScreen.style.display = 'none';
+  // Build category grid
+  const grid = document.getElementById('perfRoleCatGrid');
   if(grid){
-    grid.innerHTML = PERF_ROLES.map(r=>`
-      <div class="perf-role-card${_perfRole===r.id?' selected':''}" onclick="setPerfRole('${r.id}')">
-        <span class="role-icon">${r.icon}</span>
-        <span class="role-name">${r.name}</span>
-        <span class="role-desc">${r.desc}</span>
+    const activeCat = PERF_ROLE_CATEGORIES.find(c=>c.roles.some(r=>r.id===_perfRole))?.id;
+    grid.innerHTML = PERF_ROLE_CATEGORIES.map(cat=>`
+      <div class="perf-role-card perf-role-cat-card${activeCat===cat.id?' selected':''}" onclick="showRoleSubPicker('${cat.id}')">
+        <span class="role-icon">${cat.icon}</span>
+        <span class="role-name">${cat.name}</span>
+        <span class="role-desc">${cat.desc}</span>
       </div>`).join('');
   }
   const rememberCb = document.getElementById('perfRoleRemember');
   if(rememberCb) rememberCb.checked = !!localStorage.getItem('perfRoleRemember');
   overlay.style.display = 'flex';
+}
+
+// ── Picker: Level 2 — show sub-role grid for a category ─────────────────────
+function showRoleSubPicker(catId){
+  const cat = PERF_ROLE_CATEGORIES.find(c=>c.id===catId);
+  if(!cat) return;
+  // Single-role categories: select directly, skip sub-screen
+  if(cat.roles.length === 1){ setPerfRole(cat.roles[0].id); return; }
+  // Slide to sub screen
+  const catScreen = document.getElementById('perfRoleCatScreen');
+  const subScreen = document.getElementById('perfRoleSubScreen');
+  if(catScreen) catScreen.style.display = 'none';
+  if(subScreen) subScreen.style.display = '';
+  const titleEl = document.getElementById('perfRoleSubTitle');
+  if(titleEl) titleEl.textContent = `${cat.icon} ${cat.name}`;
+  const grid = document.getElementById('perfRoleSubGrid');
+  if(grid){
+    // 2 roles → 2 cols; 3-4 roles → 2 cols (auto)
+    grid.style.gridTemplateColumns = cat.roles.length >= 3 ? 'repeat(2,1fr)' : 'repeat(2,1fr)';
+    grid.innerHTML = cat.roles.map(r=>`
+      <div class="perf-role-card${_perfRole===r.id?' selected':''}" onclick="setPerfRole('${r.id}')">
+        <span class="role-icon" style="font-size:34px">${r.icon}</span>
+        <span class="role-name" style="font-size:13px">${r.name}</span>
+        <span class="role-desc">${r.desc}</span>
+      </div>`).join('');
+  }
+}
+
+// ── Back to category screen ──────────────────────────────────────────────────
+function goBackToRoleCategories(){
+  const catScreen = document.getElementById('perfRoleCatScreen');
+  const subScreen = document.getElementById('perfRoleSubScreen');
+  if(catScreen) catScreen.style.display = '';
+  if(subScreen) subScreen.style.display = 'none';
+  // Refresh grid so selected state is current
+  const grid = document.getElementById('perfRoleCatGrid');
+  if(grid){
+    const activeCat = PERF_ROLE_CATEGORIES.find(c=>c.roles.some(r=>r.id===_perfRole))?.id;
+    grid.innerHTML = PERF_ROLE_CATEGORIES.map(cat=>`
+      <div class="perf-role-card perf-role-cat-card${activeCat===cat.id?' selected':''}" onclick="showRoleSubPicker('${cat.id}')">
+        <span class="role-icon">${cat.icon}</span>
+        <span class="role-name">${cat.name}</span>
+        <span class="role-desc">${cat.desc}</span>
+      </div>`).join('');
+  }
 }
 
 function closeRolePicker(){
@@ -8351,55 +8511,84 @@ function setPerfRole(roleId){
     localStorage.setItem('perfRoleRemember','1');
   } else {
     localStorage.removeItem('perfRoleRemember');
-    // still keep in session via variable
   }
-  _applyPerfRole();
   closeRolePicker();
+  // Re-render song first (uses updated _perfRole for sheet selection),
+  // then _applyPerfRole runs at end of showPerfSong automatically
+  showPerfSong();
 }
 
+// ── Apply role-based view adaptations ───────────────────────────────────────
 function _applyPerfRole(){
   const role = _perfRole;
-  const roleInfo = PERF_ROLES.find(r=>r.id===role) || PERF_ROLES[5];
+  const ri = _perfRoleInfo();
 
   // Update role button label in drawer
   const roleBtn = document.getElementById('perfRoleChangeBtn');
-  if(roleBtn) roleBtn.innerHTML = `${roleInfo.icon} ${roleInfo.name} <span style="opacity:.5;font-size:10px;float:right">Change →</span>`;
+  if(roleBtn) roleBtn.innerHTML = `${ri.icon} ${ri.name} <span style="opacity:.5;font-size:10px;float:right">Change →</span>`;
 
   // Update HUD badge
   const badge = document.getElementById('perfRoleBadge');
   if(badge){
-    badge.textContent = roleInfo.icon;
-    badge.title = roleInfo.name;
+    badge.textContent = ri.icon;
+    badge.title = ri.name;
     badge.style.display = 'inline-flex';
   }
 
   // Font size adjustments
   const content = document.getElementById('perfContent');
   if(content){
-    if(role==='vocalist'){
-      content.style.fontSize = '1.18em';
-    } else if(role==='drummer'){
-      content.style.fontSize = '0.95em';
-    } else {
-      content.style.fontSize = '';
-    }
+    if(role==='vocalist'||role==='choir') content.style.fontSize = '1.18em';
+    else if(role==='drummer'||role==='cajon') content.style.fontSize = '1em';
+    else content.style.fontSize = '';
   }
 
-  // Chord visibility
-  const showChords = (role==='guitarist'||role==='keys'||role==='worship_leader'||role==='operator');
-  document.querySelectorAll('.perf-chord-row').forEach(el=>{
-    el.style.display = showChords ? '' : 'none';
-  });
-
-  // Vocalist: auto-hide chords toggle option label
+  // Chord visibility: show for stringed/keys/leadership; hide for vocals and percussion
+  const showChords = ['acoustic','electric','bass','ukulele','keys','worship_leader','operator'].includes(role);
+  document.querySelectorAll('.perf-chord-row').forEach(el=>{ el.style.display = showChords ? '' : 'none'; });
   const chordsToggleBtn = document.getElementById('perfChordsBtn');
   if(chordsToggleBtn) chordsToggleBtn.style.opacity = showChords ? '1' : '0.4';
 
-  // Worship leader / operator: auto-show Confidence Monitor
+  // Percussion view: hide lyrics, show big BPM panel
+  const isPercussion = (role==='drummer'||role==='cajon');
+  const lyricsEl = document.getElementById('perfLyricsContent');
+  if(lyricsEl) lyricsEl.style.display = isPercussion ? 'none' : '';
+  // Manage percussion BPM panel
+  let percPanel = document.getElementById('percussionPanel');
+  if(isPercussion){
+    if(!percPanel){
+      percPanel = document.createElement('div');
+      percPanel.id = 'percussionPanel';
+      if(lyricsEl && lyricsEl.parentNode) lyricsEl.parentNode.insertBefore(percPanel, lyricsEl);
+    }
+    _renderPercussionPanel(percPanel);
+    percPanel.style.display = '';
+  } else {
+    if(percPanel) percPanel.style.display = 'none';
+  }
+
+  // Worship leader: auto-show Confidence Monitor
   if(role==='worship_leader'){
     const cm = document.getElementById('confMonitor');
     if(cm && cm.style.display==='none') toggleConfidenceMonitor();
   }
+}
+
+// Percussion panel — shows BPM large + role label; updated on every song render
+function _renderPercussionPanel(el){
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+  const bpm = s?.bpm || item?.bpm || '—';
+  const ri = _perfRoleInfo();
+  el.innerHTML = `
+    <div style="text-align:center;padding:32px 16px 24px;font-family:'Poppins',sans-serif">
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px">${ri.icon} ${ri.name}</div>
+      <div style="font-size:88px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;font-variant-numeric:tabular-nums">${bpm}</div>
+      <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.35);margin-top:8px;letter-spacing:.15em;text-transform:uppercase">BPM</div>
+      <div style="margin-top:28px;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6">
+        Follow the <strong style="color:rgba(255,255,255,0.7)">arrangement chips</strong> above for section cues
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -8718,7 +8907,8 @@ function _perfPDFUpdateForSong(songId){
 
   if(songPDFs && Object.keys(songPDFs).length > 0){
     // Use first available PDF (by role if possible)
-    const roleKey = {'guitarist':'guitar','keys':'keys','vocalist':'vocals','drummer':'drums'}[_perfRole] || null;
+    // Map new role IDs → PDF key names stored in Supabase
+    const roleKey = {'acoustic':'guitar','electric':'guitar','bass':'bass','ukulele':'guitar','keys':'keys','pianist':'keys','vocalist':'vocals','choir':'vocals','drummer':'drums','cajon':'drums','worship_leader':'vocals','operator':null}[_perfRole] || null;
     const url = (roleKey && songPDFs[roleKey]) || Object.values(songPDFs)[0];
     _perfPDFUrl = url;
     if(pdfBtn) pdfBtn.style.display = 'inline-flex';
