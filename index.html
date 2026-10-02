@@ -7486,8 +7486,8 @@ function highlightCurrentLine(){
   content._lastHighlightIdx=activeIdx;
   lyricLines.forEach((line,i)=>{
     line.classList.toggle('active-line',i===activeIdx);
-    // dim-line only when highlight is enabled; when off keep all lines full opacity
-    line.classList.toggle('dim-line', _lineHighlightEnabled && i!==activeIdx);
+    // dim-line: active when line indicator is OFF (text glow/dim replaces the hairline)
+    line.classList.toggle('dim-line', !_lineHighlightEnabled && i!==activeIdx);
   });
   // ── Section change detection ──
   const activeLine=lyricLines[activeIdx];
@@ -7674,13 +7674,14 @@ function showPerfSong(){
   // Highlight btn — sync on every song load
   const hlBtn=document.getElementById('perfHighlightBtn');
   if(hlBtn){
-    hlBtn.style.background=_lineHighlightEnabled?'var(--bg3)':'rgba(212,175,55,0.18)';
-    hlBtn.style.border=_lineHighlightEnabled?'1px solid var(--border)':'1px solid rgba(212,175,55,0.5)';
-    hlBtn.style.color=_lineHighlightEnabled?'var(--text2)':'#d4af37';
+    // Line ON = golden btn; Line OFF = normal btn (text highlight mode)
+    hlBtn.style.background=_lineHighlightEnabled?'rgba(212,175,55,0.18)':'var(--bg3)';
+    hlBtn.style.border=_lineHighlightEnabled?'1px solid rgba(212,175,55,0.5)':'1px solid var(--border)';
+    hlBtn.style.color=_lineHighlightEnabled?'#d4af37':'var(--text2)';
   }
-  // Apply no-line-hl class to PM container
+  // Apply no-line-hl when line is ON (hairline replaces text effects)
   const pmEl=document.getElementById('performanceMode');
-  if(pmEl) pmEl.classList.toggle('no-line-hl',!_lineHighlightEnabled);
+  if(pmEl) pmEl.classList.toggle('no-line-hl',_lineHighlightEnabled);
   // Metronome
   const metEl=document.getElementById('perfMetroWrap');
   if(metEl) metEl.innerHTML=s.bpm?`<button onclick="toggleMetronome()" id="metroBtn" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer" title="🥁 ${s.bpm} BPM">🥁</button><div class="metro-beat" id="metroBeatDot" style="display:inline-block"></div>`:'';
@@ -8479,19 +8480,23 @@ function _perfAnnounceCue(label){
   _perfPlayClick(_perfCueVol);
 
   // Speak after 160 ms (after the two clicks)
+  // Always speak in English — Albanian TTS engines are robotic/unnatural.
+  // Musical terms (Verse, Chorus, Bridge) are universally understood by musicians.
   setTimeout(()=>{
     if(!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const lang    = (_perfLang||currentLang)==='sq' ? 'sq' : 'en';
-    const spoken  = _perfExpandLabel(label, lang);
+    const spoken  = _perfExpandLabel(label, 'en'); // always English for natural speech
     const utter   = new SpeechSynthesisUtterance(spoken);
+    utter.lang    = 'en-US';
     utter.volume  = _perfCueVol;
     utter.rate    = 1.05;
     utter.pitch   = 1.0;
-    // Pick a voice: prefer a local one matching UI lang, fall back to default
+    // Prefer a high-quality local English voice; fall back to any English, then any voice
     const voices    = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v=>v.lang.startsWith(lang==='sq'?'sq':'en') && v.localService)
+    const preferred = voices.find(v=>v.lang.startsWith('en') && v.localService && v.name.includes('Natural'))
+                   || voices.find(v=>v.lang.startsWith('en-US') && v.localService)
                    || voices.find(v=>v.lang.startsWith('en') && v.localService)
+                   || voices.find(v=>v.lang.startsWith('en'))
                    || voices[0];
     if(preferred) utter.voice = preferred;
     window.speechSynthesis.speak(utter);
@@ -8499,9 +8504,8 @@ function _perfAnnounceCue(label){
 }
 
 function _perfTestCue(){
-  const label = (_perfLang||currentLang)==='sq' ? 'Kori' : 'Chorus';
   _perfCueLastSec=''; // reset debounce so test always fires
-  _perfAnnounceCue(label);
+  _perfAnnounceCue('CH'); // always test with English "Chorus" — natural TTS
 }
 
 function togglePerfCue(){
@@ -8699,27 +8703,29 @@ function toggleLineHighlight(){
   const pm = document.getElementById('performanceMode');
   const btn = document.getElementById('perfHighlightBtn');
   if(pm){
-    pm.classList.toggle('no-line-hl', !_lineHighlightEnabled);
-    if(!_lineHighlightEnabled){
-      // Remove dim effect from all lines so nothing looks greyed out
+    // Line ON  → hairline visible, suppress scale/dim (no-line-hl suppresses .active-line/.dim-line CSS)
+    // Line OFF → hairline hidden, scale/dim active (no-line-hl removed so effects show)
+    pm.classList.toggle('no-line-hl', _lineHighlightEnabled);
+    if(_lineHighlightEnabled){
+      // Switching to hairline mode — clean up any lingering dim classes
       document.querySelectorAll('.perf-lyric-line').forEach(l=>{
         l.classList.remove('dim-line');
       });
     }
   }
-  // Also show/hide the actual gold read-zone hairline
+  // Show/hide the gold read-zone hairline
   const rzl = document.getElementById('perfReadZoneLine');
   if(rzl){
-    // Only show the line when highlight is ON and autoscroll is currently running
     const scrollActive = !!_autoScrollInterval || !!_beatActive;
     rzl.style.display = (_lineHighlightEnabled && scrollActive) ? 'block' : 'none';
   }
+  // Button: golden = line visible, normal = text-highlight mode
   if(btn){
-    btn.style.background = _lineHighlightEnabled ? 'var(--bg3)' : 'rgba(212,175,55,0.18)';
-    btn.style.border = _lineHighlightEnabled ? '1px solid var(--border)' : '1px solid rgba(212,175,55,0.5)';
-    btn.style.color = _lineHighlightEnabled ? 'var(--text2)' : '#d4af37';
+    btn.style.background = _lineHighlightEnabled ? 'rgba(212,175,55,0.18)' : 'var(--bg3)';
+    btn.style.border = _lineHighlightEnabled ? '1px solid rgba(212,175,55,0.5)' : '1px solid var(--border)';
+    btn.style.color = _lineHighlightEnabled ? '#d4af37' : 'var(--text2)';
   }
-  showToast(_lineHighlightEnabled ? 'Line highlight on' : 'Line highlight off');
+  showToast(_lineHighlightEnabled ? '🟡 Line on' : '✨ Text highlight on');
 }
 
 function toggleConfidenceMonitor(){
