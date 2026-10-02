@@ -8443,6 +8443,33 @@ function _perfPlayAdvancePing(vol){
   });
 }
 
+// Expand short section labels into full spoken words.
+// Bilingual: Albanian (sq) when the UI is in Albanian, English otherwise.
+function _perfExpandLabel(label, lang){
+  const isSq = lang === 'sq';
+  // Normalise: strip trailing digits for the base lookup, keep them for the spoken number
+  const base  = label.replace(/\d+$/, '');
+  const numPart = label.match(/\d+$/)?.[0] || '';
+  const num   = numPart ? ' ' + numPart : '';
+  const map = {
+    'V'   : isSq ? 'Strofa'       : 'Verse',
+    'CH'  : isSq ? 'Refreni'      : 'Chorus',
+    'BR'  : isSq ? 'Ura'          : 'Bridge',
+    'PR'  : isSq ? 'Para-Refreni' : 'Pre-Chorus',
+    'Intro'     : isSq ? 'Intro'      : 'Intro',
+    'Outro'     : isSq ? 'Outro'      : 'Outro',
+    'Interlude' : isSq ? 'Interludit' : 'Interlude',
+    'Tag'       : isSq ? 'Tag'        : 'Tag',
+    'Vamp'      : isSq ? 'Vamp'       : 'Vamp',
+  };
+  // Try exact match first (for multi-word labels like "Intro", "Outro")
+  if(map[label]) return map[label];
+  // Then base + spoken number (V1 → "Verse 1", CH2 → "Chorus 2")
+  if(map[base]) return map[base] + num;
+  // Fallback: speak as-is (handles any unexpected label gracefully)
+  return label;
+}
+
 function _perfAnnounceCue(label){
   if(!_perfCueEnabled || !label) return;
   if(label===_perfCueLastSec) return; // same section — skip
@@ -8455,13 +8482,14 @@ function _perfAnnounceCue(label){
   setTimeout(()=>{
     if(!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(label);
-    utter.volume = _perfCueVol;
-    utter.rate   = 1.05;
-    utter.pitch  = 1.0;
+    const lang    = (_perfLang||currentLang)==='sq' ? 'sq' : 'en';
+    const spoken  = _perfExpandLabel(label, lang);
+    const utter   = new SpeechSynthesisUtterance(spoken);
+    utter.volume  = _perfCueVol;
+    utter.rate    = 1.05;
+    utter.pitch   = 1.0;
     // Pick a voice: prefer a local one matching UI lang, fall back to default
-    const voices = window.speechSynthesis.getVoices();
-    const lang   = (_perfLang||currentLang)==='sq' ? 'sq' : 'en';
+    const voices    = window.speechSynthesis.getVoices();
     const preferred = voices.find(v=>v.lang.startsWith(lang==='sq'?'sq':'en') && v.localService)
                    || voices.find(v=>v.lang.startsWith('en') && v.localService)
                    || voices[0];
@@ -8679,6 +8707,13 @@ function toggleLineHighlight(){
       });
     }
   }
+  // Also show/hide the actual gold read-zone hairline
+  const rzl = document.getElementById('perfReadZoneLine');
+  if(rzl){
+    // Only show the line when highlight is ON and autoscroll is currently running
+    const scrollActive = !!_autoScrollInterval || !!_beatActive;
+    rzl.style.display = (_lineHighlightEnabled && scrollActive) ? 'block' : 'none';
+  }
   if(btn){
     btn.style.background = _lineHighlightEnabled ? 'var(--bg3)' : 'rgba(212,175,55,0.18)';
     btn.style.border = _lineHighlightEnabled ? '1px solid var(--border)' : '1px solid rgba(212,175,55,0.5)';
@@ -8747,7 +8782,8 @@ function _showStageNote(note){
 
 function _syncAutoScrollBtns(active,label){
   const rzl=document.getElementById('perfReadZoneLine');
-  if(rzl) rzl.style.display=active?'block':'none';
+  // Respect the user's line-highlight toggle — don't show the hairline if it's been turned off
+  if(rzl) rzl.style.display=(active && _lineHighlightEnabled)?'block':'none';
   const btnHUD=document.getElementById('autoScrollBtn');
   const btnDrawer=document.getElementById('autoScrollBtnDrawer');
   [btnHUD,btnDrawer].forEach(btn=>{
