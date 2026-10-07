@@ -381,6 +381,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:#16a34a}
 .toast.error{background:#dc2626}
+.toast.info{background:#0284c7}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -807,7 +808,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   #perfV2HUD #perfTimerDisplay{display:none}
   /* Hide secondary HUD icons — all reachable from ⚙️ drawer */
   #perfPDFBtn,#perfLiveSyncBtn,#perfRoleBadge{display:none !important;}
-  #perfV2HUD button[title="Fullscreen (F)"]{display:none !important;}
+  #perfV2HUD button[title="Ekran i Plotë (F)"]{display:none !important;}
   /* Minimum 40px touch targets for remaining HUD buttons */
   #perfV2HUD > div > button{min-height:40px;}
   #autoScrollBtn{padding:7px 12px !important;font-size:11px !important;}
@@ -1128,6 +1129,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Timer -->
       <span id="perfTimerDisplay" style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);font-family:'Roboto Mono',monospace;flex-shrink:0;min-width:36px">00:00</span>
+      <!-- Duration estimate — only shown if BPM is set -->
+      <span id="perfDurationEst" title="Kohëzgjatja e vlerësuar" style="display:none;font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);font-family:'Roboto Mono',monospace;flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:5px;padding:2px 5px"></span>
 
       <!-- SQ / EN toggle -->
       <div style="display:flex;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;flex-shrink:0">
@@ -1136,13 +1139,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
 
       <!-- Icon buttons: dark, fullscreen, settings, panic, exit -->
-      <button onclick="togglePerfPDF()" id="perfPDFBtn" title="Chord Chart PDF" style="display:none;background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">📄</button>
-      <button onclick="showPerfLiveSync()" id="perfLiveSyncBtn" title="Live Room Sync" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">📡</button>
+      <button onclick="togglePerfPDF()" id="perfPDFBtn" title="PDF i Akordeve" style="display:none;background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">📄</button>
+      <button onclick="showPerfLiveSync()" id="perfLiveSyncBtn" title="Sinkronizim Live" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">📡</button>
       <span id="perfRoleBadge" style="display:none;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);flex-shrink:0"></span>
-      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Dark/Light (D)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">🌙</button>
-      <button onclick="togglePerfFullscreen()" title="Fullscreen (F)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">⛶</button>
-      <button onclick="togglePerfDrawer()" id="perfDrawerBtn" title="Settings" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">⚙️</button>
-      <button onclick="togglePanic()" id="perfPanicBtn" title="Blank screen (P)" style="background:rgba(180,30,30,0.2);border:1px solid rgba(180,30,30,0.4);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">🚨</button>
+      <button onclick="togglePerfDark()" id="perfDarkBtn" title="Errët/Ndriçuar (D)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">🌙</button>
+      <button onclick="togglePerfFullscreen()" title="Ekran i Plotë (F)" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">⛶</button>
+      <button onclick="togglePerfDrawer()" id="perfDrawerBtn" title="Cilësimet" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">⚙️</button>
+      <button onclick="togglePanic()" id="perfPanicBtn" title="Ekran bosh (P)" style="background:rgba(180,30,30,0.2);border:1px solid rgba(180,30,30,0.4);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:14px;flex-shrink:0;touch-action:manipulation">🚨</button>
       <button onclick="exitPerformanceMode()" style="background:rgba(180,30,30,0.15);border:1px solid rgba(180,30,30,0.3);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#E06060;flex-shrink:0;touch-action:manipulation">✕</button>
     </div>
   </div>
@@ -1156,9 +1159,14 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <button onclick="closePerfDrawer()" style="background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2)">✕</button>
       </div>
 
+      <!-- Setlist bird's-eye -->
+      <div style="margin-bottom:18px">
+        <button onclick="closePerfDrawer();showBirdsEye()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🗺 Pamja e Setlistës <span style="opacity:.5;font-size:10px;float:right">Të gjitha →</span></button>
+      </div>
+
       <!-- Auto scroll + TAP BPM -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Scroll</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Lëvizja</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="toggleAutoScroll()" id="autoScrollBtnDrawer" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif">▶ Auto</button>
           <button onclick="perfTapBPM()" id="perfTapBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Poppins',sans-serif;touch-action:manipulation">♩ TAP</button>
@@ -1168,24 +1176,29 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Scroll speed -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Speed <span id="perfSpeedLabel" style="color:var(--gold);font-size:10px">100%</span></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Shpejtësia <span id="perfSpeedLabel" style="color:var(--gold);font-size:10px">100%</span></div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px">🐢</span>
           <input type="range" min="25" max="300" value="100" id="perfSpeedSlider" oninput="setPerfScrollSpeed(this.value)" style="flex:1;accent-color:var(--gold)"/>
           <span style="font-size:11px">🐇</span>
           <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" style="background:var(--bg3);border:none;border-radius:5px;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
         </div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button onclick="setPerfScrollSpeed(50);document.getElementById('perfSpeedSlider').value=50" id="perfSpeedPresetSlow" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">🐢 Ngadalë</button>
+          <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" id="perfSpeedPresetNormal" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">▶ Normal</button>
+          <button onclick="setPerfScrollSpeed(180);document.getElementById('perfSpeedSlider').value=180" id="perfSpeedPresetFast" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">🐇 Shpejtë</button>
+        </div>
       </div>
 
       <!-- Instrument -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Instrument</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Instrumenti</div>
         <div id="perfInstBtns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
 
       <!-- Transpose -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Transpose</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Transpozo</div>
         <div style="display:flex;align-items:center;gap:8px">
           <button onclick="perfTransposeActive(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:18px;font-weight:700;color:var(--text)">−</button>
           <span id="perfKeyLabel" style="flex:1;font-size:12px;font-weight:700;color:var(--blue-mid);text-align:center"></span>
@@ -1196,7 +1209,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Font size -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Font Size</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Madhësia</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:10px;color:var(--text3)">A</span>
           <input type="range" min="14" max="28" value="18" id="perfFontSlider" oninput="setPerfFont(this.value)" style="flex:1;accent-color:var(--blue-mid)"/>
@@ -1207,12 +1220,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Options row -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Options</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Opsionet</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="togglePerfChords()" id="perfChordsBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎼 Chords</button>
-          <button onclick="toggleSingerMode()" id="perfSingerBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎤 Singer</button>
-          <button onclick="toggleLineHighlight()" id="perfHighlightBtn" title="Toggle yellow line highlight" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🟡 Line</button>
+          <button onclick="togglePerfChords()" id="perfChordsBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎼 Akorde</button>
+          <button onclick="toggleSingerMode()" id="perfSingerBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎤 Këngëtar</button>
+          <button onclick="toggleLineHighlight()" id="perfHighlightBtn" title="Aktivizo theksimin e rreshtit" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🟡 Line</button>
           <button onclick="toggleConfidenceMonitor()" id="perfConfidenceBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">👁 Monitor</button>
+          <button onclick="closePerfDrawer();toggleChordRefPanel()" id="perfChordRefBtn" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Poppins',sans-serif">🎵 Ref. Akordesh</button>
           <!-- hidden alias used by keyboard shortcut M -->
           <button onclick="toggleSingerMode()" id="perfModeBtn" style="display:none"></button>
         </div>
@@ -1220,24 +1234,24 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Metronome -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Metronome</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Metronom</div>
         <span id="perfMetroWrap" style="display:flex;align-items:center;gap:6px"></span>
       </div>
 
       <!-- Role -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">My Role</div>
-        <button onclick="showRolePicker()" id="perfRoleChangeBtn" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🎛️ Operator <span style="opacity:.5;font-size:10px;float:right">Change →</span></button>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Roli Im</div>
+        <button onclick="showRolePicker()" id="perfRoleChangeBtn" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🎛️ Operator <span style="opacity:.5;font-size:10px;float:right">Ndrysho →</span></button>
       </div>
 
       <!-- Mic Scroll -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎙️ Mic Auto-Scroll</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎙️ Lëvizje me Mikrofon</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-          <button onclick="toggleMicScroll()" id="micScrollBtn" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif">🎙️ Start Mic</button>
+          <button onclick="toggleMicScroll()" id="micScrollBtn" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif">🎙️ Nis Mikrofonin</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;color:var(--text3)">Sensitivity</span>
+          <span style="font-size:10px;color:var(--text3)">Ndjeshmëria</span>
           <input type="range" min="1" max="10" value="5" id="micSensitivitySlider" oninput="_micSensitivity=Number(this.value)" style="flex:1;accent-color:var(--blue-mid)"/>
           <span id="micSensLabel" style="font-size:10px;color:var(--text3);min-width:12px">5</span>
         </div>
@@ -1246,36 +1260,43 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Stage Notes -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📝 Stage Note</div>
-        <textarea id="perfDrawerNoteInput" rows="2" placeholder="Kapo 2, fillo ngadalë, wait for leader..." oninput="(function(el){const sl=getSetlist();const item=sl.songs[perfIdx];if(item){item.note=el.value;saveSetlist(sl);}const btn=document.getElementById('perfDrawerNoteShowBtn');if(btn)btn.style.display=el.value?'block':'none';})(this)" style="width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;resize:none;outline:none;box-sizing:border-box;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-        <button id="perfDrawerNoteShowBtn" onclick="(function(){const sl=getSetlist();const item=sl.songs[perfIdx];if(item?.note)_showStageNote(item.note);})()" style="display:none;width:100%;margin-top:6px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);border-radius:8px;padding:7px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#f0c040">▲ Show Note on Screen</button>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📝 Shënim Skenë</div>
+        <textarea id="perfDrawerNoteInput" rows="2" placeholder="Kapo 2, fillo ngadalë, prit drejtuesin..." oninput="(function(el){const sl=getSetlist();const item=sl.songs[perfIdx];if(item){item.note=el.value;saveSetlist(sl);}const btn=document.getElementById('perfDrawerNoteShowBtn');if(btn)btn.style.display=el.value?'block':'none';})(this)" style="width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;resize:none;outline:none;box-sizing:border-box;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button id="perfDrawerNoteShowBtn" onclick="(function(){const sl=getSetlist();const item=sl.songs[perfIdx];if(item?.note)_showStageNote(item.note);})()" style="display:none;width:100%;margin-top:6px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.35);border-radius:8px;padding:7px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#f0c040">▲ Shfaq Shënimin</button>
+      </div>
+
+      <!-- Leader Broadcast Message — only visible when mode=leader -->
+      <div id="perfLeaderMsgSection" style="display:none;margin-bottom:18px">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">📣 Mesazh Drejtuesit</div>
+        <textarea id="perfLeaderMsgInput" rows="2" placeholder="Shkruaj mesazhin për të gjitha ekranet..." style="width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;resize:none;outline:none;box-sizing:border-box;line-height:1.5;transition:border-color .15s" onfocus="this.style.borderColor='rgba(212,175,55,0.6)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button onclick="perfSendFlash()" style="width:100%;margin-top:6px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);border-radius:8px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#d4af37">📣 Shpall në Të Gjitha</button>
       </div>
 
       <!-- IEM Section Cue — voice announces section name on jump -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎧 IEM Section Cues</div>
-        <button id="perfCueBtn" onclick="togglePerfCue()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🔇 Section Cues Off <span id="perfCueStatus" style="opacity:.5;font-size:10px;float:right">Off</span></button>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">🎧 Udhëzime Seksioni</div>
+        <button id="perfCueBtn" onclick="togglePerfCue()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">🔇 Udhëzimet Fikur <span id="perfCueStatus" style="opacity:.5;font-size:10px;float:right">Joaktiv</span></button>
         <div style="margin-top:7px;display:flex;align-items:center;gap:8px">
           <span style="font-size:10px;color:var(--text3);flex-shrink:0">Volume</span>
-          <input type="range" min="0" max="1" step="0.05" value="0.8" id="perfCueVolSlider" oninput="_perfCueVol=Number(this.value);localStorage.setItem('aa_perf_cue_vol',this.value)" style="flex:1;accent-color:var(--blue-mid)"/>
+          <input type="range" min="0" max="1" step="0.05" value="0.8" id="perfCueVolSlider" oninput="_perfCueVol=Number(this.value);try{localStorage.setItem('aa_perf_cue_vol',this.value)}catch(e){}" style="flex:1;accent-color:var(--blue-mid)"/>
           <button onclick="closePerfDrawer();_perfTestCue()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text2);font-family:'Poppins',sans-serif;flex-shrink:0">Test</button>
         </div>
       </div>
 
       <!-- PDF Chord Chart — shown in drawer on mobile where HUD button is hidden -->
       <div id="perfPDFDrawerRow" style="margin-bottom:18px;display:none">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Chord Chart</div>
-        <button onclick="closePerfDrawer();togglePerfPDF()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">📄 View PDF Chart</button>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Grafiku i Akordeve</div>
+        <button onclick="closePerfDrawer();togglePerfPDF()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">📄 Shiko PDF të Akordeve</button>
       </div>
 
       <!-- Live Sync — shown in drawer on mobile where HUD button is hidden -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Live Sync</div>
-        <button id="perfLiveSyncDrawerBtn" onclick="showPerfLiveSync()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">📡 Live Room Sync <span id="perfLiveSyncDrawerStatus" style="opacity:.5;font-size:10px;float:right">Off</span></button>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Sinkronizim Live</div>
+        <button id="perfLiveSyncDrawerBtn" onclick="showPerfLiveSync()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-align:left">📡 Sinkronizim Live <span id="perfLiveSyncDrawerStatus" style="opacity:.5;font-size:10px;float:right">Joaktiv</span></button>
         <!-- Leader: Hold All / Release; Follower: Take Over as Leader -->
-        <button id="perfHoldBtn" onclick="togglePerfHold()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⏸ Hold All Screens</button>
-        <button id="perfBlackoutBtn" onclick="togglePerfBlackout()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⚫ Blackout</button>
-        <button id="perfTakeOverBtn" onclick="perfLiveTakeOver()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">🎙️ Take Over as Leader</button>
+        <button id="perfHoldBtn" onclick="togglePerfHold()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⏸ Ndal Të Gjitha</button>
+        <button id="perfBlackoutBtn" onclick="togglePerfBlackout()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">⚫ Ekran i Zi</button>
+        <button id="perfTakeOverBtn" onclick="perfLiveTakeOver()" style="display:none;margin-top:7px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--text2)">🎙️ Merr Drejtimin</button>
       </div>
 
       <!-- Shortcuts -->
@@ -1305,15 +1326,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <!-- SCREEN 1: Category picker -->
       <div id="perfRoleCatScreen">
         <div style="text-align:center;margin-bottom:20px">
-          <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">What's your role today?</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif">Your view will adapt to help you serve better</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:4px">Cili është roli yt sot?</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif">Pamja do të përshtatet sipas rolit tënd</div>
         </div>
         <div id="perfRoleCatGrid" style="margin-bottom:18px"></div>
         <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:14px">
           <input type="checkbox" id="perfRoleRemember" style="accent-color:var(--gold);width:14px;height:14px">
-          <label for="perfRoleRemember" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Remember my role on this device</label>
+          <label for="perfRoleRemember" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer">Mbaj mend rolin tim në këtë pajisje</label>
         </div>
-        <button onclick="setPerfRole('operator')" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35);touch-action:manipulation">Skip — use full operator view</button>
+        <button onclick="setPerfRole('operator')" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35);touch-action:manipulation">Kalo — shfaq pamjen e plotë</button>
       </div>
       <!-- SCREEN 2: Sub-role picker (slides in from right) -->
       <div id="perfRoleSubScreen" style="display:none">
@@ -1321,7 +1342,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <button onclick="goBackToRoleCategories()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">←</button>
           <div>
             <div id="perfRoleSubTitle" style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:800;color:#fff"></div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Poppins',sans-serif">Choose your specific role</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Poppins',sans-serif">Zgjidhni rolin specifik</div>
           </div>
         </div>
         <div id="perfRoleSubGrid" style="margin-bottom:16px"></div>
@@ -1333,24 +1354,24 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <div id="perfLiveSync" style="display:none;position:absolute;inset:0;z-index:39;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;padding:24px">
     <div style="max-width:340px;width:100%;text-align:center">
       <div style="font-size:28px;margin-bottom:12px">📡</div>
-      <div style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Live Room Sync</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;margin-bottom:24px">All devices follow the worship leader in real time</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Sinkronizim Live</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;margin-bottom:24px">Të gjitha pajisjet ndjekin drejtuesin e adhurimit në kohë reale</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
         <button onclick="perfLiveStart('leader')" style="background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.45);border-radius:12px;padding:14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:#93c5fd">
-          🎙️ Start as Leader<div style="font-size:10px;font-weight:400;opacity:.7;margin-top:3px">Room code: <span id="perfLiveRoomCode" style="letter-spacing:3px;font-weight:800">------</span></div>
+          🎙️ Fillo si Drejtuese<div style="font-size:10px;font-weight:400;opacity:.7;margin-top:3px">Kodi i dhomës: <span id="perfLiveRoomCode" style="letter-spacing:3px;font-weight:800">------</span></div>
         </button>
         <!-- QR code — shown after leader starts, lets musicians scan to join -->
-        <div id="perfLiveSyncQRWrap" style="display:none;padding:12px 0 4px;display:none;flex-direction:column;align-items:center;gap:8px">
+        <div id="perfLiveSyncQRWrap" style="display:none;padding:12px 0 4px;flex-direction:column;align-items:center;gap:8px">
           <div id="perfLiveSyncQR" style="background:#fff;border-radius:10px;padding:10px;display:inline-block"></div>
-          <div style="font-family:'Poppins',sans-serif;font-size:10px;color:rgba(255,255,255,0.35)">Scan to join on any device</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:10px;color:rgba(255,255,255,0.35)">Skano për t'u bashkuar nga çdo pajisje</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <input id="perfLiveFollowerCode" type="text" maxlength="6" placeholder="Room code" style="flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:#fff;font-family:'Roboto Mono',monospace;font-size:16px;font-weight:700;text-align:center;letter-spacing:4px;outline:none;text-transform:uppercase">
-          <button onclick="perfLiveStart('follower')" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);border-radius:10px;padding:11px 16px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#6ee7b7;white-space:nowrap">Join →</button>
+          <input id="perfLiveFollowerCode" type="text" maxlength="6" placeholder="Kodi i dhomës" style="flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:#fff;font-family:'Roboto Mono',monospace;font-size:16px;font-weight:700;text-align:center;letter-spacing:4px;outline:none;text-transform:uppercase">
+          <button onclick="perfLiveStart('follower')" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);border-radius:10px;padding:11px 16px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;color:#6ee7b7;white-space:nowrap">Bashkohu →</button>
         </div>
       </div>
       <div id="perfLiveSyncStatus" style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:12px;min-height:16px"></div>
-      <button onclick="closePerfLiveSync()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35)">Cancel</button>
+      <button onclick="closePerfLiveSync()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.35)">Anulo</button>
     </div>
   </div>
 
@@ -1380,7 +1401,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       </div>
     </div>
     <div id="perfPDFScroll" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:12px;position:relative">
-      <div id="perfPDFLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:13px;color:rgba(255,255,255,0.45)">Loading PDF…</div>
+      <div id="perfPDFLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:13px;color:rgba(255,255,255,0.45)">Duke ngarkuar PDF…</div>
       <canvas id="perfPDFCanvas" style="max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px;display:none"></canvas>
     </div>
   </div>
@@ -1398,13 +1419,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
   <!-- ── NEXT SECTION preview strip ── -->
   <div id="perfNextSectionBar" style="display:none;position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);align-items:center;gap:7px;white-space:nowrap">
-    <span style="opacity:0.5;font-size:10px">▼ Next</span>
+    <span style="opacity:0.5;font-size:10px">▼ Tjetër</span>
     <span id="perfNextSectionLabel" style="font-weight:600;color:rgba(255,255,255,0.85)"></span>
   </div>
 
   <!-- ── QUEUE preview strip — shown to followers when leader moves to new song ── -->
   <div id="perfQueueBar" style="display:none;position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:15;pointer-events:none;background:rgba(74,222,128,0.1);backdrop-filter:blur(6px);border:1px solid rgba(74,222,128,0.25);border-radius:30px;padding:5px 18px;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(74,222,128,0.8);align-items:center;gap:7px;white-space:nowrap;opacity:1;transition:opacity 1s">
-    <span style="opacity:0.6;font-size:10px">🎵 Up next</span>
+    <span style="opacity:0.6;font-size:10px">🎵 Tjetër</span>
     <span id="perfQueueLabel" style="font-weight:700"></span>
   </div>
 
@@ -1425,6 +1446,14 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     <div id="perfEndText" style="font-size:15px;font-weight:600;color:var(--text);font-family:'Poppins',sans-serif;opacity:.85">Fund i këngës</div>
   </div>
 
+  <!-- ── AUTO-ADVANCE COUNTDOWN overlay ── -->
+  <div id="perfAdvanceCountdown" style="display:none;position:absolute;inset:0;z-index:26;pointer-events:auto;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px)">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;text-transform:uppercase;letter-spacing:.15em">Tjetër →</div>
+    <div id="perfAdvanceNextTitle" style="font-family:'Poppins',sans-serif;font-size:clamp(16px,4vw,30px);font-weight:800;color:#fff;text-align:center;padding:0 28px;line-height:1.2"></div>
+    <div id="perfAdvanceNum" style="font-family:'Poppins',sans-serif;font-size:clamp(64px,14vw,110px);font-weight:900;color:rgba(212,175,55,0.9);line-height:1;transition:transform .15s,opacity .15s"></div>
+    <button onclick="_perfSkipCountdown()" style="margin-top:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:6px 18px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5)">Kalo →</button>
+  </div>
+
   <!-- ── PANIC OVERLAY — blank black screen ── -->
   <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:30;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
     <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif">Tap për të kthyer</div>
@@ -1441,6 +1470,22 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- z-index 55 > section sidebar (50) so it covers everything including the sidebar chips -->
   <div id="perfBlackoutOverlay" style="display:none;position:absolute;inset:0;z-index:55;background:#000;pointer-events:none"></div>
 
+  <!-- ── CHORDS REFERENCE PANEL — floating collapsible ── -->
+  <div id="perfChordRefPanel" style="display:none;position:absolute;left:8px;bottom:48px;z-index:48;max-width:220px;background:rgba(8,12,26,0.88);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <span style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">🎵 Akorde</span>
+      <button onclick="toggleChordRefPanel()" style="background:none;border:none;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);padding:0 2px">✕</button>
+    </div>
+    <div id="perfChordRefList" style="padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow-y:auto"></div>
+  </div>
+
+  <!-- ── LEADER FLASH MESSAGE overlay — pm_flash broadcast, 8s auto-dismiss ── -->
+  <div id="perfFlashOverlay" onclick="_perfDismissFlash()" style="display:none;position:absolute;inset:0;z-index:53;pointer-events:auto;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px)">
+    <div style="font-size:11px;font-weight:700;color:rgba(212,175,55,0.65);font-family:'Poppins',sans-serif;text-transform:uppercase;letter-spacing:.2em">📣 Mesazh Drejtuesit</div>
+    <div id="perfFlashText" style="font-family:'Poppins',sans-serif;font-size:clamp(18px,5vw,40px);font-weight:800;color:#fff;text-align:center;padding:0 36px;line-height:1.35;max-width:600px"></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.25);font-family:'Poppins',sans-serif;margin-top:4px">Kliko për të mbyllur</div>
+  </div>
+
   <!-- ── SHORTCUTS OVERLAY ── -->
   <div id="perfShortcutsOverlay" onclick="this.style.display='none'" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:35;align-items:center;justify-content:center">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px 28px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
@@ -1451,6 +1496,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <div id="perfShortcutsList" style="display:flex;flex-direction:column;gap:0"></div>
       <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Kliko kudo jashtë per ta mbyllur</div>
     </div>
+  </div>
+
+  <!-- ── SETLIST BIRD'S-EYE OVERVIEW — full-screen compact view ── -->
+  <div id="perfBirdsEye" style="display:none;position:absolute;inset:0;z-index:38;background:rgba(0,0,0,0.94);backdrop-filter:blur(12px);flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.1);flex-shrink:0">
+      <div style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:800;color:#fff">🗺 Pamja e Setlistës</div>
+      <button onclick="closeBirdsEye()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6)">✕ Mbyll</button>
+    </div>
+    <div id="perfBirdsEyeGrid" style="flex:1;overflow-y:auto;padding:12px 12px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;align-content:start"></div>
   </div>
 
   <!-- hidden compat wrapper — JS references perfControlsBar for opacity transitions -->
@@ -2649,7 +2703,7 @@ function toEmbedUrl(url) {
 // ═══════════════════════════════════════════════════════
 //  ⭐ FAVORITES
 // ═══════════════════════════════════════════════════════
-function saveFavorites(favs) { localStorage.setItem('aa_favorites', JSON.stringify(favs)); }
+function saveFavorites(favs) { try{ localStorage.setItem('aa_favorites', JSON.stringify(favs)); }catch(e){ console.warn('saveFavorites failed:',e); } }
 
 function getFavorites() {
   try {
@@ -2730,7 +2784,7 @@ END; $$;</code>
     <!-- Summary cards -->
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:28px">
       <div style="background:var(--blue-light);border-radius:var(--r);padding:20px;text-align:center">
-        <div style="font-size:28px;font-weight:800;color:var(--blue-mid)">${SONGS.length}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--blue-mid)">${allSongs.length}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">🎵 Këngë Totale</div>
       </div>
       <div style="background:var(--red-muted);border-radius:var(--r);padding:20px;text-align:center">
@@ -2787,11 +2841,8 @@ END; $$;</code>
     <div style="margin-top:24px">
       <div class="admin-section-title" style="margin-bottom:12px">⭐ Top 10 — Popularity Score</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Score = shikime×1 + shkarkime×3 + preferuara×10</div>
-      ${[...allSongs].map(s=>({s,score:getPopularityScore(s.id,STATS)}))
-        .sort((a,b)=>b.score-a.score).slice(0,10)
-        .map(({s,score},i)=>{
-          const max = getPopularityScore(allSongs[0].id,STATS)||1;
-          const pct = Math.min(100,Math.round((score/(max||1))*100));
+      ${(()=>{const sorted=[...allSongs].map(s=>({s,score:getPopularityScore(s.id,STATS)})).sort((a,b)=>b.score-a.score).slice(0,10);const maxScore=sorted[0]?.score||1;return sorted.map(({s,score},i)=>{
+          const pct = Math.min(100,Math.round((score/maxScore)*100));
           return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <span style="font-size:12px;font-weight:700;color:var(--text3);min-width:18px">${i+1}</span>
             <div style="flex:1;min-width:0">
@@ -2802,7 +2853,7 @@ END; $$;</code>
             </div>
             <span class="pop-score">⭐ ${score}</span>
           </div>`;
-        }).join('')}
+        }).join('');})()}
     </div>
 
     <!-- Songs added per month -->
@@ -3036,7 +3087,7 @@ function shareSong(platform){
     window.open(`viber://forward?text=${encodedText}`, '_blank');
   } else if(platform === 'copy'){
     if(navigator.clipboard){
-      navigator.clipboard.writeText(url).then(()=>showToast('✅ Linku u kopjua!','success'));
+      navigator.clipboard.writeText(url).then(()=>showToast('✅ Linku u kopjua!','success')).catch(()=>showToast('❌ Kopjimi dështoi!','error'));
     } else {
       const ta = document.createElement('textarea');
       ta.value = url; document.body.appendChild(ta); ta.select();
@@ -3384,7 +3435,8 @@ async function loadArtistsAsync() {
 async function upsertArtistAsync(name) {
   const sb = getSB();
   if (!sb) { const a=loadArtists(); if(!a.includes(name)){a.push(name);saveArtists(a);} return; }
-  await sb.from('artists').upsert({ name }, { onConflict: 'name' });
+  const { error: upsertErr } = await sb.from('artists').upsert({ name }, { onConflict: 'name' });
+  if(upsertErr) console.warn('upsertArtistAsync failed:', upsertErr);
 }
 async function deleteArtistAsync(name) {
   const sb = getSB();
@@ -3406,12 +3458,12 @@ async function loadSocialAsync() {
       obj[r.platform] = r.url || '';
     }
   });
-  localStorage.setItem('aa_social', JSON.stringify(obj)); // update local cache
+  try{ localStorage.setItem('aa_social', JSON.stringify(obj)); }catch(e){ console.warn('saveSocial cache failed:',e); } // update local cache
   return obj;
 }
 async function saveSocialAsync(social) {
   const sb = getSB();
-  localStorage.setItem('aa_social', JSON.stringify(social)); // always cache locally
+  try{ localStorage.setItem('aa_social', JSON.stringify(social)); }catch(e){ console.warn('saveSocialAsync cache failed:',e); } // always cache locally
   if (!sb) return;
   const rows = [
     { platform:'instagram',       url: social.instagram       || '' },
@@ -3493,12 +3545,12 @@ async function getAdminSession() {
 
 // ── LEGACY localStorage FUNCTIONS (used as fallback) ──
 function loadData(){ const r=localStorage.getItem('aa_songs'); return r?JSON.parse(r):JSON.parse(JSON.stringify(DEFAULT_SONGS)); }
-function saveData(s){ localStorage.setItem('aa_songs',JSON.stringify(s)); }
+function saveData(s){ try{ localStorage.setItem('aa_songs',JSON.stringify(s)); }catch(e){ console.warn('saveData failed:',e); } }
 function saveSongLocal(song){ const s=loadData(); const i=s.findIndex(x=>x.id===song.id); if(i>=0)s[i]=song; else s.push(song); saveData(s); }
 function loadArtists(){ const r=localStorage.getItem('aa_artists'); return r?JSON.parse(r):[...DEFAULT_ARTISTS]; }
-function saveArtists(a){ localStorage.setItem('aa_artists',JSON.stringify(a)); }
+function saveArtists(a){ try{ localStorage.setItem('aa_artists',JSON.stringify(a)); }catch(e){ console.warn('saveArtists failed:',e); } }
 function loadPDFs(){ const r=localStorage.getItem('aa_pdfs'); return r?JSON.parse(r):{}; }
-function savePDFs(p){ localStorage.setItem('aa_pdfs',JSON.stringify(p)); }
+function savePDFs(p){ try{ localStorage.setItem('aa_pdfs',JSON.stringify(p)); }catch(e){ console.warn('savePDFs failed:',e); } }
 
 let SONGS   = loadData();
 let ARTISTS = loadArtists();
@@ -3708,7 +3760,7 @@ function toggleTheme(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   document.documentElement.setAttribute('data-theme',isDark?'light':'dark');
   document.getElementById('themeBtn').innerHTML=isDark?'<span style="font-size:15px">🌙</span>':'<span style="font-size:15px">☀</span>';
-  localStorage.setItem('aa-theme',isDark?'light':'dark');
+  try{ localStorage.setItem('aa-theme',isDark?'light':'dark'); }catch(e){ console.warn('toggleTheme save failed:',e); }
 }
 (()=>{const s=localStorage.getItem('aa-theme');if(s==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('themeBtn').innerHTML='<span style="font-size:15px">☀</span>';}})();
 
@@ -4196,7 +4248,7 @@ async function submitReport(songId){
   const note=document.getElementById('reportNote')?.value.trim();
   if(!note){ showToast('Shkruaj pershkrimin!','error'); return; }
   const msg='RAPORT: '+s?.title+' | Lloji: '+type+' | '+note+' | '+new Date().toLocaleString();
-  try{ await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
+  try{ await (window.emailjs||await new Promise((r,j)=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);setTimeout(()=>{clearInterval(t);j(new Error('emailjs timeout'));},10000);})).send('service_yr0bbyf','template_0sm4ndf',{name:'Vizitor',email:'report@site.al',message:msg,time:new Date().toLocaleString()}); showToast('Raporti u dergua!','success'); }
   catch(e){ showToast('Gabim ne dergim','error'); }
   document.getElementById('reportModal')?.remove();
 }
@@ -4386,7 +4438,7 @@ function updateTransposeBadge(){
 }
 function doTranspose(d){
   transposeSteps+=d;
-  if(currentSong) transposeSteps===0?localStorage.removeItem('aa_tp_'+currentSong.id):localStorage.setItem('aa_tp_'+currentSong.id,transposeSteps);
+  if(currentSong){ try{ transposeSteps===0?localStorage.removeItem('aa_tp_'+currentSong.id):localStorage.setItem('aa_tp_'+currentSong.id,transposeSteps); }catch(e){} }
   renderSong(); updateTransposeBadge();
 }
 function resetTranspose(){
@@ -4398,7 +4450,7 @@ function resetTranspose(){
 function setLyricsFont(size){
   size = Number(size);
   window._lyricsFontSize = size;
-  localStorage.setItem('aa_font_size', size);
+  try{ localStorage.setItem('aa_font_size', size); }catch(e){}
   const box = document.getElementById('lyricsBoxMain');
   if(box){
     box.style.fontSize = size + 'px';
@@ -5117,7 +5169,7 @@ async function refreshPDFPanel(){
     const thumbSrc=s.thumb||makeThumbnail(s.thumbGrad||['#1a2a4a','#2c4074','#5a80c0'],s.title);
     block.innerHTML=`
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-        <img src="${thumbSrc}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>
+        <img src="${thumbSrc}" alt="${s.title}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
           <div style="font-size:12px;color:var(--text3);margin-top:2px">${s.artist} &nbsp;·&nbsp; Tonaliteti: <strong>${s.key}</strong></div>
@@ -5388,7 +5440,7 @@ function dismissDevBanner(){
   if(!b) return;
   b.style.opacity='0'; b.style.transition='opacity .3s';
   setTimeout(function(){b&&b.remove();},300);
-  localStorage.setItem('dev_banner_last',Date.now());
+  try{ localStorage.setItem('dev_banner_last',Date.now()); }catch(e){}
 }
 function scheduleDevBanner(){
   var last=Number(localStorage.getItem('dev_banner_last')||0);
@@ -5438,7 +5490,7 @@ function showPWABanner(){
     'font-family:Poppins,sans-serif'
   ].join(';');
   banner.innerHTML = `
-    <img src="./icon-192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'"/>
+    <img src="./icon-192.png" alt="App icon" style="width:40px;height:40px;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'"/>
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:600;color:var(--text)">Instalo si App</div>
       <div style="font-size:11px;color:var(--text3)">Hap shpejt, pa browser</div>
@@ -5461,7 +5513,7 @@ function installPWA(){
 
 function dismissPWABanner(){
   document.getElementById('pwaBanner')?.remove();
-  localStorage.setItem('pwa_banner_dismissed','1');
+  try{ localStorage.setItem('pwa_banner_dismissed','1'); }catch(e){}
 }
 
 // ─ COPY LYRICS ─────────────────────────────────────────────────────────────
@@ -5696,7 +5748,7 @@ function t(key){ return TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS['sq'][k
 
 function setLang(lang){
   currentLang = lang;
-  localStorage.setItem('aa-lang', lang);
+  try{ localStorage.setItem('aa-lang', lang); }catch(e){}
   document.getElementById('langSQ')?.classList.toggle('active', lang==='sq');
   document.getElementById('langEN')?.classList.toggle('active', lang==='en');
   applyLang();
@@ -6675,7 +6727,7 @@ function addChordInteraction(){
     // Keyboard ← →
     document.addEventListener('keydown',(e)=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable) return;
-      const songPage=document.getElementById('songPage');
+      const songPage=document.getElementById('page-song');
       if(!currentSong||!songPage||songPage.style.display==='none') return;
       if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
         const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
@@ -6687,12 +6739,12 @@ function addChordInteraction(){
     // Swipe left/right on song page (mobile)
     let _swX=null,_swY=null;
     document.addEventListener('touchstart',(e)=>{
-      const sp=document.getElementById('songPage');
+      const sp=document.getElementById('page-song');
       if(!currentSong||!sp||sp.style.display==='none') return;
       _swX=e.touches[0].clientX; _swY=e.touches[0].clientY;
     },{passive:true});
     document.addEventListener('touchend',(e)=>{
-      const sp=document.getElementById('songPage');
+      const sp=document.getElementById('page-song');
       if(!currentSong||!sp||sp.style.display==='none'||_swX===null) return;
       const dx=e.changedTouches[0].clientX-_swX;
       const dy=e.changedTouches[0].clientY-(_swY||0);
@@ -6728,7 +6780,7 @@ function setChordDiagramType(type, popupEl){
     const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
     const allSections=parseLyricsText(rawText);
     const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-    _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
+    _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
     renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
   }
 }
@@ -6806,13 +6858,18 @@ function hideChordDiagram(){
   document.addEventListener('touchstart',onTouchStart,{passive:true});
   document.addEventListener('touchend',onTouchEnd,{passive:true});
 
-  document.addEventListener('DOMContentLoaded',()=>{
+  function _attachPerfContentTouch(){
     const perfContent=document.getElementById('perfContent');
     if(perfContent){
       perfContent.addEventListener('touchstart',onTouchStart,{passive:true});
       perfContent.addEventListener('touchend',onTouchEnd,{passive:true});
     }
-  });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',_attachPerfContentTouch);
+  } else {
+    _attachPerfContentTouch();
+  }
 })();
 
 // ═══════════════════════════════════════════════════════
@@ -6888,7 +6945,7 @@ function addRecentlyViewed(songId){
   let rv = getRecentlyViewed().filter(x => x !== id);
   rv.unshift(id);
   rv = rv.slice(0, RV_MAX);
-  localStorage.setItem(RV_KEY, JSON.stringify(rv));
+  try{ localStorage.setItem(RV_KEY, JSON.stringify(rv)); }catch(e){}
 }
 function getRecentlyViewed(){ try{ return JSON.parse(localStorage.getItem(RV_KEY)||'[]'); }catch(e){ return []; } }
 function clearRecentlyViewed(){ localStorage.removeItem(RV_KEY); renderRecentlyViewed(); }
@@ -6939,7 +6996,7 @@ async function sendSongRequest(){
   if(!title){ showToast('Shkruaj titullin e këngës!','error'); return; }
   const message = `🎵 KËRKESË KËNGË\n\nEmri: ${name||'Anonim'}\nKënga: ${title}\nArtisti: ${artist||'I panjohur'}\nYouTube: ${youtube||'—'}\nData: ${new Date().toLocaleString()}`;
   try {
-    await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
+    await (window.emailjs||await new Promise((r,j)=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);setTimeout(()=>{clearInterval(t);j(new Error('emailjs timeout'));},10000);})).send('service_yr0bbyf','template_0sm4ndf',{name:name||'Vizitor',email:'request@adhurojme.al',message,time:new Date().toLocaleString()});
     showToast('✅ Kërkesa u dërgua! Faleminderit!','success');
     ['reqName','reqSongTitle','reqArtist','reqYoutube'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   } catch(e){ showToast('❌ Gabim gjatë dërgimit. Provo sërish!','error'); }
@@ -6952,9 +7009,9 @@ const SETLIST_KEY = 'aa_setlists';
 const SETLIST_ACTIVE_KEY = 'aa_setlist_active';
 
 function getAllSetlists(){ try{ return JSON.parse(localStorage.getItem(SETLIST_KEY)||'[]'); }catch(e){ return []; } }
-function saveAllSetlists(lists){ localStorage.setItem(SETLIST_KEY, JSON.stringify(lists)); }
+function saveAllSetlists(lists){ try{ localStorage.setItem(SETLIST_KEY, JSON.stringify(lists)); }catch(e){ console.warn('saveAllSetlists failed:',e); } }
 function getActiveIdx(){ return parseInt(localStorage.getItem(SETLIST_ACTIVE_KEY)||'0'); }
-function setActiveIdx(i){ localStorage.setItem(SETLIST_ACTIVE_KEY, String(i)); }
+function setActiveIdx(i){ try{ localStorage.setItem(SETLIST_ACTIVE_KEY, String(i)); }catch(e){} }
 
 // Returns the currently active setlist object.
 // A setlist has: { name, songs: [{id, title, artist, key, instrument, note}] }
@@ -7044,7 +7101,7 @@ function shareSetlistLink(){
     const payload={name:sl.name,songs:sl.songs.map(s=>({id:s.id,note:s.note||'',inst:s.instrument||''}))};
     const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
     const url=window.location.origin+window.location.pathname+'#setlist='+encoded;
-    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>showToast('✅ Link i kopjuar! Ndaje me ekipin.','success'));
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>showToast('✅ Link i kopjuar! Ndaje me ekipin.','success')).catch(()=>showToast('❌ Kopjimi dështoi!','error'));
   }catch(e){ showToast('Gabim gjatë krijimit të link-ut','error'); }
 }
 // Loads a shared setlist from the URL hash on page load.
@@ -7066,7 +7123,7 @@ function shareSetlist(){
   const sl=getSetlist();
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
   const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})${s.note?'\n   📝 '+s.note:''}`).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
-  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success'));
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success')).catch(()=>showToast('❌ Kopjimi dështoi!','error'));
 }
 
 function printSetlist(){
@@ -7111,7 +7168,7 @@ function renderSetlist(){
     const thumb=song?.thumb||'';
     return `<div style="display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:18px;font-weight:800;color:var(--text3);min-width:28px;text-align:center;padding-top:10px">${i+1}</div>
-      ${thumb?`<img src="${thumb}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>`:''}
+      ${thumb?`<img src="${thumb}" alt="${s.title}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0"/>`:''}
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
         <div style="font-size:12px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -7185,7 +7242,7 @@ function setPerfLang(lang){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7349,7 +7406,7 @@ function toggleSingerMode(){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7499,8 +7556,139 @@ function highlightCurrentLine(){
     const sectionBlocks=[...document.querySelectorAll('.perf-section-block')];
     const sections=sectionBlocks.map(b=>({label:b.dataset.label||b.dataset.section||''}));
     _updateNextSectionPreview(newSection, sections);
+    // Highlight active section in sidebar
+    _updateSectionSidebarActive(newSection);
   }
   _syncConfidenceMonitor();
+}
+
+// Update sidebar button highlight to show active section
+function _updateSectionSidebarActive(activeLabel){
+  const items=document.getElementById('perfSidebarItems');
+  if(!items) return;
+  items.querySelectorAll('button[id^="sidebarBtn_"]').forEach(btn=>{
+    const isActive=btn.id===`sidebarBtn_${activeLabel.replace(/[^a-zA-Z0-9]/g,'_')}`;
+    btn.style.borderColor=isActive?'rgba(212,175,55,0.85)':'transparent';
+    btn.style.boxShadow=isActive?'0 0 8px rgba(212,175,55,0.5)':'none';
+  });
+  // Scroll active button into view within the sidebar
+  const activeBtn=document.getElementById(`sidebarBtn_${activeLabel.replace(/[^a-zA-Z0-9]/g,'_')}`);
+  activeBtn?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── Chords reference panel ──
+let _perfChordRefOpen=false;
+function toggleChordRefPanel(){
+  _perfChordRefOpen=!_perfChordRefOpen;
+  const panel=document.getElementById('perfChordRefPanel');
+  if(!panel) return;
+  if(_perfChordRefOpen){
+    _buildChordRefPanel();
+    panel.style.display='block';
+  } else {
+    panel.style.display='none';
+  }
+  // Sync button style
+  const btn=document.getElementById('perfChordRefBtn');
+  if(btn){ btn.style.background=_perfChordRefOpen?'rgba(74,222,128,0.15)':'var(--bg3)'; btn.style.color=_perfChordRefOpen?'#6ee7b7':'var(--text2)'; }
+}
+
+function _buildChordRefPanel(){
+  const list=document.getElementById('perfChordRefList');
+  if(!list) return;
+  const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
+  const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
+  if(!s){ list.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,0.3)">No song loaded</span>'; return; }
+  const perfInst=_perfGetInst(item,s);
+  const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
+  // Extract all chord tokens — match [Ab7], Am/E style tokens
+  const chordRegex=/\b([A-G][#b]?(?:maj|min|m|M|aug|dim|sus|add|no)?[0-9]?(?:\/[A-G][#b]?)?)\b/g;
+  const seen=new Set();
+  const matches=[...rawText.matchAll(chordRegex)];
+  matches.forEach(m=>seen.add(m[1]));
+  // Also parse from structured lines
+  const sections=parseLyricsText(rawText);
+  sections.forEach(sec=>{
+    (sec.lines||[]).forEach(l=>{
+      const chords=l.chords||'';
+      [...chords.matchAll(chordRegex)].forEach(m=>seen.add(m[1]));
+    });
+  });
+  const steps=_perfTranspose?.[s.id]||0;
+  const chords=[...seen].filter(c=>c.length>=1);
+  if(chords.length===0){ list.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,0.3)">No chords found</span>'; return; }
+  // Color code by chord quality
+  list.innerHTML=chords.map(c=>{
+    const isMinor=c.includes('m')&&!c.includes('maj');
+    const isDim=c.includes('dim');
+    const isAug=c.includes('aug');
+    const bg=isDim?'rgba(251,146,60,0.2)':isAug?'rgba(167,139,250,0.2)':isMinor?'rgba(96,165,250,0.2)':'rgba(52,211,153,0.2)';
+    const clr=isDim?'#fdba74':isAug?'#c4b5fd':isMinor?'#93c5fd':'#6ee7b7';
+    return `<span style="padding:4px 8px;border-radius:8px;background:${bg};color:${clr};font-family:'Roboto Mono',monospace;font-size:12px;font-weight:700;white-space:nowrap">${c}</span>`;
+  }).join('');
+}
+
+// Toggle sidebar collapsed/expanded
+let _perfSidebarCollapsed=false;
+function _perfToggleSidebar(){
+  _perfSidebarCollapsed=!_perfSidebarCollapsed;
+  const items=document.getElementById('perfSidebarItems');
+  const btn=document.getElementById('perfSidebarToggle');
+  if(items) items.style.display=_perfSidebarCollapsed?'none':'';
+  if(btn){ btn.textContent=_perfSidebarCollapsed?'⊞':'⊟'; btn.title=_perfSidebarCollapsed?'Zgjero panelin':'Mbyll panelin'; }
+}
+
+// ── Setlist bird's-eye overview ──
+function showBirdsEye(){
+  const ov=document.getElementById('perfBirdsEye');
+  const grid=document.getElementById('perfBirdsEyeGrid');
+  if(!ov||!grid) return;
+  const sl=getSetlist();
+  grid.innerHTML=sl.songs.map((item,i)=>{
+    const s=SONGS.find(x=>Number(x.id)===Number(item.id));
+    const isCurrent=i===perfIdx;
+    // Duration estimate
+    let durStr='';
+    if(s?.bpm && s.bpm>0){
+      const perfInst=_perfGetInst(item,s);
+      const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
+      const sections=parseLyricsText(rawText);
+      const repKey=`rep_${s.id}`;
+      const reps=window._perfSectionRepeats?.[repKey]||{};
+      const secsPerBeat=60/s.bpm;
+      let total=0;
+      sections.forEach(sec=>{
+        const lines=(sec.lines||[]).filter(l=>!l.chordOnly&&(l.sq||l.en));
+        total+=Math.max(lines.length,2)*4*secsPerBeat*(reps[sec.label]||1);
+      });
+      total=Math.round(total*1.15);
+      durStr=`~${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
+    }
+    const bg=isCurrent?'rgba(212,175,55,0.15)':'rgba(255,255,255,0.03)';
+    const border=isCurrent?'rgba(212,175,55,0.55)':'rgba(255,255,255,0.08)';
+    return `<button onclick="perfIdx=${i};showPerfSong();closeBirdsEye()" style="text-align:left;background:${bg};border:1.5px solid ${border};border-radius:12px;padding:10px 12px;cursor:pointer;font-family:'Poppins',sans-serif;touch-action:manipulation;transition:background .12s">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:10px;font-weight:700;color:${isCurrent?'#d4af37':'rgba(255,255,255,0.35)'};">${i+1}</span>
+        ${isCurrent?'<span style="font-size:9px;background:rgba(212,175,55,0.25);color:#d4af37;border-radius:4px;padding:1px 5px;font-weight:700">NOW</span>':''}
+        ${item.note?'<span style="width:6px;height:6px;border-radius:50%;background:#f0c040;flex-shrink:0;display:inline-block"></span>':''}
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${item.title||s?.title||'?'}</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap">
+        ${s?.key?`<span style="font-size:10px;background:rgba(96,165,250,0.2);color:#93c5fd;border-radius:4px;padding:1px 6px;font-weight:700">${s.key}</span>`:''}
+        ${s?.bpm?`<span style="font-size:10px;color:rgba(255,255,255,0.35)">🥁${s.bpm}</span>`:''}
+        ${durStr?`<span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'Roboto Mono',monospace">${durStr}</span>`:''}
+        ${item.note?`<span style="font-size:10px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">📝 ${item.note}</span>`:''}
+      </div>
+    </button>`;
+  }).join('');
+  ov.style.display='flex';
+  // Scroll current song into view after render
+  setTimeout(()=>{ grid.children[perfIdx]?.scrollIntoView({behavior:'smooth',block:'center'}); },60);
+}
+
+function closeBirdsEye(){
+  const ov=document.getElementById('perfBirdsEye');
+  if(ov) ov.style.display='none';
 }
 
 
@@ -7559,8 +7747,8 @@ function perfKeyHandler(e){
   else if(k==='p'||k==='P') togglePanic();
 
   // ── Scroll speed: + / - (10% steps, clamped 25–300) ────────────────────────
-  else if(k==='+'||k==='='){ const ns=Math.min(300,_perfScrollSpeed+10); setPerfScrollSpeed(ns); showToast('Speed: '+ns+'%'); }
-  else if(k==='-'){ const ns=Math.max(25,_perfScrollSpeed-10); setPerfScrollSpeed(ns); showToast('Speed: '+ns+'%'); }
+  else if(k==='+'||k==='='){ const ns=Math.min(300,_perfScrollSpeed+10); setPerfScrollSpeed(ns); showToast('Shpejtësia: '+ns+'%'); }
+  else if(k==='-'){ const ns=Math.max(25,_perfScrollSpeed-10); setPerfScrollSpeed(ns); showToast('Shpejtësia: '+ns+'%'); }
 
   // ── Font size: ] bigger / [ smaller ────────────────────────────────────────
   else if(k===']'){ const nf=Math.min(28,(_perfFontSize||18)+1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
@@ -7667,7 +7855,7 @@ function showPerfSong(){
   // Singer/Musician btn — sync to restored _perfMusicianMode
   ['perfModeBtn','perfSingerBtn'].forEach(id=>{
     const mb=document.getElementById(id); if(!mb) return;
-    mb.textContent = _perfMusicianMode ? '🎤 Singer' : '🎵 Musician';
+    mb.textContent = _perfMusicianMode ? '🎤 Këngëtar' : '🎵 Muzikant';
     mb.style.background = _perfMusicianMode ? 'var(--bg3)' : 'var(--blue-mid)';
     mb.style.color = _perfMusicianMode ? 'var(--text2)' : '#fff';
   });
@@ -7699,7 +7887,7 @@ function showPerfSong(){
   // Merge user-defined custom sections (per-device localStorage, chords persist across reloads)
   _perfCustomSecs(s.id).forEach(cs=>{
     if(!sectionMap[cs.label]){
-      const customSec={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};
+      const customSec={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};
       sectionMap[cs.label]=customSec;
       allSections.push(customSec);
     }
@@ -7740,10 +7928,14 @@ function showPerfSong(){
     <div style="display:flex;gap:0;min-height:100%;position:relative">
       <!-- FLOATING SECTION SIDEBAR — right side, always visible -->
       <div id="perfSectionSidebar" style="position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;padding:6px 4px;background:rgba(0,0,0,0.35);backdrop-filter:blur(8px);border-radius:12px;border:1px solid rgba(255,255,255,0.08)">
+        <!-- Collapse toggle -->
+        <button onclick="_perfToggleSidebar()" id="perfSidebarToggle" title="Mbyll panelin" style="width:46px;padding:3px 2px;border-radius:7px;border:none;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);font-size:10px;cursor:pointer;touch-action:manipulation">⊟</button>
+        <div id="perfSidebarItems">
         ${allSections.map(sec=>`
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
           <button onclick="perfJumpToSection('${sec.label}')"
-            style="width:46px;padding:6px 2px;border-radius:8px;border:none;background:${sec.color||'var(--blue)'};color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent">
+            id="sidebarBtn_${sec.label.replace(/[^a-zA-Z0-9]/g,'_')}"
+            style="width:46px;padding:6px 2px;border-radius:8px;border:2px solid transparent;background:${sec.color||'var(--blue)'};color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:border-color .15s,box-shadow .15s">
             ${sec.label}
           </button>
           <div style="display:flex;align-items:center;gap:1px">
@@ -7754,6 +7946,7 @@ function showPerfSong(){
               style="width:18px;height:18px;border-radius:4px;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;line-height:1;padding:0;touch-action:manipulation">+</button>
           </div>
         </div>`).join('')}
+        </div>
       </div>
       <!-- MAIN LYRICS — full width, sidebar floats over -->
       <div style="flex:1;min-width:0;padding-right:58px">
@@ -7773,10 +7966,11 @@ function showPerfSong(){
               const ac=_perfSectionColor(_sectionClass(sec.label));
               if(sec.isCustom){
                 // Theme-aware purple so the button is legible in both dark and light mode.
-                // The ✏️ add half uses a soft purple pill; the 🗑 delete half uses red.
+                // The ✏️ add half uses the section's saved color; the 🗑 delete half uses red.
                 const isDk=_isPerfDark();
-                const cPurple=isDk?'#d4a8f0':'#6b21a8';
-                const cPurpleBg=isDk?'rgba(180,130,240,0.18)':'rgba(107,33,168,0.10)';
+                const savedColor=(()=>{const saved=_perfCustomSecs(s.id).find(c=>c.label===sec.label);return saved?.color||'#8b3fb5';})();
+                const cPurple=savedColor;
+                const cPurpleBg=isDk?`${savedColor}30`:`${savedColor}18`;
                 const cRed=isDk?'#f87171':'#b91c1c';
                 const cRedBg=isDk?'rgba(248,113,113,0.15)':'rgba(185,28,28,0.08)';
                 return `<span style="display:inline-flex;align-items:center"><button onclick="perfAddSection('${s.id}','${sec.label}')" title="Shto ${sec.label} në rend" style="padding:2px 7px;border-radius:100px 0 0 100px;border:1.5px dashed ${cPurple};border-right:none;background:${cPurpleBg};color:${cPurple};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">✏️${sec.label}</button><button onclick="event.stopPropagation();_perfDeleteCustomSec('${s.id}','${sec.label}')" title="Fshi seksionin ${sec.label}" style="padding:2px 5px;border-radius:0 100px 100px 0;border:1.5px dashed ${cRed};border-left:none;background:${cRedBg};color:${cRed};font-family:'Poppins',sans-serif;font-size:10px;cursor:pointer;touch-action:manipulation">🗑</button></span>`;
@@ -7788,11 +7982,16 @@ function showPerfSong(){
           <!-- Mini-form to create a custom instrumental section (hidden by default) -->
           <div id="perfCustomSecForm" style="display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:7px">
             <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-              <select id="perfCustomSecType" style="border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:11px;padding:3px 5px;font-family:'Poppins',sans-serif;cursor:pointer"><option>INTRO</option><option>INST</option><option>SOLO</option><option>IL</option><option>OUTRO</option><option>TAG</option><option>BREAK</option><option>JAM</option></select>
-              <input id="perfCustomSecLabel" placeholder="Emri (p.sh. INTRO2)" maxlength="12" style="width:100px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:11px;padding:3px 7px;font-family:'Poppins',sans-serif">
-              <input id="perfCustomSecChords" placeholder="Akorde: Am F C G" style="flex:1;min-width:110px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:11px;padding:3px 7px;font-family:'Roboto Mono',monospace">
+              <select id="perfCustomSecType" style="border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;padding:3px 5px;font-family:'Poppins',sans-serif;cursor:pointer"><option>INTRO</option><option>INST</option><option>SOLO</option><option>IL</option><option>OUTRO</option><option>TAG</option><option>BREAK</option><option>JAM</option></select>
+              <input id="perfCustomSecLabel" placeholder="Emri (p.sh. INTRO2)" maxlength="12" style="width:100px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;padding:3px 7px;font-family:'Poppins',sans-serif">
+              <input id="perfCustomSecChords" placeholder="Akorde: Am F C G" style="flex:1;min-width:110px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;padding:3px 7px;font-family:'Roboto Mono',monospace">
               <button onclick="_perfCreateCustomSec('${s.id}')" style="padding:3px 13px;border-radius:6px;border:none;background:var(--blue-mid);color:#fff;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation">Shto</button>
               <button onclick="document.getElementById('perfCustomSecForm').style.display='none'" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer">✕</button>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;margin-top:6px;flex-wrap:wrap">
+              <span style="font-size:10px;color:var(--text3);flex-shrink:0">🎨 Ngjyra:</span>
+              ${['#8b3fb5','#2563eb','#16a34a','#ea580c','#dc2626','#0891b2','#d97706','#be185d'].map((c,ci)=>`<button data-ci="${ci}" onclick="(function(btn,c){document.querySelectorAll('.csec-color-swatch').forEach(b=>b.style.outline='none');btn.style.outline='2.5px solid '+c;btn.style.outlineOffset='2px';document.getElementById('perfCustomSecColor').value=c;})(this,'${c}')" class="csec-color-swatch" title="${c}" style="width:18px;height:18px;border-radius:50%;background:${c};border:none;cursor:pointer;flex-shrink:0;${ci===0?'outline:2.5px solid '+c+';outline-offset:2px;':''}"></button>`).join('')}
+              <input type="color" id="perfCustomSecColor" value="#8b3fb5" oninput="(function(v){document.querySelectorAll('.csec-color-swatch').forEach(b=>b.style.outline='none');document.getElementById('perfCustomSecColor').style.outline='2.5px solid '+v+';outline-offset:2px'})(this.value)" style="width:22px;height:22px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:transparent;flex-shrink:0" title="Zgjidhni ngjyrë të personalizuar">
             </div>
             <div style="font-size:10px;color:var(--text3);margin-top:4px">💡 Seksionet e tua ruhen në këtë pajisje dhe qëndrojnë edhe pas rindezjes.</div>
           </div>
@@ -7802,6 +8001,35 @@ function showPerfSong(){
       </div>
     </div>`;
   renderPerfArrangement(s.id, sectionMap, steps, perfInst);
+
+  // ── Duration estimator — BPM × line count × section repeats ──
+  const durEl=document.getElementById('perfDurationEst');
+  if(durEl){
+    if(s.bpm && s.bpm>0){
+      const arr=_perfArrangements[arrKey]||allSections.map(sec=>sec.label);
+      const secsPerBeat=60/s.bpm;
+      let totalSecs=0;
+      arr.forEach(label=>{
+        const sec=sectionMap[label];
+        if(!sec) return;
+        const lyricLines=(sec.lines||[]).filter(l=>!l.chordOnly&&(l.sq||l.en));
+        const lineCount=Math.max(lyricLines.length,2); // min 2 lines per section
+        const repCount=reps[label]||1;
+        // Each lyric line ≈ 4 beats (1 bar in 4/4)
+        totalSecs+=lineCount*4*secsPerBeat*repCount;
+      });
+      // Add 15% for intros/pauses
+      totalSecs=Math.round(totalSecs*1.15);
+      const mm=Math.floor(totalSecs/60);
+      const ss=String(totalSecs%60).padStart(2,'0');
+      durEl.textContent=`~${mm}:${ss}`;
+      durEl.title=`Kohëzgjatja e vlerësuar me ${s.bpm} BPM`;
+      durEl.style.display='inline';
+    } else {
+      durEl.style.display='none';
+    }
+  }
+
   // Apply role-based view (chord visibility, percussion panel, font) after every song render
   _applyPerfRole();
   setTimeout(addChordInteraction, 80);
@@ -7845,7 +8073,7 @@ function changeSectionRep(songId, label, delta){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id,sectionMap,_perfTranspose?.[s.id]||0,perfInst);
 }
 
@@ -7965,7 +8193,7 @@ function setPerfFont(size){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
+  _perfCustomSecs(s.id).forEach(cs=>{ if(!sectionMap[cs.label]) sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true}; });
   renderPerfArrangement(s.id, sectionMap, _perfTranspose?.[s.id]||0, perfInst);
 }
 
@@ -8017,7 +8245,7 @@ function _perfTransposeLightUpdate(s, item){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{if(!sectionMap[cs.label])sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+  _perfCustomSecs(s.id).forEach(cs=>{if(!sectionMap[cs.label])sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
   renderPerfArrangement(s.id,sectionMap,steps,perfInst);
 }
 
@@ -8032,7 +8260,7 @@ function _perfLyricsLightUpdate(){
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||'';
   const allSections=parseLyricsText(rawText);
   const sectionMap={};allSections.forEach(sec=>sectionMap[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{if(!sectionMap[cs.label])sectionMap[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+  _perfCustomSecs(s.id).forEach(cs=>{if(!sectionMap[cs.label])sectionMap[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
   renderPerfArrangement(s.id,sectionMap,steps,perfInst);
 }
 
@@ -8177,7 +8405,7 @@ function perfCycleRepeat(songId,label){
   const pi=item.instrument||s.instruments?.[0]||'Guitar';
   const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
   const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
-  _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+  _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
   renderPerfArrangement(s.id,sm,_perfTranspose?.[s.id]||0,pi);
 }
 
@@ -8242,7 +8470,7 @@ function _perfChipDragStart(e,songId,fromIdx){
     const pi=item.instrument||s.instruments?.[0]||'Guitar';
     const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
     const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
-    _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
+    _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
     renderPerfArrangement(s.id,sm,_perfTranspose?.[s.id]||0,pi);
   }
 
@@ -8309,11 +8537,13 @@ function _perfCreateCustomSec(songId){
     label=label+n;
   }
   const chords=(chordsEl?.value||'').trim();
-  _perfSaveCustomSec(songId,{label, type, chords});
+  const colorEl=document.getElementById('perfCustomSecColor');
+  const color=(colorEl?.value||'#8b3fb5');
+  _perfSaveCustomSec(songId,{label, type, chords, color});
   // Auto-add to current arrangement so user sees it immediately
   const key=`perf_arr_${songId}`;
   if(_perfArrangements?.[key]) _perfArrangements[key].push(label);
-  // Reset form inputs
+  // Reset form inputs (but keep color selection)
   if(labelEl) labelEl.value='';
   if(chordsEl) chordsEl.value='';
   _perfLyricsLightUpdate(); // Bug 12 fix: preserve scroll position
@@ -8524,9 +8754,9 @@ function _syncPerfCueBtn(){
     btn.style.background   = _perfCueEnabled ? 'rgba(96,165,250,0.15)' : 'var(--bg3)';
     btn.style.borderColor  = _perfCueEnabled ? 'rgba(96,165,250,0.5)'  : 'var(--border)';
     btn.style.color        = _perfCueEnabled ? '#93c5fd' : 'var(--text2)';
-    btn.childNodes[0].textContent = _perfCueEnabled ? '🎧 Section Cues On ' : '🔇 Section Cues Off ';
+    btn.childNodes[0].textContent = _perfCueEnabled ? '🎧 Udhëzimet Aktive ' : '🔇 Udhëzimet Fikur ';
   }
-  if(status) status.textContent = _perfCueEnabled ? 'On' : 'Off';
+  if(status) status.textContent = _perfCueEnabled ? 'Aktiv' : 'Joaktiv';
   if(vol) vol.value = _perfCueVol;
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -8725,7 +8955,7 @@ function toggleLineHighlight(){
     btn.style.border = _lineHighlightEnabled ? '1px solid rgba(212,175,55,0.5)' : '1px solid var(--border)';
     btn.style.color = _lineHighlightEnabled ? '#d4af37' : 'var(--text2)';
   }
-  showToast(_lineHighlightEnabled ? '🟡 Line on' : '✨ Text highlight on');
+  showToast(_lineHighlightEnabled ? '🟡 Rreshti aktiv' : '✨ Tekst me efekt');
 }
 
 function toggleConfidenceMonitor(){
@@ -8807,35 +9037,35 @@ let _perfRole = localStorage.getItem('perfRole') || 'operator';
 // ── Two-level role picker ────────────────────────────────────────────────────
 // Level 1: instrument categories  →  Level 2: specific sub-role
 const PERF_ROLE_CATEGORIES = [
-  { id:'guitar',     icon:'🎸', name:'Guitar',      desc:'Acoustic · Electric · Bass · Uke',
+  { id:'guitar',     icon:'🎸', name:'Guitar',      desc:'Akustike · Elektrik · Bas · Uke',
     roles:[
-      { id:'acoustic', icon:'🪕', name:'Acoustic',  desc:'Capo chart + lyrics',          sheet:'Guitar' },
-      { id:'electric', icon:'⚡', name:'Electric',  desc:'Concert pitch, no capo',        sheet:'Piano'  },
-      { id:'bass',     icon:'🎚️', name:'Bass',      desc:'Root notes per section',        sheet:'Piano'  },
-      { id:'ukulele',  icon:'🪗', name:'Ukulele',   desc:'Concert pitch chords',          sheet:'Piano'  },
+      { id:'acoustic', icon:'🪕', name:'Acoustic',  desc:'Me kapo + tekst',              sheet:'Guitar' },
+      { id:'electric', icon:'⚡', name:'Electric',  desc:'Pitch normal, pa kapo',         sheet:'Piano'  },
+      { id:'bass',     icon:'🎚️', name:'Bass',      desc:'Nota bazë çdo seksion',         sheet:'Piano'  },
+      { id:'ukulele',  icon:'🪗', name:'Ukulele',   desc:'Akorde normale',                sheet:'Piano'  },
     ]
   },
   { id:'keys',       icon:'🎹', name:'Keys',        desc:'Piano / Keyboard',
     roles:[
-      { id:'keys',     icon:'🎹', name:'Piano / Keys', desc:'Concert pitch chords + lyrics', sheet:'Piano' },
+      { id:'keys',     icon:'🎹', name:'Piano / Keys', desc:'Akorde normale + tekst',     sheet:'Piano' },
     ]
   },
-  { id:'percussion', icon:'🥁', name:'Percussion',  desc:'Drums or Cajon',
+  { id:'percussion', icon:'🥁', name:'Percussion',  desc:'Daulle ose Kajon',
     roles:[
-      { id:'drummer',  icon:'🥁', name:'Drums',     desc:'BPM + section cues',            sheet:null },
-      { id:'cajon',    icon:'🪘', name:'Cajon',     desc:'BPM + section cues',            sheet:null },
+      { id:'drummer',  icon:'🥁', name:'Drums',     desc:'BPM + sinjale seksioni',        sheet:null },
+      { id:'cajon',    icon:'🪘', name:'Cajon',     desc:'BPM + sinjale seksioni',        sheet:null },
     ]
   },
-  { id:'vocals',     icon:'🎤', name:'Vocals',      desc:'Singer or Choir',
+  { id:'vocals',     icon:'🎤', name:'Vocals',      desc:'Këngëtar ose Kor',
     roles:[
-      { id:'vocalist', icon:'🎤', name:'Vocalist',  desc:'Large lyrics, no chords',       sheet:'Piano' },
-      { id:'choir',    icon:'🎵', name:'Choir',     desc:'Large lyrics, harmonies',       sheet:'Piano' },
+      { id:'vocalist', icon:'🎤', name:'Vocalist',  desc:'Tekst i madh, pa akorde',       sheet:'Piano' },
+      { id:'choir',    icon:'🎵', name:'Choir',     desc:'Tekst i madh, harmoni',          sheet:'Piano' },
     ]
   },
   { id:'leadership', icon:'🎛️', name:'Leadership', desc:'Worship Leader · Operator',
     roles:[
-      { id:'worship_leader', icon:'🙏', name:'Worship Leader', desc:'Full view + Monitor', sheet:'Piano' },
-      { id:'operator',       icon:'🎛️', name:'Operator',       desc:'Full control view',   sheet:null    },
+      { id:'worship_leader', icon:'🙏', name:'Worship Leader', desc:'Pamje e plotë + Monitor', sheet:'Piano' },
+      { id:'operator',       icon:'🎛️', name:'Operator',       desc:'Pamje me kontroll të plotë', sheet:null },
     ]
   },
 ];
@@ -8940,8 +9170,7 @@ function setPerfRole(roleId){
   _perfRole = roleId;
   const rememberCb = document.getElementById('perfRoleRemember');
   if(rememberCb && rememberCb.checked){
-    localStorage.setItem('perfRole', roleId);
-    localStorage.setItem('perfRoleRemember','1');
+    try{ localStorage.setItem('perfRole', roleId); localStorage.setItem('perfRoleRemember','1'); }catch(e){}
   } else {
     localStorage.removeItem('perfRoleRemember');
     localStorage.removeItem('perfRole'); // don't carry stale role across sessions
@@ -8959,7 +9188,7 @@ function _applyPerfRole(){
 
   // Update role button label in drawer
   const roleBtn = document.getElementById('perfRoleChangeBtn');
-  if(roleBtn) roleBtn.innerHTML = `${ri.icon} ${ri.name} <span style="opacity:.5;font-size:10px;float:right">Change →</span>`;
+  if(roleBtn) roleBtn.innerHTML = `${ri.icon} ${ri.name} <span style="opacity:.5;font-size:10px;float:right">Ndrysho →</span>`;
 
   // Update HUD badge
   const badge = document.getElementById('perfRoleBadge');
@@ -9058,7 +9287,7 @@ function showPerfLiveSync(){
   if(_perfLiveMode==='leader') _perfRenderQR(_perfLiveRoomCode);
   // If already live show status
   const statusEl = document.getElementById('perfLiveSyncStatus');
-  if(statusEl) statusEl.textContent = _perfLiveChannel ? `🟢 Live as ${_perfLiveMode}` : '';
+  if(statusEl) statusEl.textContent = _perfLiveChannel ? `🟢 Aktiv si ${_perfLiveMode==='leader'?'Drejtues':'Pasues'}` : '';
   overlay.style.display = 'flex';
 }
 
@@ -9119,8 +9348,8 @@ function perfLiveStart(mode){
         if(!overlay) return;
         const holding=!!payload?.hold;
         overlay.style.display=holding?'flex':'none';
-        if(holding) showToast('⏸ Hold — waiting for leader…','info',0);
-        else{ showToast('▶ Released','success'); }
+        if(holding) showToast('⏸ Ndalesë — prit drejtuesin…','info',0);
+        else{ showToast('▶ Lëshuar','success'); }
       });
       // Panic/blackout: leader sends pure black to all followers
       _perfLiveChannel.on('broadcast', {event:'pm_panic'}, ({payload})=>{
@@ -9129,6 +9358,10 @@ function perfLiveStart(mode){
         const blacking=!!payload?.blackout;
         overlay.style.display=blacking?'block':'none';
         if(navigator.vibrate) navigator.vibrate(blacking?[60,40,60]:30);
+      });
+      // Flash message: leader broadcasts a text message
+      _perfLiveChannel.on('broadcast', {event:'pm_flash'}, ({payload})=>{
+        if(payload?.msg) _perfShowFlash(payload.msg);
       });
     }
     // Presence: track device count (all modes)
@@ -9141,6 +9374,7 @@ function perfLiveStart(mode){
       if(status==='SUBSCRIBED'){
         _perfLiveUpdateBadge(true);
         closePerfLiveSync();
+        _perfUpdateLeaderUI(); // show Leader Message section when mode=leader
         // Track presence
         try{ _perfLiveChannel.track({mode, joined_at:Date.now()}); }catch(e){}
         if(mode==='leader'){
@@ -9168,7 +9402,7 @@ function perfLiveStart(mode){
         // Auto-reconnect: save state, tear down, rebuild after 3s
         const savedMode=_perfLiveMode, savedRoom=_perfLiveRoomCode;
         const badgeText=document.getElementById('perfLiveBadgeText');
-        if(badgeText) badgeText.textContent='⚠️ Reconnecting…';
+        if(badgeText) badgeText.textContent='⚠️ Duke u rilidhur…';
         if(_perfHeartbeatTimer){clearInterval(_perfHeartbeatTimer);_perfHeartbeatTimer=null;}
         if(_perfLeaderWatchTimer){clearInterval(_perfLeaderWatchTimer);_perfLeaderWatchTimer=null;}
         setTimeout(()=>{
@@ -9195,12 +9429,12 @@ function togglePerfHold(){
   }
   const btn=document.getElementById('perfHoldBtn');
   if(btn){
-    btn.textContent=_perfHoldActive?'▶ Release Hold':'⏸ Hold All Screens';
+    btn.textContent=_perfHoldActive?'▶ Lësho Ndalesën':'⏸ Ndal Të Gjitha';
     btn.style.background=_perfHoldActive?'rgba(251,146,60,0.15)':'var(--bg3)';
     btn.style.borderColor=_perfHoldActive?'rgba(251,146,60,0.5)':'var(--border)';
     btn.style.color=_perfHoldActive?'#fdba74':'var(--text2)';
   }
-  showToast(_perfHoldActive?'⏸ All screens paused':'▶ Screens released', _perfHoldActive?'':'success');
+  showToast(_perfHoldActive?'⏸ Të gjitha ekranet u ndalën':'▶ Ekranet u lëshuan', _perfHoldActive?'':'success');
 }
 
 // ── Leader: toggle Blackout — pure black on all follower screens ──
@@ -9212,12 +9446,48 @@ function togglePerfBlackout(){
   }
   const btn=document.getElementById('perfBlackoutBtn');
   if(btn){
-    btn.textContent=_perfBlackoutActive?'⬜ Restore Screens':'⚫ Blackout';
+    btn.textContent=_perfBlackoutActive?'⬜ Rikthe Ekranet':'⚫ Ekran i Zi';
     btn.style.background=_perfBlackoutActive?'rgba(0,0,0,0.7)':'var(--bg3)';
     btn.style.borderColor=_perfBlackoutActive?'rgba(255,255,255,0.25)':'var(--border)';
     btn.style.color=_perfBlackoutActive?'#fff':'var(--text2)';
   }
-  showToast(_perfBlackoutActive?'⚫ All screens blacked out':'⬜ Screens restored', 'info');
+  showToast(_perfBlackoutActive?'⚫ Të gjitha ekranet u bënë të zeza':'⬜ Ekranet u rikthyen', 'info');
+}
+
+// ── Leader: send flash broadcast message to all follower screens ──
+function perfSendFlash(){
+  const inp=document.getElementById('perfLeaderMsgInput');
+  const msg=inp?.value?.trim();
+  if(!msg){ showToast('Shkruaj një mesazh','error'); return; }
+  if(_perfLiveChannel && _perfLiveMode==='leader'){
+    try{ _perfLiveChannel.send({type:'broadcast',event:'pm_flash',payload:{msg}}); }catch(e){}
+  }
+  _perfShowFlash(msg); // also show on leader's screen
+  if(inp) inp.value='';
+  closePerfDrawer();
+}
+
+function _perfShowFlash(msg){
+  const ov=document.getElementById('perfFlashOverlay');
+  const txt=document.getElementById('perfFlashText');
+  if(!ov||!txt) return;
+  txt.textContent=msg;
+  ov.style.display='flex';
+  if(window._perfFlashTimer) clearTimeout(window._perfFlashTimer);
+  window._perfFlashTimer=setTimeout(_perfDismissFlash, 8000);
+  if(navigator.vibrate) navigator.vibrate([30,20,30]);
+}
+
+function _perfDismissFlash(){
+  if(window._perfFlashTimer){ clearTimeout(window._perfFlashTimer); window._perfFlashTimer=null; }
+  const ov=document.getElementById('perfFlashOverlay');
+  if(ov) ov.style.display='none';
+}
+
+// Show/hide Leader Message section in drawer based on live mode
+function _perfUpdateLeaderUI(){
+  const sec=document.getElementById('perfLeaderMsgSection');
+  if(sec) sec.style.display=(_perfLiveMode==='leader')?'block':'none';
 }
 
 // ── QR code: render room join URL into the Live Sync panel ──
@@ -9242,12 +9512,12 @@ function _perfRenderQR(code){
 function perfLiveTakeOver(){
   if(_perfLiveMode==='leader') return;
   const code=_perfLiveRoomCode;
-  if(!code){ showToast('Not in a room','error'); return; }
+  if(!code){ showToast('Nuk je në asnjë dhomë','error'); return; }
   _perfLiveStop();
   _perfLiveRoomCode=code;
   perfLiveStart('leader');
   closePerfDrawer();
-  showToast('🎙️ You are now the Leader — room '+code,'success');
+  showToast('🎙️ Je drejtues tani — dhoma '+code,'success');
 }
 
 function _perfLiveStop(){
@@ -9328,8 +9598,8 @@ function _perfUpdateLeaderStatus(){
     badge.style.borderColor='rgba(239,68,68,0.55)';
     badge.style.cursor='pointer'; badge.style.pointerEvents='auto';
     if(dot) dot.style.background='#f87171';
-    if(badgeText) badgeText.textContent='⚠️ No signal — tap to sync';
-    badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Sync request sent…','info',2000); };
+    if(badgeText) badgeText.textContent='⚠️ Pa signal — kliko për sinkron';
+    badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Kërkesë sinkronizimi u dërgua…','info',2000); };
   } else {
     badge.style.borderColor='rgba(96,165,250,0.4)';
     badge.style.cursor='default'; badge.style.pointerEvents='none';
@@ -9370,7 +9640,7 @@ function _perfLiveApply(data){
     perfIdx = data.song_idx;
     showPerfSong();
     if(nextSong){
-      const title = nextSong.title || nextSong.songId || 'Next song';
+      const title = nextSong.title || nextSong.songId || 'Kënga tjetër';
       showToast('🎵 '+ title, 'info', 3500);
     }
     // Show queue bar — what comes after the new current song
@@ -9393,32 +9663,37 @@ function _perfLiveUpdateBadge(active){
   const badgeText = document.getElementById('perfLiveBadgeText');
   const dot = document.getElementById('perfLiveDot');
   const btn = document.getElementById('perfLiveSyncBtn');
-  if(badge) badge.style.display = active ? 'flex' : 'none';
-
-  if(active && _perfLiveMode==='follower'){
-    // If leader is offline, let _perfUpdateLeaderStatus paint the red warning — don't overwrite it
-    if(!_perfLeaderOnline){ _perfUpdateLeaderStatus(); return; }
-    // Follower badge: tappable for manual sync
-    badge.style.pointerEvents='auto'; badge.style.cursor='pointer';
-    badge.style.borderColor='rgba(96,165,250,0.4)';
-    if(dot) dot.style.background='#93c5fd';
-    badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Sync request sent…','info',2000); };
-    if(badgeText) badgeText.textContent='👁 SYNC · tap to pull';
-  } else if(active && _perfLiveMode==='leader'){
-    badge.style.pointerEvents='none'; badge.style.cursor='default';
-    badge.style.borderColor='rgba(74,222,128,0.4)';
-    if(dot) dot.style.background='#4ade80';
-    badge.onclick=null;
-    // Show device count if we have presence data
-    const devStr = _perfPresenceCount>1 ? ` · ${_perfPresenceCount} devices` : '';
-    if(badgeText) badgeText.textContent = '📡 LIVE · '+(_perfLiveRoomCode||'')+devStr;
-  } else if(badgeText){
+  if(badge){
+    badge.style.display = active ? 'flex' : 'none';
+    if(active && _perfLiveMode==='follower'){
+      // If leader is offline, let _perfUpdateLeaderStatus paint the red warning — don't overwrite it
+      if(!_perfLeaderOnline){ _perfUpdateLeaderStatus(); }
+      else {
+        // Follower badge: tappable for manual sync
+        badge.style.pointerEvents='auto'; badge.style.cursor='pointer';
+        badge.style.borderColor='rgba(96,165,250,0.4)';
+        if(dot) dot.style.background='#93c5fd';
+        badge.onclick=()=>{ _perfFollowerSyncRequest(); showToast('📡 Kërkesë sinkronizimi u dërgua…','info',2000); };
+        if(badgeText) badgeText.textContent='👁 SYNC · kliko';
+      }
+    } else if(active && _perfLiveMode==='leader'){
+      badge.style.pointerEvents='none'; badge.style.cursor='default';
+      badge.style.borderColor='rgba(74,222,128,0.4)';
+      if(dot) dot.style.background='#4ade80';
+      badge.onclick=null;
+      // Show device count if we have presence data
+      const devStr = _perfPresenceCount>1 ? ` · ${_perfPresenceCount} pajisje` : '';
+      if(badgeText) badgeText.textContent = '📡 LIVE · '+(_perfLiveRoomCode||'')+devStr;
+    } else if(badgeText){
+      badgeText.textContent = '';
+    }
+  } else if(badgeText && !active){
     badgeText.textContent = '';
   }
 
   if(btn){
     btn.style.background = active ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)';
-    btn.title = active ? 'Stop Live Sync' : 'Live Room Sync';
+    btn.title = active ? 'Ndalo Sinkronizimin' : 'Sinkronizim Live';
     btn.onclick = active ? (()=>{ _perfLiveStop(); }) : (()=>{ showPerfLiveSync(); });
   }
   // Bug 11 fix: also update drawer Live Sync button (only entry on mobile where HUD btn is hidden)
@@ -9430,7 +9705,7 @@ function _perfLiveUpdateBadge(active){
     drawerBtn.style.color = active ? '#f87171' : 'var(--text2)';
     drawerBtn.onclick = active ? (()=>{ _perfLiveStop(); closePerfDrawer(); }) : (()=>{ closePerfDrawer(); showPerfLiveSync(); });
   }
-  if(drawerStatus) drawerStatus.textContent = active ? (_perfLiveMode==='leader' ? 'LIVE 📡' : 'SYNC 👁') : 'Off';
+  if(drawerStatus) drawerStatus.textContent = active ? (_perfLiveMode==='leader' ? 'LIVE 📡' : 'SYNC 👁') : 'Joaktiv';
 
   // Show/hide Hold and TakeOver drawer buttons based on live mode
   const holdBtn = document.getElementById('perfHoldBtn');
@@ -9469,7 +9744,7 @@ function toggleMicScroll(){
 async function _startMicScroll(){
   const btn = document.getElementById('micScrollBtn');
   const statusEl = document.getElementById('micStatusText');
-  if(statusEl) statusEl.textContent = '🎙️ Requesting microphone…';
+  if(statusEl) statusEl.textContent = '🎙️ Duke kërkuar mikrofonin…';
   try {
     _micStream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
     _micContext = new (window.AudioContext||window.webkitAudioContext)();
@@ -9479,11 +9754,11 @@ async function _startMicScroll(){
     _micAnalyser.smoothingTimeConstant = 0.7;
     source.connect(_micAnalyser);
     _micActive = true;
-    if(btn){ btn.textContent='🔴 Stop Mic'; btn.style.background='rgba(239,68,68,0.25)'; btn.style.color='#f87171'; }
-    if(statusEl) statusEl.textContent = '🎙️ Listening — clap or speak to scroll';
+    if(btn){ btn.textContent='🔴 Ndalo Mikrofonin'; btn.style.background='rgba(239,68,68,0.25)'; btn.style.color='#f87171'; }
+    if(statusEl) statusEl.textContent = '🎙️ Dëgjoj — duartrokit ose fol për të lëvizur';
     _micLoop();
   } catch(e){
-    if(statusEl) statusEl.textContent = '⚠️ Mic access denied';
+    if(statusEl) statusEl.textContent = '⚠️ Mikrofoni u refuzua';
     console.warn('Mic error:',e);
   }
 }
@@ -9497,7 +9772,7 @@ function _stopMicScroll(){
   const btn = document.getElementById('micScrollBtn');
   const statusEl = document.getElementById('micStatusText');
   const bar = document.getElementById('perfAudioLevel');
-  if(btn){ btn.textContent='🎙️ Start Mic'; btn.style.background='var(--bg3)'; btn.style.color='var(--text2)'; }
+  if(btn){ btn.textContent='🎙️ Nis Mikrofonin'; btn.style.background='var(--bg3)'; btn.style.color='var(--text2)'; }
   if(statusEl) statusEl.textContent = '';
   if(bar) bar.style.width='0%';
   const audioBar = document.getElementById('perfAudioBar');
@@ -9544,7 +9819,7 @@ function _micDoScroll(){
   content.scrollBy({top: stepPx, behavior:'smooth'});
   // Visual feedback
   const statusEl = document.getElementById('micStatusText');
-  if(statusEl){ statusEl.textContent='↓ Onset!'; setTimeout(()=>{ if(_micActive && statusEl) statusEl.textContent='🎙️ Listening…'; },600); }
+  if(statusEl){ statusEl.textContent='↓ Beat!'; setTimeout(()=>{ if(_micActive && statusEl) statusEl.textContent='🎙️ Duke dëgjuar…'; },600); }
 }
 
 // Sensitivity slider label sync
@@ -9603,7 +9878,7 @@ async function _loadPerfPDF(url){
   } catch(e){
     console.warn('PDF load error:',e);
     const loading = document.getElementById('perfPDFLoading');
-    if(loading) loading.textContent = '⚠️ Could not load PDF';
+    if(loading) loading.textContent = '⚠️ PDF nuk u ngarkua';
   }
 }
 
@@ -9783,10 +10058,15 @@ function _launchScroll(content,pxPerSec,btn){
   botSpacer.className='perf-bot-spacer';
   botSpacer.style.cssText='height:'+(viewH-readZone)+'px;pointer-events:none;flex-shrink:0';
   lyricsEl.appendChild(botSpacer);
+  // If topSpacerH===0, lyrics are already below readZone; pre-scroll so line 1 is at readZone
+  if(topSpacerH===0){
+    const initScroll=Math.max(0,lyricsOffset-readZone);
+    content.scrollTop=initScroll;
+  }
   requestAnimationFrame(()=>highlightCurrentLine());
   startLineHighlight();
-  // Float accumulator — prevents sub-pixel scroll loss
-  let scrollPos=0,last=null,paused=false,pauseTimer=null;
+  // Float accumulator — prevents sub-pixel scroll loss; start at current scrollTop so no jump
+  let scrollPos=content.scrollTop,last=null,paused=false,pauseTimer=null;
   const onTouch=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   const onWheel=()=>{paused=true;clearTimeout(pauseTimer);pauseTimer=setTimeout(()=>paused=false,2500);};
   content.addEventListener('touchstart',onTouch,{passive:true});
@@ -9808,17 +10088,38 @@ function _launchScroll(content,pxPerSec,btn){
       const maxScroll=content.scrollHeight-content.clientHeight;
       if(maxScroll>0&&scrollPos>=maxScroll-5){
         content.scrollTop=maxScroll;
-        const endEl=document.getElementById('perfEndIndicator');
-        const endTxt=document.getElementById('perfEndText');
-        const isSQ=(_perfLang||currentLang)==='sq';
         const sl=getSetlist(); const hasNext=perfIdx<sl.songs.length-1;
-        if(endTxt) endTxt.textContent=isSQ?(hasNext?'Fund i këngës — Duke kaluar...':'Fund i këngës'):(hasNext?'End of Song — Advancing...':'End of Song');
-        if(endEl){ endEl.style.display='flex'; setTimeout(()=>endEl.style.display='none',hasNext?1800:3000); }
-        setTimeout(()=>{
-          stopAutoScroll(); stopLineHighlight();
-          _syncAutoScrollBtns(false);
-          if(hasNext){ setTimeout(()=>{ perfIdx++; showPerfSong(); setTimeout(()=>toggleAutoScroll(),800); },1200); }
-        },800);
+        if(hasNext){
+          // 5-second countdown before auto-advancing to next song
+          const nextItem=sl.songs[perfIdx+1];
+          const nextSong=SONGS.find(x=>Number(x.id)===Number(nextItem?.id));
+          const cdEl=document.getElementById('perfAdvanceCountdown');
+          const cdTitle=document.getElementById('perfAdvanceNextTitle');
+          const cdNum=document.getElementById('perfAdvanceNum');
+          if(cdEl&&cdTitle&&cdNum){
+            cdTitle.textContent=nextSong?.title||nextItem?.title||'';
+            cdEl.style.display='flex';
+            let n=5; cdNum.textContent=n;
+            const cdTick=()=>{
+              n--;
+              if(n>0){
+                cdNum.style.transform='scale(1.15)'; cdNum.style.opacity='0.6';
+                setTimeout(()=>{ cdNum.style.transform='scale(1)'; cdNum.style.opacity='1'; cdNum.textContent=n; },100);
+              } else {
+                _perfDoAdvance();
+              }
+            };
+            window._perfAdvanceTimer=setInterval(cdTick,1000);
+          } else { _perfDoAdvance(); }
+        } else {
+          // Last song — show end indicator and stop
+          const endEl=document.getElementById('perfEndIndicator');
+          const endTxt=document.getElementById('perfEndText');
+          const isSQ=(_perfLang||currentLang)==='sq';
+          if(endTxt) endTxt.textContent=isSQ?'Fund i këngës':'End of Song';
+          if(endEl){ endEl.style.display='flex'; setTimeout(()=>endEl.style.display='none',3000); }
+          setTimeout(()=>{ stopAutoScroll(); stopLineHighlight(); _syncAutoScrollBtns(false); },800);
+        }
         return;
       }
     }
@@ -9832,6 +10133,9 @@ function _launchScroll(content,pxPerSec,btn){
 // spacers, progress bar, event listeners (touch/wheel pause).
 function stopAutoScroll(){
   if(_autoScrollInterval){ cancelAnimationFrame(_autoScrollInterval); _autoScrollInterval=null; }
+  // Cancel any pending advance countdown
+  if(window._perfAdvanceTimer){ clearInterval(window._perfAdvanceTimer); window._perfAdvanceTimer=null; }
+  const cdEl=document.getElementById('perfAdvanceCountdown'); if(cdEl) cdEl.style.display='none';
   const content=document.getElementById('perfContent');
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
   if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
@@ -9842,6 +10146,18 @@ function stopAutoScroll(){
   const pb=document.getElementById('perfProgressBar'); if(pb) pb.style.display='none';
   const pf=document.getElementById('perfProgressFill'); if(pf) pf.style.width='0%';
   const rzl=document.getElementById('perfReadZoneLine'); if(rzl) rzl.style.display='none';
+}
+
+// Advance to next song after countdown completes
+function _perfDoAdvance(){
+  if(window._perfAdvanceTimer){ clearInterval(window._perfAdvanceTimer); window._perfAdvanceTimer=null; }
+  const cdEl=document.getElementById('perfAdvanceCountdown'); if(cdEl) cdEl.style.display='none';
+  stopAutoScroll(); stopLineHighlight(); _syncAutoScrollBtns(false);
+  perfIdx++; showPerfSong(); setTimeout(()=>toggleAutoScroll(),800);
+}
+// Skip the countdown immediately
+function _perfSkipCountdown(){
+  _perfDoAdvance();
 }
 
 async function sendContactEmail() {
@@ -9860,7 +10176,7 @@ async function sendContactEmail() {
   btn.textContent = '⏳ Duke dërguar…';
 
   try {
-    await (window.emailjs||await new Promise(r=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);})).send('service_yr0bbyf', 'template_0sm4ndf', {
+    await (window.emailjs||await new Promise((r,j)=>{const t=setInterval(()=>{if(window.emailjs){clearInterval(t);r(window.emailjs);}},50);setTimeout(()=>{clearInterval(t);j(new Error('emailjs timeout'));},10000);})).send('service_yr0bbyf', 'template_0sm4ndf', {
       name:    name,
       email:   email,
       message: message,
@@ -10263,7 +10579,7 @@ async function rereadWithAI(instrument) {
 function saveAnthropicKey() {
   const key = document.getElementById('anthropicApiKey').value.trim();
   if (!key) { showToast('Fut çelësin së pari!', 'error'); return; }
-  localStorage.setItem('aa-anthropic-key', key);
+  try{ localStorage.setItem('aa-anthropic-key', key); }catch(e){ showToast('❌ Çelësi nuk u ruajt (hapësirë e plotë)','error'); return; }
   document.getElementById('aiKeyStatus').textContent = '✅ Çelësi u ruajt! Tani PDF-et imazh do lexohen automatikisht.';
   document.getElementById('aiKeyStatus').style.color = 'var(--gold)';
   showToast('✅ API Key u ruajt!', 'success');
