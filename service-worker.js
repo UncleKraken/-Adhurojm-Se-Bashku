@@ -1,85 +1,56 @@
-// Adhurojmë Së Bashku — Service Worker
-// Version — bump this to force cache refresh
-const CACHE_VERSION = 'asb-v2';
-const STATIC_CACHE = `${CACHE_VERSION}-static`;
-const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
-// Files to cache immediately on install
-const STATIC_FILES = [
+// Adhurojmë Së Bashku — Service Worker v10
+// Caches the app shell for offline use and fast repeat loads.
+const CACHE_NAME = 'asb-v10';
+const SHELL = [
   './',
   './index.html',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;700&display=swap',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
 ];
-// Install — cache static files
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => {
-      return Promise.allSettled(
-        STATIC_FILES.map(url => cache.add(url).catch(() => {}))
-      );
-    }).then(() => self.skipWaiting())
-  );
-});
-// Activate — clean old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
-            .map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-// Fetch — cache-first for static, network-first for Supabase
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  // Skip non-GET and chrome-extension requests
-  if(event.request.method !== 'GET') return;
-  if(url.protocol === 'chrome-extension:') return;
-  // Supabase API — network first, fallback to cache
-  if(url.hostname.includes('supabase.co')){
-    event.respondWith(
-      fetch(event.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(DYNAMIC_CACHE).then(cache => cache.put(event.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  // Static files — cache first
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if(cached) return cached;
-      return fetch(event.request).then(res => {
-        if(res && res.status === 200){
-          const clone = res.clone();
-          caches.open(DYNAMIC_CACHE).then(cache => cache.put(event.request, clone));
-        }
-        return res;
-      }).catch(() => {
-        // Offline fallback for navigation
-        if(event.request.mode === 'navigate'){
-          return caches.match('./index.html');
-        }
-      });
-    })
+
+// Install: cache the app shell
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
   );
 });
 
-// Message — handle skip-waiting without leaving async channel open
-// FIX: do NOT return `true` from a sync message handler.
-// Returning `true` signals Chrome that an async response is coming;
-// if the channel closes first it throws:
-// "A listener indicated an asynchronous response by returning true,
-//  but the message channel closed before a response was received"
-self.addEventListener('message', event => {
-  if(event.data && event.data.type === 'SKIP_WAITING'){
-    self.skipWaiting(); // synchronous — no async gap, no return true
+// Activate: delete old caches
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: network-first for navigation, cache-first for everything else
+self.addEventListener('fetch', e => {
+  const { request } = e;
+  const url = new URL(request.url);
+
+  // Only handle same-origin requests
+  if (url.origin !== location.origin) return;
+
+  if (request.mode === 'navigate') {
+    // Network-first for HTML navigations so fresh content loads when online
+    e.respondWith(
+      fetch(request).then(r => {
+        const clone = r.clone();
+        caches.open(CACHE_NAME).then(c => c.put(request, clone));
+        return r;
+      }).catch(() => caches.match('./index.html'))
+    );
+  } else {
+    // Cache-first for assets (JS, CSS, fonts, images)
+    e.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(r => {
+          if (!r || r.status !== 200 || r.type === 'opaque') return r;
+          const clone = r.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, clone));
+          return r;
+        });
+      })
+    );
   }
 });
