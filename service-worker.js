@@ -1,9 +1,14 @@
 // Adhurojmë Së Bashku — Service Worker v10
 // Caches the app shell for offline use and fast repeat loads.
-const CACHE_NAME = 'asb-v10';
+const CACHE_NAME = 'asb-v11';
 const SHELL = [
   './',
   './index.html',
+  './manifest.json',
+  './favicon.ico',
+  './icon-192.png',
+  './icon-512.png',
+  './og-image.jpg',
 ];
 
 // Install: cache the app shell
