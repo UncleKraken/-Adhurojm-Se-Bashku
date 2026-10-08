@@ -659,14 +659,14 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 [data-theme="light"] #performanceMode[data-dark="0"] #perfLangEN { color: #4a5568 !important; }
 
 /* ── Section cue pills: dark saturated on light bg ── */
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-verse     { background:rgba(37,99,235,0.1);   color:#1d4ed8; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-chorus    { background:rgba(161,98,7,0.12);   color:#92400e; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-bridge    { background:rgba(109,40,217,0.1);  color:#6d28d9; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-prechorus { background:rgba(4,120,87,0.1);    color:#065f46; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-intro     { background:rgba(180,83,9,0.1);    color:#9a3412; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-outro     { background:rgba(180,83,9,0.1);    color:#9a3412; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-interlude { background:rgba(157,23,77,0.1);   color:#9d174d; }
-[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-default   { background:rgba(0,0,0,0.06);      color:#718096; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-verse     { background:rgba(37,99,235,0.18);  border:1px solid rgba(37,99,235,0.45);   color:#1d4ed8; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-chorus    { background:rgba(161,98,7,0.18);   border:1px solid rgba(161,98,7,0.45);    color:#92400e; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-bridge    { background:rgba(109,40,217,0.18); border:1px solid rgba(109,40,217,0.45);  color:#6d28d9; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-prechorus { background:rgba(4,120,87,0.18);   border:1px solid rgba(4,120,87,0.45);    color:#065f46; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-intro     { background:rgba(180,83,9,0.18);   border:1px solid rgba(180,83,9,0.45);    color:#9a3412; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-outro     { background:rgba(180,83,9,0.18);   border:1px solid rgba(180,83,9,0.45);    color:#9a3412; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-interlude { background:rgba(157,23,77,0.18);  border:1px solid rgba(157,23,77,0.45);   color:#9d174d; }
+[data-theme="light"] #performanceMode[data-dark="0"] .perf-section-label.sec-default   { background:rgba(0,0,0,0.1);       border:1px solid rgba(0,0,0,0.2);        color:#4a5568; }
 
 /* ── Next-section bar at bottom ── */
 [data-theme="light"] #performanceMode[data-dark="0"] #perfNextSectionBar {
@@ -737,10 +737,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .ci-beat-dot.active{background:#f0c040;transform:scale(1.4);}
 
 /* ── SONG CHANGE transition ── */
-@keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
-#perfContent.anim-in-right{animation:slideInRight .3s cubic-bezier(.25,.46,.45,.94) forwards;}
-#perfContent.anim-in-left{animation:slideInLeft .3s cubic-bezier(.25,.46,.45,.94) forwards;}
+@keyframes perfSlideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes perfSlideInLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+#perfContent.anim-in-right{animation:perfSlideInRight .3s cubic-bezier(.25,.46,.45,.94) forwards;}
+#perfContent.anim-in-left{animation:perfSlideInLeft .3s cubic-bezier(.25,.46,.45,.94) forwards;}
 
 /* ── PERFORMANCE MODE enter animation ── */
 @keyframes perfEnter{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
@@ -804,6 +804,9 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   }
   #perfArrChips::-webkit-scrollbar{display:none;}
 }
+/* Hide native scrollbar in Performance Mode lyrics pane — PM is a fullscreen teleprompter */
+#perfContent{scrollbar-width:none;}
+#perfContent::-webkit-scrollbar{display:none;}
 @media(max-width:480px){
   /* Song meta + timer: hidden — title alone is enough */
   #perfV2HUD #perfSongMeta{display:none}
@@ -7273,7 +7276,7 @@ function setPerfLang(lang){
   // v2.0 stable — beta text element removed, no update needed
   // Update perf UI labels
   const autoBtn=document.getElementById('autoScrollBtn');
-  if(autoBtn&&!_autoScrollInterval) autoBtn.textContent=lang==='sq'?'▶ Auto':'▶ Auto';
+  if(autoBtn&&!_autoScrollInterval) autoBtn.textContent='▶ Auto';
   const exitBtn=document.querySelector('#performanceMode button[onclick="exitPerformanceMode()"]');
   if(exitBtn) exitBtn.textContent=lang==='sq'?'✕ Dil':'✕ Exit';
   // Re-render lyrics
@@ -8356,11 +8359,11 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       'sec-intro':'rgba(251,146,60,0.22)','sec-outro':'rgba(251,146,60,0.22)',
       'sec-interlude':'rgba(244,114,182,0.22)','sec-default':'rgba(255,255,255,0.12)'
     }[cls]||'rgba(255,255,255,0.12)' : {
-      'sec-verse':'rgba(37,99,235,0.1)','sec-chorus':'rgba(161,98,7,0.1)',
-      'sec-bridge':'rgba(109,40,217,0.1)','sec-prechorus':'rgba(4,120,87,0.1)',
-      'sec-intro':'rgba(180,83,9,0.1)','sec-outro':'rgba(180,83,9,0.1)',
-      'sec-interlude':'rgba(157,23,77,0.1)','sec-default':'rgba(0,0,0,0.06)'
-    }[cls]||'rgba(0,0,0,0.06)';
+      'sec-verse':'rgba(37,99,235,0.18)','sec-chorus':'rgba(161,98,7,0.18)',
+      'sec-bridge':'rgba(109,40,217,0.18)','sec-prechorus':'rgba(4,120,87,0.18)',
+      'sec-intro':'rgba(180,83,9,0.18)','sec-outro':'rgba(180,83,9,0.18)',
+      'sec-interlude':'rgba(157,23,77,0.18)','sec-default':'rgba(0,0,0,0.1)'
+    }[cls]||'rgba(0,0,0,0.1)';
     const chipText= dark ? {
       'sec-verse':'#93c5fd','sec-chorus':'#fcd34d','sec-bridge':'#c4b5fd',
       'sec-prechorus':'#6ee7b7','sec-intro':'#fdba74','sec-outro':'#fdba74',
@@ -8376,11 +8379,11 @@ function renderPerfArrangement(songId,sectionMap,steps,perfInst){
       'sec-intro':'rgba(251,146,60,0.4)','sec-outro':'rgba(251,146,60,0.4)',
       'sec-interlude':'rgba(244,114,182,0.4)','sec-default':'rgba(255,255,255,0.2)'
     }[cls]||'rgba(255,255,255,0.2)' : {
-      'sec-verse':'rgba(37,99,235,0.3)','sec-chorus':'rgba(161,98,7,0.3)',
-      'sec-bridge':'rgba(109,40,217,0.3)','sec-prechorus':'rgba(4,120,87,0.3)',
-      'sec-intro':'rgba(180,83,9,0.3)','sec-outro':'rgba(180,83,9,0.3)',
-      'sec-interlude':'rgba(157,23,77,0.3)','sec-default':'rgba(0,0,0,0.12)'
-    }[cls]||'rgba(0,0,0,0.12)';
+      'sec-verse':'rgba(37,99,235,0.55)','sec-chorus':'rgba(161,98,7,0.55)',
+      'sec-bridge':'rgba(109,40,217,0.55)','sec-prechorus':'rgba(4,120,87,0.55)',
+      'sec-intro':'rgba(180,83,9,0.55)','sec-outro':'rgba(180,83,9,0.55)',
+      'sec-interlude':'rgba(157,23,77,0.55)','sec-default':'rgba(0,0,0,0.2)'
+    }[cls]||'rgba(0,0,0,0.2)';
     return `<div data-chip-idx="${i}" style="display:flex;align-items:center;gap:3px;background:${chipColor};border:1px solid ${chipBorder};color:${chipText};border-radius:100px;padding:2px 8px 2px 5px;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;cursor:default;transition:box-shadow .12s,opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><span onpointerdown="_perfChipDragStart(event,'${songId}',${i})" style="cursor:grab;font-size:11px;opacity:0.45;padding:0 3px 0 1px;touch-action:none;user-select:none;line-height:1;flex-shrink:0" title="Tërhiq për rirenditje">⠿</span><span onclick="document.querySelector('.perf-section-block[data-label=\\'${label}\\']')?.scrollIntoView({behavior:'smooth',block:'start'})" style="cursor:pointer">${label}</span><span onclick="event.stopPropagation();perfCycleRepeat('${songId}','${label}')" title="Kliko për të ndryshuar përsëritjet" style="background:rgba(0,0,0,0.25);border-radius:8px;padding:0 5px;font-size:10px;cursor:pointer;user-select:none">${rep>1?`×${rep}`:'×1'}</span><button onclick="event.stopPropagation();perfRemoveSection('${songId}',${i})" style="background:rgba(0,0,0,0.2);border:none;border-radius:50%;width:15px;height:15px;cursor:pointer;color:inherit;font-size:9px;line-height:1;padding:0;margin-left:1px;flex-shrink:0">×</button></div>`;
   }).join('');
 
@@ -8469,7 +8472,7 @@ function perfCycleRepeat(songId,label){
   // Lightweight re-render — only chips + lyrics, no full song rebuild
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-  const pi=item.instrument||s.instruments?.[0]||'Guitar';
+  const pi=_perfGetInst(item,s);
   const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
   const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
   _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
@@ -8527,14 +8530,16 @@ function _perfChipDragStart(e,songId,fromIdx){
     if(!dragging||targetIdx===fromIdx) return;
     const arr=_perfArrangements?.[`perf_arr_${songId}`];
     if(!arr) return;
-    // "Insert before target chip" — account for the index shift after removal
-    const insertAt=targetIdx>fromIdx?targetIdx-1:targetIdx;
+    // After splice(fromIdx,1) the array is 1 shorter; for a rightward move the
+    // target chip is now at targetIdx-1, so inserting at targetIdx places the
+    // dragged item correctly after it. Leftward moves need no adjustment.
+    const insertAt=targetIdx;
     arr.splice(insertAt,0,arr.splice(fromIdx,1)[0]);
     _saveArr(songId); // Persist the new order so it survives a page reload
     // Re-render arrangement (lightweight — no full showPerfSong scroll reset)
     const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
     const s=SONGS.find(x=>Number(x.id)===Number(item?.id)); if(!s) return;
-    const pi=item.instrument||s.instruments?.[0]||'Guitar';
+    const pi=_perfGetInst(item,s);
     const rt=s.lyricsRaw?.[pi]||s.lyricsRaw?.Guitar||'';
     const as=parseLyricsText(rt); const sm={};as.forEach(sec=>sm[sec.label]=sec);
     _perfCustomSecs(s.id).forEach(cs=>{if(!sm[cs.label])sm[cs.label]={label:cs.label,color:cs.color||'#8b3fb5',lines:[{chords:'',sq:cs.chords||'',en:'',chordOnly:true}],isCustom:true};});
@@ -8609,7 +8614,9 @@ function _perfCreateCustomSec(songId){
   _perfSaveCustomSec(songId,{label, type, chords, color});
   // Auto-add to current arrangement so user sees it immediately
   const key=`perf_arr_${songId}`;
-  if(_perfArrangements?.[key]) _perfArrangements[key].push(label);
+  if(!_perfArrangements) _perfArrangements={};
+  if(!_perfArrangements[key]) _perfArrangements[key]=[];
+  _perfArrangements[key].push(label);
   // Reset form inputs (but keep color selection)
   if(labelEl) labelEl.value='';
   if(chordsEl) chordsEl.value='';
@@ -9936,7 +9943,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const inp=document.getElementById('perfLiveFollowerCode');
     if(inp) inp.value=urlRoom.toUpperCase();
     // If performance mode is active, open the Live Sync panel automatically
-    const perfEl=document.getElementById('perfV2');
+    const perfEl=document.getElementById('performanceMode');
     if(perfEl && perfEl.style.display!=='none'){
       setTimeout(()=>showPerfLiveSync(),400);
     }
@@ -10238,7 +10245,6 @@ function stopAutoScroll(){
   const cdEl=document.getElementById('perfAdvanceCountdown'); if(cdEl) cdEl.style.display='none';
   const content=document.getElementById('perfContent');
   if(content?._scrollCleanup){ content._scrollCleanup(); delete content._scrollCleanup; }
-  if(content?._autoScrollCleanup){ content._autoScrollCleanup(); delete content._autoScrollCleanup; }
   // Belt-and-suspenders cleanup
   const lyricsEl=document.getElementById('perfLyricsContent');
   lyricsEl?.querySelector('.perf-top-spacer')?.remove();
