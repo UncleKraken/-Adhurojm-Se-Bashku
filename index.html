@@ -206,6 +206,8 @@ nav{position:sticky;top:0;z-index:500;background:var(--nav-bg);backdrop-filter:b
 .card-key-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);color:var(--gold-l);font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px;border:1px solid rgba(201,151,58,0.4)}
 .card-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s}
 .song-card:hover .card-play{opacity:1}
+/* Touch devices: always show the play affordance at low opacity */
+@media(hover:none){.card-play{opacity:0.65}}
 .play-circle{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;padding-left:3px}
 .card-body{padding:13px 15px 15px;display:flex;flex-direction:column;flex:1}
 .card-title{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -582,10 +584,10 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 .admin-form .form-grid{margin-bottom:0}
 
 /* ── SCROLL TO TOP ── */
-#scrollTopBtn{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--blue-mid);color:#fff;border:none;box-shadow:0 4px 16px rgba(44,64,116,0.4);cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;z-index:800;transition:opacity .25s,transform .25s}
+#scrollTopBtn{position:fixed;bottom:88px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--blue-mid);color:#fff;border:none;box-shadow:0 4px 16px rgba(44,64,116,0.4);cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;z-index:800;transition:opacity .25s,transform .25s}
 #scrollTopBtn.show{display:flex}
 #scrollTopBtn:hover{background:var(--blue);transform:translateY(-3px)}
-@media(max-width:768px){#scrollTopBtn{bottom:16px;right:16px;width:40px;height:40px;font-size:15px}}
+@media(max-width:768px){#scrollTopBtn{bottom:80px;right:16px;width:40px;height:40px;font-size:15px}}
 
 /* ── ADMIN NOTE FIELD ── */
 .song-admin-note{background:var(--gold-muted);border:1px solid rgba(201,151,58,0.35);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--text2);margin-top:14px;font-style:italic;line-height:1.7}
@@ -2060,16 +2062,16 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     <div class="admin-tabs">
       <button class="admin-tab active" id="atab-songs" onclick="switchAdminTab('songs',this)">🎵 Këngët<span id="adminSongCountBadge" style="background:var(--blue-mid);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;vertical-align:middle"></span></button>
       <button class="admin-tab" id="atab-addSong" onclick="switchAdminTab('addSong',this)">➕ Shto / Edito</button>
-      <button class="admin-tab" id="atab-pdfs" onclick="switchAdminTab('pdfs',this)">📄 PDF Files</button>
+      <button class="admin-tab" id="atab-pdfs" onclick="switchAdminTab('pdfs',this)">📄 PDF-et</button>
       <button class="admin-tab" id="atab-bulk" onclick="switchAdminTab('bulk',this)">🏷️ Kategori</button>
       <button class="admin-tab" id="atab-artists" onclick="switchAdminTab('artists',this)">👤 Artistët</button>
       <button class="admin-tab" id="atab-social" onclick="switchAdminTab('social',this)">🔗 Social</button>
       <button class="admin-tab" id="atab-stats" onclick="switchAdminTab('stats',this)">📊 Statistika</button>
       <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128235; Kërkesat<span id="requestsBadge" style="display:none;background:#e53935;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:5px;vertical-align:middle"></span></button>
-      <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Backup</button>
-      <button class="admin-tab" id="atab-tools" onclick="switchAdminTab('tools',this)">🔧 Tools</button>
+      <button class="admin-tab" id="atab-export" onclick="switchAdminTab('export',this)">💾 Rezervim</button>
+      <button class="admin-tab" id="atab-tools" onclick="switchAdminTab('tools',this)">🔧 Vegla</button>
     </div>
-    <button class="btn btn-ghost" onclick="previewAsVisitor()" title="Shiko faqen si vizitor (pa admin mode)" style="margin-left:8px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);border:none;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">👁 Preview</button>
+    <button class="btn btn-ghost" onclick="previewAsVisitor()" title="Shiko faqen si vizitor (pa admin mode)" style="margin-left:8px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);border:none;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">👁 Pamja</button>
     <button class="admin-close" onclick="closeAdmin()">✕</button>
     <!-- Lang toggle in admin -->
     <div style="display:flex;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-left:8px">
@@ -2100,13 +2102,13 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         <table class="songs-table" id="adminSongsTable">
           <thead><tr>
             <th style="width:32px"><input type="checkbox" id="adminSelectAll" onchange="adminToggleAll(this.checked)" title="Zgjidh të gjitha" style="cursor:pointer;width:15px;height:15px"></th>
-            <th style="width:52px">Cover</th>
+            <th style="width:52px">Kopertina</th>
             <th>Titulli Shqip</th>
             <th>Titulli Origjinal</th>
             <th>Artisti</th>
             <th>Tonaliteti</th>
             <th>PDFs</th>
-            <th>📊 Stats</th>
+            <th>📊 Statistika</th>
             <th style="width:160px">Veprime</th>
           </tr></thead>
           <tbody id="adminSongsTbody"></tbody>
@@ -2225,7 +2227,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         </div>
 
         <!-- SECTION 2: Thumbnail Upload -->
-        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">2. Foto Cover (Thumbnail)</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">2. Foto Kopertinë (Thumbnail)</div>
         <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;margin-bottom:24px">
           <!-- Preview -->
           <div id="thumbPreviewWrap" style="width:120px;height:90px;border-radius:12px;overflow:hidden;border:2px solid var(--border);background:var(--bg3);position:relative;flex-shrink:0">
@@ -2249,7 +2251,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
         </div>
 
         <!-- SECTION 3: PDF Upload -->
-        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">3. PDF Files &amp; Tekste me Akorde</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">3. PDF-et &amp; Tekste me Akorde</div>
         <div style="background:var(--blue-light);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--text)">
           💡 Ngarko PDF-in — teksti dhe akordet do të lexohen automatikisht dhe do të vendosen në fushat e tekstit. Mund t'i editosh pastaj nëse duhet.
         </div>
@@ -2279,7 +2281,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
                 placeholder="[V1]&#10;Em  C  G  D&#10;Kush është si Ti?&#10;(Who is like He?)&#10;&#10;[CH]&#10;G  D  Em  C&#10;T'lavdëroj Adonai&#10;(I praise you Adonai)"></textarea>
               <div style="position:absolute;right:8px;top:8px;display:flex;gap:4px">
                 <button onclick="rereadWithAI('Guitar')" id="aiReadGuitarBtn" style="display:none;background:var(--gold);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">🤖 AI</button>
-                <button onclick="previewLyrics('Guitar')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">👁 Preview</button>
+                <button onclick="previewLyrics('Guitar')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">👁 Pamja</button>
               </div>
             </div>
           </div>
@@ -2307,7 +2309,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
                 placeholder="[V1]&#10;Em7  Cmaj7  G  Dsus&#10;Kush është si Ti?&#10;(Who is like He?)"></textarea>
               <div style="position:absolute;right:8px;top:8px;display:flex;gap:4px">
                 <button onclick="rereadWithAI('Piano')" id="aiReadPianoBtn" style="display:none;background:var(--gold);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">🤖 AI</button>
-                <button onclick="previewLyrics('Piano')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">👁 Preview</button>
+                <button onclick="previewLyrics('Piano')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif">👁 Pamja</button>
               </div>
             </div>
           </div>
@@ -2328,7 +2330,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
     <!-- ── TAB: PDF MANAGEMENT ── -->
     <div class="admin-panel" id="tab-pdfs">
-      <div class="admin-section-title">📄 Menaxho PDF Files</div>
+      <div class="admin-section-title">📄 Menaxho PDF-et</div>
       <div style="background:var(--blue-light);border-radius:var(--rs);padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--text)">
         💡 Ngarko PDF-in e këngës (Guitar dhe/ose Piano). Sapo të ngarkohet, butoni <strong>Shkarko PDF</strong> aktivizohet automatikisht për vizitorët.
       </div>
@@ -2461,7 +2463,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
               <select id="toolsStatsSort" class="form-select" onchange="renderSongStatsTable()" style="font-size:12px;padding:6px 10px;border-radius:8px">
                 <option value="views">👁 Shikime ↓</option>
                 <option value="downloads">⬇ Shkarkime ↓</option>
-                <option value="score">⭐ Score ↓</option>
+                <option value="score">⭐ Pikë ↓</option>
                 <option value="title">Az Titull</option>
               </select>
             </div>
@@ -2533,7 +2535,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
     <!-- ── TAB: TOOLS ── -->
     <div class="admin-panel" id="tab-tools">
-      <div class="admin-section-title">🔧 Tools & Diagnostika</div>
+      <div class="admin-section-title">🔧 Vegla & Diagnostika</div>
       <div style="padding:0 0 24px">
 
         <!-- PDF Link Checker -->
@@ -2556,7 +2558,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
     </div>
 
     <div class="admin-panel" id="tab-export">
-      <div class="admin-section-title">💾 Backup & Export</div>
+      <div class="admin-section-title">💾 Rezervim & Eksport</div>
       <div style="padding:0 0 20px">
         <div class="admin-form" style="margin-bottom:16px">
           <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">📦 Shkarko të gjitha të dhënat</div>
@@ -3441,7 +3443,10 @@ async function upsertArtistAsync(name) {
 async function deleteArtistAsync(name) {
   const sb = getSB();
   if (!sb) { saveArtists(loadArtists().filter(a=>a!==name)); return; }
-  await sb.from('artists').delete().eq('name', name);
+  try{
+    const {error}=await sb.from('artists').delete().eq('name', name);
+    if(error) throw error;
+  }catch(err){ console.error('deleteArtistAsync failed:',err); showToast('❌ Nuk u fshi artisti: '+err.message,'error'); }
 }
 
 // ── SOCIAL LINKS ──
@@ -3480,7 +3485,9 @@ async function saveSocialAsync(social) {
     { platform:'references',      url: JSON.stringify(social.references || []) },
   ];
   for (const row of rows) {
-    await sb.from('social_links').upsert(row, { onConflict: 'platform' });
+    try{
+      await sb.from('social_links').upsert(row, { onConflict: 'platform' });
+    }catch(err){ console.error('saveSocialAsync upsert failed for',row.platform,':',err); }
   }
 }
 
@@ -3511,7 +3518,10 @@ async function uploadFileAsync(bucket, path, dataUrl, contentType) {
 async function deleteFileAsync(bucket, path) {
   const sb = getSB();
   if (!sb) return;
-  await sb.storage.from(bucket).remove([path]);
+  try{
+    const {error}=await sb.storage.from(bucket).remove([path]);
+    if(error) throw error;
+  }catch(err){ console.error('deleteFileAsync failed:',bucket,path,err); throw err; }
 }
 
 // ── ADMIN AUTH ──
@@ -4040,6 +4050,12 @@ function populateFilters(){
   [...new Set(SONGS.map(s=>s.key))].forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;kS.appendChild(o);});
 }
 function renderLibrary(){
+  // Ensure stats are loaded for sort/filter modes that need them.
+  // filterByCategory() always pre-loads them, but direct library navigation does not.
+  if(!window._statsForFilter){
+    loadStats().then(s=>{ window._statsForFilter=s; renderLibrary(); }).catch(()=>{});
+    // Render now with empty stats (shows un-ranked list) while fetch is in flight
+  }
   const q=normalizeSearch(document.getElementById('libSearch').value);
   const artist=document.getElementById('filterArtist').value;
   const key=document.getElementById('filterKey').value;
@@ -4487,16 +4503,22 @@ async function applyBulkCategory(){
   if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
   showToast(`⏳ Duke aplikuar "${cat}" për ${checked.length} këngë...`,'');
   const sb = getSB();
-  let done = 0;
+  let done = 0, errs = 0;
   for(const id of checked){
     const song = SONGS.find(s=>Number(s.id)===id);
     if(!song) continue;
     const cats = [...new Set([...(song.categories||[]), cat])];
-    if(sb){ await sb.from('songs').update({categories:cats}).eq('id',id); }
+    if(sb){
+      try{
+        const {error}=await sb.from('songs').update({categories:cats}).eq('id',id);
+        if(error) throw error;
+      }catch(err){ errs++; console.error('applyBulkCategory failed for',id,err); continue; }
+    }
     song.categories = cats; done++;
   }
   localStorage.removeItem('aa_songs_cache');
-  showToast(`✅ Kategoria u aplikua për ${done} këngë!`,'success');
+  if(errs) showToast(`⚠️ ${done} u aplikuan, ${errs} dështuan.`,'error');
+  else showToast(`✅ Kategoria u aplikua për ${done} këngë!`,'success');
   renderBulkSongList();
 }
 
@@ -4506,16 +4528,22 @@ async function removeBulkCategory(){
   if(!checked.length){ showToast('Zgjidhni të paktën një këngë!','error'); return; }
   showToast(`⏳ Duke hequr "${cat}"...`,'');
   const sb = getSB();
-  let done = 0;
+  let done = 0, errs = 0;
   for(const id of checked){
     const song = SONGS.find(s=>Number(s.id)===id);
     if(!song) continue;
     const cats = (song.categories||[]).filter(c=>c!==cat);
-    if(sb){ await sb.from('songs').update({categories:cats}).eq('id',id); }
+    if(sb){
+      try{
+        const {error}=await sb.from('songs').update({categories:cats}).eq('id',id);
+        if(error) throw error;
+      }catch(err){ errs++; console.error('removeBulkCategory failed for',id,err); continue; }
+    }
     song.categories = cats; done++;
   }
   localStorage.removeItem('aa_songs_cache');
-  showToast(`✅ Kategoria u hoq nga ${done} këngë!`,'success');
+  if(errs) showToast(`⚠️ ${done} u hoqën, ${errs} dështuan.`,'error');
+  else showToast(`✅ Kategoria u hoq nga ${done} këngë!`,'success');
   renderBulkSongList();
 }
 function generateAndDownloadSitemap(){
@@ -4663,7 +4691,7 @@ async function runPDFLinkCheck(){
   const entries = [];
   Object.entries(allPDFs).forEach(([songId, instMap]) => {
     const song = SONGS.find(s=>String(s.id)===String(songId));
-    const title = song?.title || `Song #${songId}`;
+    const title = song?.title || `Këngë #${songId}`;
     Object.entries(instMap).forEach(([inst, url]) => {
       entries.push({title, inst, url, songId});
     });
@@ -4753,22 +4781,26 @@ async function exportAllData(){
   showToast('⏳ Duke eksportuar të dhënat...','');
   const sb = getSB();
   const exportData = { exported_at: new Date().toISOString(), songs: [], pdfs: [] };
-  if(sb){
-    const {data:songs} = await sb.from('songs').select('*').order('created_at',{ascending:true});
-    const {data:pdfs} = await sb.from('song_pdfs').select('*');
-    exportData.songs = songs||[];
-    exportData.pdfs = pdfs||[];
-  } else {
-    exportData.songs = loadData();
-  }
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `adhurojme-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  showToast('✅ Backup u shkarkua!','success');
+  try{
+    if(sb){
+      const {data:songs, error:e1} = await sb.from('songs').select('*').order('created_at',{ascending:true});
+      if(e1) throw e1;
+      const {data:pdfs, error:e2} = await sb.from('song_pdfs').select('*');
+      if(e2) throw e2;
+      exportData.songs = songs||[];
+      exportData.pdfs = pdfs||[];
+    } else {
+      exportData.songs = loadData();
+    }
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `adhurojme-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    showToast('✅ Backup u shkarkua!','success');
+  }catch(err){ showToast('❌ Eksporti dështoi: '+err.message,'error'); }
 }
 
 function buildPDFFileName(song, instrument, isTransposed){
@@ -4932,15 +4964,21 @@ async function loadSongRequests(){
 
 async function markRequestDone(id){
   const sb=getSB(); if(!sb) return;
-  await sb.from('song_requests').update({done:true}).eq('id',id);
-  loadSongRequests();
+  try{
+    const {error}=await sb.from('song_requests').update({done:true}).eq('id',id);
+    if(error) throw error;
+    loadSongRequests();
+  }catch(err){ showToast('❌ Nuk u shënua si bërë: '+err.message,'error'); }
 }
 
 async function deleteRequest(id){
   if(!confirm('Fshi këtë kërkesë?')) return;
   const sb=getSB(); if(!sb) return;
-  await sb.from('song_requests').delete().eq('id',id);
-  loadSongRequests();
+  try{
+    const {error}=await sb.from('song_requests').delete().eq('id',id);
+    if(error) throw error;
+    loadSongRequests();
+  }catch(err){ showToast('❌ Nuk u fshi kërkesa: '+err.message,'error'); }
 }
 
 function switchAdminTab(tab,el){
@@ -4958,7 +4996,7 @@ function switchAdminTab(tab,el){
   if(tab==='stats'){ renderStatsDashboard(); renderSongStatsTable(); }
   if(tab==='bulk') renderBulkSongList();
   if(tab==='export'){}
-  if(tab==='tools'){}
+  if(tab==='tools'){ try{ initToolsTab(); }catch(e){} }
   if(tab==='addSong'){ 
     const dl=document.getElementById('artistDatalist');
     if(dl){ dl.innerHTML=''; ARTISTS.forEach(a=>{const o=document.createElement('option');o.value=a;dl.appendChild(o);}); }
@@ -5262,17 +5300,20 @@ async function handlePDFUpload(event, songId, instrument){
 async function deletePDF(songId, instrument){
   if(!confirm('Fshi PDF-in për këtë instrument?')) return;
   showToast('Duke fshirë...','');
-  if(isOnline()){
-    const sb = getSB();
-    // Delete from storage
-    await deleteFileAsync('pdfs', `${songId}_${instrument}.pdf`);
-    // Delete from song_pdfs table
-    await sb.from('song_pdfs').delete().eq('song_id', songId).eq('instrument', instrument);
-  }
-  if(PDFS[songId]) delete PDFS[songId][instrument];
-  savePDFs(PDFS);
-  refreshPDFPanel();
-  showToast('✅ PDF u fshi.','success');
+  try{
+    if(isOnline()){
+      const sb = getSB();
+      // Delete from storage (deleteFileAsync already throws on error)
+      await deleteFileAsync('pdfs', `${songId}_${instrument}.pdf`);
+      // Delete from song_pdfs table
+      const {error}=await sb.from('song_pdfs').delete().eq('song_id', songId).eq('instrument', instrument);
+      if(error) throw error;
+    }
+    if(PDFS[songId]) delete PDFS[songId][instrument];
+    savePDFs(PDFS);
+    refreshPDFPanel();
+    showToast('✅ PDF u fshi.','success');
+  }catch(err){ showToast('❌ Nuk u fshi PDF-i: '+err.message,'error'); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -7375,10 +7416,13 @@ function showPerfShortcuts(){
     ['+ / -','Shpejtësi scroll (10% herë)'],
     ['[ / ]','Madhësia e shkronjave'],
     ['K','Akorde on/off'],
+    ['L','Rreshti aktiv on/off'],
     ['F','Fullscreen on/off'],
     ['D','Dark / Light mode'],
     ['M','Singer / Musician mode'],
     ['P','Panic — ekran bosh'],
+    ['N','Riset font (18px)'],
+    ['0','Riset shpejtësi (100%)'],
     ['? / /','Shkurtesat (ky panel)'],
     ['Escape','Mbyll / Dil'],
   ];
@@ -7539,6 +7583,24 @@ function highlightCurrentLine(){
     // (happens during section-gap transitions when no lyric line is near readZone)
     const prev=content._lastHighlightIdx;
     activeIdx=(prev!==undefined)?prev:(content.scrollTop<(content.scrollHeight-content.clientHeight)/2?0:lyricLines.length-1);
+  } else {
+    // Hysteresis: don't flip to a new line unless it beats the currently active line
+    // by a meaningful margin. Prevents stutter when two adjacent lines are equidistant
+    // from the readZone (e.g. at section boundaries where both lines are visible).
+    const HYSTERESIS=22; // px — must beat current champion by this much to win
+    const prevIdx=content._lastHighlightIdx;
+    if(prevIdx!==undefined && prevIdx!==activeIdx){
+      const prevLine=lyricLines[prevIdx];
+      if(prevLine){
+        const pr=prevLine.getBoundingClientRect();
+        const prevTop=pr.top-containerTop;
+        const prevBot=pr.bottom-containerTop;
+        if(prevBot>=0 && prevTop<=viewH){ // prev line still visible
+          const prevDist=Math.abs((prevTop+pr.height/2)-readZone);
+          if(closest>prevDist-HYSTERESIS) activeIdx=prevIdx; // hold current
+        }
+      }
+    }
   }
   content._lastHighlightIdx=activeIdx;
   lyricLines.forEach((line,i)=>{
@@ -7598,7 +7660,7 @@ function _buildChordRefPanel(){
   if(!list) return;
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-  if(!s){ list.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,0.3)">No song loaded</span>'; return; }
+  if(!s){ list.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,0.3)">Asnjë këngë e ngarkuar</span>'; return; }
   const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
   // Extract all chord tokens — match [Ab7], Am/E style tokens
@@ -7753,6 +7815,11 @@ function perfKeyHandler(e){
   // ── Font size: ] bigger / [ smaller ────────────────────────────────────────
   else if(k===']'){ const nf=Math.min(28,(_perfFontSize||18)+1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
   else if(k==='['){ const nf=Math.max(14,(_perfFontSize||18)-1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
+
+  // ── Line highlight / Reset shortcuts ────────────────────────────────────────
+  else if(k==='l'||k==='L') toggleLineHighlight();
+  else if(k==='n'||k==='N'){ setPerfFont(18); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=18; showToast('Fonti: 18px'); }
+  else if(k==='0'){ setPerfScrollSpeed(100); showToast('Shpejtësia: 100%'); }
 
   // ── Help overlay / Exit ─────────────────────────────────────────────────────
   else if(k==='?'||k==='/'){
@@ -9302,7 +9369,13 @@ function perfLiveStart(mode){
   // Get room code from input if follower
   if(mode==='follower'){
     const inp = document.getElementById('perfLiveFollowerCode');
-    if(inp && inp.value.trim()) _perfLiveRoomCode = inp.value.trim().toUpperCase();
+    const code = inp ? inp.value.trim().toUpperCase() : '';
+    if(!code){
+      showToast('⚠️ Fut kodin e dhomës për t\'u bashkuar!','error',3500);
+      _perfLiveMode = null;
+      return;
+    }
+    _perfLiveRoomCode = code;
   }
   const channelName = 'pm:' + _perfLiveRoomCode;
 
@@ -9636,6 +9709,11 @@ function _perfLiveApply(data){
   if(typeof data.song_idx === 'number' && data.song_idx !== perfIdx){
     songChanged = true;
     const sl=getSetlist();
+    // Bounds-check: follower's setlist may be shorter than leader's
+    if(data.song_idx < 0 || data.song_idx >= (sl?.songs?.length||0)){
+      showToast('⚠️ Kënga e drejtuesit nuk ekziston në listën tënde','error',4000);
+      return;
+    }
     const nextSong = sl?.songs?.[data.song_idx];
     perfIdx = data.song_idx;
     showPerfSong();
@@ -9821,6 +9899,28 @@ function _micDoScroll(){
   const statusEl = document.getElementById('micStatusText');
   if(statusEl){ statusEl.textContent='↓ Beat!'; setTimeout(()=>{ if(_micActive && statusEl) statusEl.textContent='🎙️ Duke dëgjuar…'; },600); }
 }
+
+// Global keyboard shortcut: / focuses the library search bar (only when PM is not active)
+document.addEventListener('keydown', (e)=>{
+  if(e.key !== '/') return;
+  // Don't intercept when already typing in an input/textarea
+  const tag = e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||e.target.isContentEditable) return;
+  // Don't intercept when Performance Mode is open
+  const pm = document.getElementById('performanceMode');
+  if(pm && pm.style.display !== 'none') return;
+  e.preventDefault();
+  // Focus libSearch if on library page, else heroSearch
+  const libSearch = document.getElementById('libSearch');
+  const heroSearch = document.getElementById('heroSearch');
+  const libPage = document.getElementById('page-library');
+  if(libPage && libPage.style.display !== 'none' && libSearch){
+    libSearch.focus(); libSearch.select();
+    showPage('library');
+  } else if(heroSearch){
+    heroSearch.focus(); heroSearch.select();
+  }
+});
 
 // Sensitivity slider label sync
 document.addEventListener('DOMContentLoaded', ()=>{
