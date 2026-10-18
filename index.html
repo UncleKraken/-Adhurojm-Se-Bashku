@@ -2669,8 +2669,17 @@ async function trackStat(songId, type) {
   const sb = getSB();
   if (!sb || !songId) return;
   try {
-    const { error } = await sb.rpc('increment_stat', { p_song_id: songId, p_type: type });
-    if(error) console.warn('[trackStat] RPC error:', error.message);
+    // Pass song ID as string — avoids PostgreSQL overload ambiguity between
+    // increment_stat(bigint, text) and increment_stat(integer, text).
+    // Text param resolves unambiguously to the text-typed overload.
+    const { error } = await sb.rpc('increment_stat', { p_song_id: String(songId), p_type: type });
+    if(error){
+      if(error.message.includes('best candidate') || error.message.includes('ambiguous')){
+        console.warn('[trackStat] Overload ambiguity — run the FIX SQL in Admin → Stats to resolve.');
+      } else {
+        console.warn('[trackStat] RPC error:', error.message);
+      }
+    }
     // Bust cache & refresh hero stats so the new count appears immediately
     invalidateStatsCache();
     setTimeout(()=>updateHeroStats(), 800);
@@ -2761,22 +2770,35 @@ async function renderStatsDashboard() {
     }catch(e){}
   }
 
-  // Check if increment_stat RPC exists — show warning if not
+  // Check if increment_stat RPC exists and is unambiguous — show warning if broken
   if(sb){
     try{
+      // Pass as string — matches text overload; ambiguous if only bigint/integer exist
       const {error} = await sb.rpc('increment_stat', {p_song_id:'__healthcheck__', p_type:'view'});
-      if(error && error.message.includes('not exist')){
+      const isNotExist   = error?.message.includes('not exist');
+      const isAmbiguous  = error?.message.includes('best candidate') || error?.message.includes('ambiguous');
+      if(error && (isNotExist || isAmbiguous)){
+        const headline = isAmbiguous
+          ? '⚠️ increment_stat ka dy versione konfliktuale (bigint + integer)!'
+          : '⚠️ RPC increment_stat nuk ekziston në Supabase!';
+        const desc = isAmbiguous
+          ? 'PostgreSQL nuk mund të zgjedhë mes dy version-eve. Stats nuk po ruhen. Hapi SQL-in e mëposhtëm në Supabase → SQL Editor:'
+          : 'Statistikat nuk po regjistrohen. Shko te Supabase → SQL Editor dhe krijo funksionin:';
         container.innerHTML = `<div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:18px;color:var(--red);font-size:13px;line-height:1.8">
-          <strong>⚠️ RPC increment_stat nuk ekziston në Supabase!</strong><br>
-          Statistikat nuk po regjistrohen. Shko te Supabase → SQL Editor dhe krijo funksionin:<br>
-          <code style="display:block;margin-top:8px;background:var(--bg3);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap">CREATE OR REPLACE FUNCTION increment_stat(p_song_id text, p_type text)
+          <strong>${headline}</strong><br>${desc}<br>
+          <code style="display:block;margin-top:8px;background:var(--bg3);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap">-- Fshi version-et konfliktuale (nëse ekzistojnë)
+DROP FUNCTION IF EXISTS public.increment_stat(bigint, text);
+DROP FUNCTION IF EXISTS public.increment_stat(integer, text);
+
+-- Krijo version-in e saktë me text
+CREATE OR REPLACE FUNCTION public.increment_stat(p_song_id text, p_type text)
 RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
   INSERT INTO song_stats(song_id, views, downloads)
-  VALUES(p_song_id, CASE WHEN p_type='view' THEN 1 ELSE 0 END, CASE WHEN p_type='download' THEN 1 ELSE 0 END)
+  VALUES(p_song_id, CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END, CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END)
   ON CONFLICT(song_id) DO UPDATE SET
-    views = song_stats.views + CASE WHEN p_type='view' THEN 1 ELSE 0 END,
-    downloads = song_stats.downloads + CASE WHEN p_type='download' THEN 1 ELSE 0 END;
+    views = song_stats.views + CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END,
+    downloads = song_stats.downloads + CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END;
 END; $$;</code>
         </div>`;
         return;
