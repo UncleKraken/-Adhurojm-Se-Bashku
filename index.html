@@ -1015,11 +1015,19 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <option value="Piano">🎹 Piano</option>
         </select>
         <select class="f-select" id="filterBpm" onchange="renderLibrary()">
-          <option value="">🥁 Çdo BPM</option>
-          <option value="0-70">🐢 Ngadalë (&lt;70)</option>
-          <option value="70-100">🚶 Mesatar (70-100)</option>
-          <option value="100-130">🏃 Shpejt (100-130)</option>
-          <option value="130-999">⚡ Shumë shpejt (&gt;130)</option>
+          <option value="" data-sq="🥁 Çdo BPM" data-en="🥁 Any BPM">🥁 Çdo BPM</option>
+          <option value="0-70" data-sq="🐢 Ngadalë (&lt;70)" data-en="🐢 Slow (&lt;70)">🐢 Ngadalë (&lt;70)</option>
+          <option value="70-100" data-sq="🚶 Mesatar (70–99)" data-en="🚶 Medium (70–99)">🚶 Mesatar (70–99)</option>
+          <option value="100-130" data-sq="🏃 Shpejt (100–129)" data-en="🏃 Fast (100–129)">🏃 Shpejt (100–129)</option>
+          <option value="130-999" data-sq="⚡ Shumë shpejt (&gt;=130)" data-en="⚡ Very Fast (&gt;=130)">⚡ Shumë shpejt (&gt;=130)</option>
+        </select>
+        <select class="f-select" id="libSort" onchange="renderLibrary()">
+          <option value="" data-sq="↕ Rend. Default" data-en="↕ Default Order">↕ Rend. Default</option>
+          <option value="az" data-sq="🔤 A–Z" data-en="🔤 A–Z">🔤 A–Z</option>
+          <option value="za" data-sq="🔤 Z–A" data-en="🔤 Z–A">🔤 Z–A</option>
+          <option value="views" data-sq="👁 Më të Shikuara" data-en="👁 Most Viewed">👁 Më të Shikuara</option>
+          <option value="downloads" data-sq="⬇ Më të Shkarkuara" data-en="⬇ Most Downloaded">⬇ Më të Shkarkuara</option>
+          <option value="recent" data-sq="🆕 Më të Reja" data-en="🆕 Most Recent">🆕 Më të Reja</option>
         </select>
       </div>
       <div class="songs-grid" id="libraryGrid"></div>
@@ -1088,8 +1096,8 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
       <!-- Empty state -->
       <div id="setlistEmpty" style="text-align:center;padding:60px 20px;color:var(--text3);display:none">
         <div style="font-size:48px;margin-bottom:12px">🎵</div>
-        <div style="font-size:16px;font-weight:600;margin-bottom:8px">Setlista është bosh</div>
-        <div style="font-size:13px">Kërko këngë sipër dhe shto ato këtu</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px" data-sq="Setlista është bosh" data-en="Setlist is empty">Setlista është bosh</div>
+        <div style="font-size:13px" data-sq="Kërko këngë sipër dhe shto ato këtu" data-en="Search for songs above and add them here">Kërko këngë sipër dhe shto ato këtu</div>
       </div>
 
       <!-- Setlist items -->
@@ -1181,7 +1189,7 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
 
       <!-- Scroll speed -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Shpejtësia <span id="perfSpeedLabel" style="color:var(--gold);font-size:10px">100%</span></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px"><span data-sq="Shpejtësia" data-en="Speed">Shpejtësia</span> <span id="perfSpeedLabel" style="color:var(--gold);font-size:10px">100%</span></div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px">🐢</span>
           <input type="range" min="25" max="300" value="100" id="perfSpeedSlider" oninput="setPerfScrollSpeed(this.value)" style="flex:1;accent-color:var(--gold)"/>
@@ -1189,15 +1197,15 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
           <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" style="background:var(--bg3);border:none;border-radius:5px;padding:2px 6px;cursor:pointer;font-size:9px;color:var(--text3)">↺</button>
         </div>
         <div style="display:flex;gap:4px;margin-top:6px">
-          <button onclick="setPerfScrollSpeed(50);document.getElementById('perfSpeedSlider').value=50" id="perfSpeedPresetSlow" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">🐢 Ngadalë</button>
+          <button onclick="setPerfScrollSpeed(50);document.getElementById('perfSpeedSlider').value=50" id="perfSpeedPresetSlow" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif" data-sq="🐢 Ngadalë" data-en="🐢 Slow">🐢 Ngadalë</button>
           <button onclick="setPerfScrollSpeed(100);document.getElementById('perfSpeedSlider').value=100" id="perfSpeedPresetNormal" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">▶ Normal</button>
-          <button onclick="setPerfScrollSpeed(180);document.getElementById('perfSpeedSlider').value=180" id="perfSpeedPresetFast" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif">🐇 Shpejtë</button>
+          <button onclick="setPerfScrollSpeed(180);document.getElementById('perfSpeedSlider').value=180" id="perfSpeedPresetFast" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 2px;cursor:pointer;font-size:10px;font-weight:700;color:var(--text3);font-family:'Poppins',sans-serif" data-sq="🐇 Shpejtë" data-en="🐇 Fast">🐇 Shpejtë</button>
         </div>
       </div>
 
       <!-- Instrument -->
       <div style="margin-bottom:18px">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Instrumenti</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px" data-sq="Instrumenti" data-en="Instrument">Instrumenti</div>
         <div id="perfInstBtns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
 
@@ -1448,20 +1456,20 @@ footer{background:#07090F;color:rgba(255,255,255,0.55);padding:44px 24px 26px}
   <!-- ── END OF SONG indicator ── -->
   <div id="perfEndIndicator" style="display:none;position:absolute;inset:0;z-index:25;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:8px">
     <div style="font-size:40px;animation:pulse 1.2s infinite">🙏</div>
-    <div id="perfEndText" style="font-size:15px;font-weight:600;color:var(--text);font-family:'Poppins',sans-serif;opacity:.85">Fund i këngës</div>
+    <div id="perfEndText" style="font-size:15px;font-weight:600;color:var(--text);font-family:'Poppins',sans-serif;opacity:.85" data-sq="Fund i këngës" data-en="End of Song">Fund i këngës</div>
   </div>
 
   <!-- ── AUTO-ADVANCE COUNTDOWN overlay ── -->
   <div id="perfAdvanceCountdown" style="display:none;position:absolute;inset:0;z-index:26;pointer-events:auto;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px)">
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;text-transform:uppercase;letter-spacing:.15em">Tjetër →</div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;text-transform:uppercase;letter-spacing:.15em" data-sq="Tjetër →" data-en="Next →">Tjetër →</div>
     <div id="perfAdvanceNextTitle" style="font-family:'Poppins',sans-serif;font-size:clamp(16px,4vw,30px);font-weight:800;color:#fff;text-align:center;padding:0 28px;line-height:1.2"></div>
     <div id="perfAdvanceNum" style="font-family:'Poppins',sans-serif;font-size:clamp(64px,14vw,110px);font-weight:900;color:rgba(212,175,55,0.9);line-height:1;transition:transform .15s,opacity .15s"></div>
-    <button onclick="_perfSkipCountdown()" style="margin-top:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:6px 18px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5)">Kalo →</button>
+    <button onclick="_perfSkipCountdown()" style="margin-top:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:6px 18px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:11px;color:rgba(255,255,255,0.5)" data-sq="Kalo →" data-en="Skip →">Kalo →</button>
   </div>
 
   <!-- ── PANIC OVERLAY — blank black screen ── -->
   <div id="perfPanicOverlay" onclick="togglePanic()" style="display:none;position:absolute;inset:0;background:#000;z-index:30;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:16px">
-    <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif">Tap për të kthyer</div>
+    <div style="color:rgba(255,255,255,0.15);font-size:13px;font-family:'Poppins',sans-serif" data-sq="Tap për të kthyer" data-en="Tap to return">Tap për të kthyer</div>
   </div>
 
   <!-- ── HOLD overlay — follower sees this when leader calls Hold ── -->
@@ -3596,6 +3604,21 @@ async function initData() {
   updateSetlistBadge();
   updateHeroStats();
   await checkUrlSong();
+  // Seed the initial history state so the back button knows to return to 'home'
+  // when the user hasn't opened a song via URL. If a ?song= URL was loaded,
+  // openSong() already called pushState — we replaceState 'home' beneath it
+  // so pressing back from the song returns to home rather than leaving the site.
+  const _initParams = new URLSearchParams(window.location.search);
+  if(!_initParams.get('song')){
+    history.replaceState({page:'home'}, '', window.location.pathname);
+  } else {
+    // Insert a home entry before the song entry so back → home, not Google.
+    // Capture the song URL BEFORE replaceState clears the search params.
+    const _songUrl = window.location.href;
+    const _songState = {songId: Number(_initParams.get('song'))};
+    history.replaceState({page:'home'}, '', window.location.pathname);
+    history.pushState(_songState, '', _songUrl);
+  }
 }
 
 function showLoadingState(on) {
@@ -3713,6 +3736,10 @@ function buildCard(song){
 // Mobile bottom nav function — nav disabled, kept as no-op for safety
 function updateMobileNav(page){}
 
+// Flag: true while showPage() was triggered by a popstate event — prevents
+// pushing a new history entry in response to a back/forward navigation.
+let _histNavInProgress = false;
+
 function showPage(page,el){
   // Stop YouTube video when leaving song page
   if(page !== 'song') {
@@ -3734,6 +3761,15 @@ function showPage(page,el){
   if(page==='setlist'){ renderSetlist(); updateSetlistBadge(); }
   if(page !== 'song') resetMetaTags();
   try{updateMobileNav(page);}catch(e){}
+
+  // Push a history entry so the Android/iOS back gesture navigates within
+  // the app instead of jumping straight back to the previous site.
+  // Skip when: triggered by popstate (would create a loop), page==='song'
+  // (openSong() handles its own pushState), or already on the same page
+  // (prevents duplicate entries when tapping the active nav tab again).
+  if(!_histNavInProgress && page !== 'song' && history.state?.page !== page){
+    history.pushState({page}, '', window.location.pathname);
+  }
 }
 
 function renderFavoritesPage(){
@@ -3827,13 +3863,13 @@ function updateAC(inputId,listId){
   if(listId==='heroAC'||listId==='libAC'){
     if(!allMatches.length){
       footer=`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--text3);font-size:12px;padding:12px;flex-direction:column;gap:4px;text-align:center">
-        <span>Nuk u gjet asnjë këngë për "<strong>${q}</strong>"</span>
+        <span>${currentLang==='sq'?`Nuk u gjet asnjë këngë për "<strong>${q}</strong>"`:`No songs found for "<strong>${q}</strong>"`}</span>
       </div>`;
     } else {
       const label=allMatches.length===1
-        ?`1 këngë e gjetur`
-        :`${allMatches.length} këngë të gjetura`;
-      footer=`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:11px;font-weight:600;border-top:1px solid var(--border);padding:8px;cursor:pointer">🔍 ${label} — shiko listën e plotë →</div>`;
+        ?(currentLang==='sq'?`1 këngë e gjetur`:`1 song found`)
+        :(currentLang==='sq'?`${allMatches.length} këngë të gjetura`:`${allMatches.length} songs found`);
+      footer=`<div class="ac-item ac-seeall" style="justify-content:center;color:var(--blue-mid);font-size:11px;font-weight:600;border-top:1px solid var(--border);padding:8px;cursor:pointer">🔍 ${label} — ${currentLang==='sq'?'shiko listën e plotë →':'view full list →'}</div>`;
     }
   }
   if(!matches.length&&!footer){closeAC(listId);return;}
@@ -4112,14 +4148,24 @@ function renderLibrary(){
     if(inst&&!s.instruments.includes(inst))return false;
     if(bpmRange){
       const [minB,maxB]=bpmRange.split('-').map(Number);
-      const bpm=s.bpm||0;
+      const bpm=Number(s.bpm)||0;
       if(bpm===0)return false; // exclude songs without BPM when filtering by BPM
-      if(bpm<minB||bpm>maxB)return false;
+      // Use exclusive upper bound (>=) so boundaries don't overlap between ranges.
+      // Exception: last range max is 999 (artificial ceiling), keep inclusive there.
+      if(bpm<minB||(maxB<999?bpm>=maxB:bpm>maxB))return false;
     }
     return true;
   });
 
-  if(!f.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">Nuk u gjet asnjë këngë.</div>';
+  // ── Sort ──────────────────────────────────────────────────────────────────
+  const sortVal=document.getElementById('libSort')?.value||'';
+  if(sortVal==='az')       f.sort((a,b)=>a.title.localeCompare(b.title,'sq',{sensitivity:'base'}));
+  else if(sortVal==='za')  f.sort((a,b)=>b.title.localeCompare(a.title,'sq',{sensitivity:'base'}));
+  else if(sortVal==='views')     f.sort((a,b)=>(STATS[b.id]?.views||0)-(STATS[a.id]?.views||0));
+  else if(sortVal==='downloads') f.sort((a,b)=>(STATS[b.id]?.downloads||0)-(STATS[a.id]?.downloads||0));
+  else if(sortVal==='recent')    {} // SONGS order is already newest-first from Supabase
+
+  if(!f.length) grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3)">${currentLang==='sq'?'Nuk u gjet asnjë këngë.':'No songs found.'}</div>`;
   else f.forEach(s=>grid.appendChild(buildCard(s)));
 }
 
@@ -4220,18 +4266,30 @@ function resetMetaTags(){
   if(url.searchParams.has('song') || url.searchParams.has('slug')){
     url.searchParams.delete('song');
     url.searchParams.delete('slug');
-    window.history.pushState({}, '', url.toString());
+    // Use replaceState (not pushState) — showPage() adds the real history entry.
+    // Pushing here would create a ghost {} entry that our popstate handler
+    // misreads as 'home', requiring an extra back-press to leave the song.
+    window.history.replaceState(window.history.state, '', url.toString());
   }
 }
 
-// Handle browser back/forward button
+// Handle browser back/forward button (Android back, iOS swipe, desktop Alt+←)
 window.addEventListener('popstate', async (e) => {
-  const params = new URLSearchParams(window.location.search);
-  const songId = params.get('song');
-  if(songId && SONGS.length){
-    await openSong(Number(songId));
+  _histNavInProgress = true;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const songId = params.get('song') || e.state?.songId;
+    if(songId && SONGS.length){
+      // Navigating to a song page
+      await openSong(Number(songId));
+    } else {
+      // Navigating to a non-song page (home, songs, favorites, setlist, etc.)
+      const page = e.state?.page || 'home';
+      showPage(page, null);
+    }
+  } finally {
+    _histNavInProgress = false;
   }
-  // Don't force showPage('home') — let browser handle normally
 });
 
 // On load — check if URL has ?song=
@@ -4319,7 +4377,7 @@ function renderSong(){
 
   const videoHtml=s.youtube
     ?`<iframe src="${toEmbedUrl(s.youtube)}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`
-    :`<div class="video-placeholder"><div style="font-size:44px;margin-bottom:8px">🎵</div><p>Kjo këngë aktualisht nuk ka video zyrtare.</p></div>`;
+    :`<div class="video-placeholder"><div style="font-size:44px;margin-bottom:8px">🎵</div><p>${t('no-video')}</p></div>`;
 
   const instBtns=s.instruments.map(i=>`<button class="inst-btn ${i===currentInst?'active':''}" onclick="selectInst('${i}')">${i==='Guitar'?'🎸 '+(currentLang==='sq'?'Kitarë':'Guitar'):'🎹 Piano'}</button>`).join('');
 
@@ -4345,14 +4403,14 @@ function renderSong(){
     : '';
 
   document.getElementById('songDetail').innerHTML=`
-    <button class="back-btn" onclick="showPage('songs')">${t('back-btn')}</button>
+    <button class="back-btn" onclick="history.back()">${t('back-btn')}</button>
     <div style="margin-bottom:28px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div>
           <h1 class="song-htitle">${s.title}</h1>
           <div class="song-horig">${s.original||''} ${s.artist?'– '+s.artist:''}</div>
         </div>
-        <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?'Hiq nga të preferuarat':'Shto te të preferuarat'}">${isFav?'❤️':'🤍'}</button>
+        <button onclick="toggleFavorite(${s.id})" id="favBtn" style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;flex-shrink:0;transition:transform .2s" title="${isFav?(currentLang==='sq'?'Hiq nga të preferuarat':'Remove from favorites'):(currentLang==='sq'?'Shto te të preferuarat':'Add to favorites')}">${isFav?'❤️':'🤍'}</button>
       </div>
       <div class="tag-row">
         <span class="tag tag-blue">🎵 ${s.key}</span>
@@ -6780,26 +6838,7 @@ function addChordInteraction(){
         if(next){ e.preventDefault(); openSong(next.id); }
       }
     });
-    // Swipe left/right on song page (mobile)
-    let _swX=null,_swY=null;
-    document.addEventListener('touchstart',(e)=>{
-      const sp=document.getElementById('page-song');
-      if(!currentSong||!sp||sp.style.display==='none') return;
-      _swX=e.touches[0].clientX; _swY=e.touches[0].clientY;
-    },{passive:true});
-    document.addEventListener('touchend',(e)=>{
-      const sp=document.getElementById('page-song');
-      if(!currentSong||!sp||sp.style.display==='none'||_swX===null) return;
-      const dx=e.changedTouches[0].clientX-_swX;
-      const dy=e.changedTouches[0].clientY-(_swY||0);
-      _swX=null; _swY=null;
-      // Only count horizontal swipes (not scrolling)
-      if(Math.abs(dx)<80||Math.abs(dy)>60) return;
-      const idx=SONGS.findIndex(s=>Number(s.id)===Number(currentSong.id));
-      if(idx<0) return;
-      const next=dx<0?SONGS[idx+1]:SONGS[idx-1];
-      if(next) openSong(next.id);
-    },{passive:true});
+    // Swipe left/right on song page — handled by initSwipe() below (removed duplicate handler)
   }
 }
 
@@ -6855,6 +6894,11 @@ function hideChordDiagram(){
     return null;
   }
 
+  // iOS Safari intercepts swipes starting within ~20px of either edge for its
+  // native back/forward gesture. We use a 30px dead zone on each side so the
+  // app's song-swipe never fights with the OS gesture.
+  const IOS_EDGE_ZONE = 30;
+
   function onTouchStart(e){
     startX=e.touches[0].clientX;
     startY=e.touches[0].clientY;
@@ -6871,6 +6915,11 @@ function hideChordDiagram(){
 
     // Stricter thresholds to avoid accidental swipes
     if(Math.abs(dx)<80||dy>80||dt>600) return;
+
+    // Ignore swipes that started in the iOS edge-gesture zone (left or right).
+    // Those belong to the OS: left edge = browser back, right edge = forward.
+    const W=window.innerWidth;
+    if(startX < IOS_EDGE_ZONE || startX > W - IOS_EDGE_ZONE) return;
 
     // If the user actually scrolled a horizontal container, ignore swipe
     if(scrollEl && Math.abs(scrollEl.scrollLeft-startScrollLeft)>5) return;
@@ -7166,7 +7215,7 @@ function loadSetlistFromHash(){
 function shareSetlist(){
   const sl=getSetlist();
   if(!sl.songs.length){ showToast('Setlista është bosh!','error'); return; }
-  const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>`${i+1}. ${s.title} — ${s.artist} (${s.key})${s.note?'\n   📝 '+s.note:''}`).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
+  const text=`📋 ${sl.name}\n${'─'.repeat(30)}\n${sl.songs.map((s,i)=>{ const song=SONGS.find(x=>Number(x.id)===Number(s.id)); const capoTxt=song?.capo?` Capo ${song.capo}`:''; return `${i+1}. ${s.title} — ${s.artist} (${s.key}${capoTxt})${s.note?'\n   📝 '+s.note:''}`; }).join('\n')}\n${'─'.repeat(30)}\n🎵 Adhurojmë Së Bashku`;
   if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Setlista u kopjua!','success')).catch(()=>showToast('❌ Kopjimi dështoi!','error'));
 }
 
@@ -7198,7 +7247,7 @@ function renderSetlist(){
   const statsEl=document.getElementById('setlistStats');
   renderSetlistTabs();
   if(nameInput) nameInput.value=sl.name;
-  if(statsEl) statsEl.innerHTML=sl.songs.length?`<span>🎵 ${sl.songs.length} këngë</span><span>·</span><span>⏱ ~${Math.round(sl.songs.length*3.5)} min</span>`:'';
+  if(statsEl) statsEl.innerHTML=sl.songs.length?`<span>🎵 ${sl.songs.length} ${currentLang==='sq'?'këngë':'songs'}</span><span>·</span><span>⏱ ~${Math.round(sl.songs.length*3.5)} min</span>`:'';
   if(!sl.songs.length){
     if(empty) empty.style.display='block';
     if(items) items.innerHTML='';
@@ -7216,20 +7265,20 @@ function renderSetlist(){
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title}</div>
         <div style="font-size:12px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ♪ ${s.artist} &nbsp;<span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span>
+          ♪ ${s.artist} &nbsp;<span class="tag tag-blue" style="font-size:10px;padding:1px 7px">${s.key}</span>${song?.capo?`<span style="font-size:10px;color:var(--text3);background:var(--bg3);border-radius:6px;padding:1px 6px">Capo ${song.capo}</span>`:''}
           ${song && song.instruments?.length > 1 ? `
           <select onchange="updateSetlistInstrument(${s.id},this.value)" style="font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;cursor:pointer">
             ${song.instruments.map(i=>`<option value="${i}" ${(s.instrument||song.instruments[0])===i?'selected':''}>${i==='Guitar'?'🎸 Guitar':'🎹 Piano'}</option>`).join('')}
           </select>` : `<span style="font-size:11px;color:var(--text3)">${s.instrument==='Piano'?'🎹 Piano':'🎸 Guitar'}</span>`}
         </div>
-        <input type="text" placeholder="📝 Shto shënim (p.sh. Kapo 2, Fillo ngadalë...)" value="${s.note||''}" oninput="updateSetlistNote(${s.id},this.value)" style="margin-top:8px;width:100%;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:11px;outline:none"/>
+        <input type="text" placeholder="${currentLang==='sq'?'📝 Shto shënim (p.sh. Kapo 2, Fillo ngadalë...)':'📝 Add note (e.g. Capo 2, Start slow...)'}" value="${s.note||''}" oninput="updateSetlistNote(${s.id},this.value)" style="margin-top:8px;width:100%;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:11px;outline:none"/>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
         <div style="display:flex;gap:4px">
           <button onclick="moveSetlistItem(${s.id},-1)" ${i===0?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:12px;color:var(--text2);opacity:${i===0?'0.3':'1'}">▲</button>
           <button onclick="moveSetlistItem(${s.id},1)" ${i===sl.songs.length-1?'disabled':''} style="background:var(--bg3);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:12px;color:var(--text2);opacity:${i===sl.songs.length-1?'0.3':'1'}">▼</button>
         </div>
-        <button onclick="openSong(${s.id})" style="background:var(--blue-light);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;color:var(--blue-mid);font-family:'Poppins',sans-serif;white-space:nowrap">🎵 Hap</button>
+        <button onclick="openSong(${s.id})" style="background:var(--blue-light);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;color:var(--blue-mid);font-family:'Poppins',sans-serif;white-space:nowrap">🎵 ${currentLang==='sq'?'Hap':'Open'}</button>
         <button onclick="removeFromSetlist(${s.id})" style="background:rgba(220,38,38,0.1);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:11px;color:#dc2626">✕</button>
       </div>
     </div>`;
@@ -7261,7 +7310,7 @@ function _saveArr(songId){
 function _loadArr(songId){
   try{ const r=localStorage.getItem(`aa_arr_${songId}`); return r?JSON.parse(r):null; }catch(e){ return null; }
 }
-let _perfShowChords = !!localStorage.getItem('aa_perf_chords');           // persisted — restored on load
+let _perfShowChords = localStorage.getItem('aa_perf_chords') !== '0';     // persisted — default ON; '0' means explicitly turned off
 let _perfMusicianMode = localStorage.getItem('aa_perf_musician') !== '0'; // persisted — restored on load (default true)
 let _perfAutoHideTimer = null; // auto-hide controls timer
 let _perfControlsHidden = false;
@@ -7418,6 +7467,8 @@ function showPerfShortcuts(){
     ['Space','Auto-scroll nisje / ndalesë'],
     ['+ / -','Shpejtësi scroll (10% herë)'],
     ['[ / ]','Madhësia e shkronjave'],
+    ['Shift+} / {','Transpozo lart / poshtë'],
+    ['Shift+N','Riset transpose'],
     ['K','Akorde on/off'],
     ['L','Rreshti aktiv on/off'],
     ['F','Fullscreen on/off'],
@@ -7663,7 +7714,7 @@ function _buildChordRefPanel(){
   if(!list) return;
   const sl=getSetlist(); const item=sl?.songs?.[perfIdx];
   const s=SONGS.find(x=>Number(x.id)===Number(item?.id));
-  if(!s){ list.innerHTML='<span style="font-size:11px;color:rgba(255,255,255,0.3)">Asnjë këngë e ngarkuar</span>'; return; }
+  if(!s){ list.innerHTML=`<span style="font-size:11px;color:rgba(255,255,255,0.3)">${currentLang==='sq'?'Asnjë këngë e ngarkuar':'No song loaded'}</span>`; return; }
   const perfInst=_perfGetInst(item,s);
   const rawText=s.lyricsRaw?.[perfInst]||s.lyricsRaw?.Guitar||s.lyricsRaw?.Piano||'';
   // Extract all chord tokens — match [Ab7], Am/E style tokens
@@ -7812,17 +7863,22 @@ function perfKeyHandler(e){
   else if(k==='p'||k==='P') togglePanic();
 
   // ── Scroll speed: + / - (10% steps, clamped 25–300) ────────────────────────
-  else if(k==='+'||k==='='){ const ns=Math.min(300,_perfScrollSpeed+10); setPerfScrollSpeed(ns); showToast('Shpejtësia: '+ns+'%'); }
-  else if(k==='-'){ const ns=Math.max(25,_perfScrollSpeed-10); setPerfScrollSpeed(ns); showToast('Shpejtësia: '+ns+'%'); }
+  else if(k==='+'||k==='='){ const ns=Math.min(300,_perfScrollSpeed+10); setPerfScrollSpeed(ns); showToast((currentLang==='sq'?'Shpejtësia: ':'Speed: ')+ns+'%'); }
+  else if(k==='-'){ const ns=Math.max(25,_perfScrollSpeed-10); setPerfScrollSpeed(ns); showToast((currentLang==='sq'?'Shpejtësia: ':'Speed: ')+ns+'%'); }
 
   // ── Font size: ] bigger / [ smaller ────────────────────────────────────────
-  else if(k===']'){ const nf=Math.min(28,(_perfFontSize||18)+1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
-  else if(k==='['){ const nf=Math.max(14,(_perfFontSize||18)-1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
+  else if(k===']'&&!e.shiftKey){ const nf=Math.min(28,(_perfFontSize||18)+1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
+  else if(k==='['&&!e.shiftKey){ const nf=Math.max(14,(_perfFontSize||18)-1); setPerfFont(nf); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=nf; }
+
+  // ── Transpose: Shift+] (}) up / Shift+[ ({) down / Shift+N reset ──────────
+  else if(k==='}'||(k===']'&&e.shiftKey)){ e.preventDefault(); perfTransposeActive(1); }
+  else if(k==='{'||(k==='['&&e.shiftKey)){ e.preventDefault(); perfTransposeActive(-1); }
+  else if((k==='n'||k==='N')&&e.shiftKey){ e.preventDefault(); perfTransposeResetActive(); showToast('↺ Key reset'); }
 
   // ── Line highlight / Reset shortcuts ────────────────────────────────────────
   else if(k==='l'||k==='L') toggleLineHighlight();
   else if(k==='n'||k==='N'){ setPerfFont(18); const sl=document.getElementById('perfFontSlider'); if(sl) sl.value=18; showToast('Fonti: 18px'); }
-  else if(k==='0'){ setPerfScrollSpeed(100); showToast('Shpejtësia: 100%'); }
+  else if(k==='0'){ setPerfScrollSpeed(100); showToast(currentLang==='sq'?'Shpejtësia: 100%':'Speed: 100%'); }
 
   // ── Help overlay / Exit ─────────────────────────────────────────────────────
   else if(k==='?'||k==='/'){
@@ -8236,7 +8292,7 @@ function startCountdown(cb){
 function togglePerfChords(){
   _perfShowChords=!_perfShowChords;
   // Persist silently — restored on next PM session
-  try{ _perfShowChords ? localStorage.setItem('aa_perf_chords','1') : localStorage.removeItem('aa_perf_chords'); }catch(e){}
+  try{ _perfShowChords ? localStorage.removeItem('aa_perf_chords') : localStorage.setItem('aa_perf_chords','0'); }catch(e){}
   const btn=document.getElementById('perfChordsBtn');
   if(btn){btn.style.background=_perfShowChords?'var(--blue-mid)':'var(--bg3)';btn.style.color=_perfShowChords?'#fff':'var(--text2)';}
   // Bug 12 fix: use lightweight re-render — showPerfSong() resets scrollTop=0 mid-song.
@@ -10859,7 +10915,7 @@ async function saveSong() {
     bpm: parseInt(document.getElementById('fBpm')?.value)||null,
     adminNote: document.getElementById('fAdminNote')?.value.trim()||'',
     capo: document.getElementById('fGuitar').checked ? parseInt(document.getElementById('fCapo').value) || 0 : 0,
-    recent: !editIdNum,
+    recent: editIdNum ? (SONGS.find(x=>Number(x.id)===Number(editIdNum))?.recent ?? false) : true,
     youtube: document.getElementById('fYoutube').value.trim() || null,
     thumb: thumb,
     thumbGrad: ['#1a2a4a','#2c4074','#5a80c0'],
