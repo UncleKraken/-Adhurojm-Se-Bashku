@@ -4176,9 +4176,11 @@ let currentSong=null,currentInst='Guitar',transposeSteps=0;
 
 function updateSongUrl(song){
   if(!song) return;
-  const url=new URL(window.location);
-  url.searchParams.set('song',song.id);
-  history.replaceState(null,'',url);
+  // NOTE: Do NOT replaceState here. openSong() calls pushState with the proper URL
+  // right after this, so a replaceState here would corrupt the current history entry
+  // (e.g. {page:'home'}) by nulling its state and adding ?song= to its URL.
+  // That caused the back button to re-open the same song instead of going back.
+  // Title is set early here; updateMetaTags() sets it again after render.
   document.title=song.title+' — '+song.artist+' | Adhurojme Se Bashku';
 }
 // Recently viewed — stored in localStorage as an array of song IDs.
