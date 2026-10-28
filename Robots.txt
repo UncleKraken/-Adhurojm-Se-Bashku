@@ -13,3 +13,15 @@ Allow: /
 
 User-agent: DuckDuckBot
 Allow: /
+
+# robots.txt — Adhurojmë Së Bashku
+# Generated: 2026-10-28
+
+User-agent: *
+Allow: /
+
+# Block admin panel from indexing
+Disallow: /?admin
+
+# Sitemap location
+Sitemap: https://unclekraken.github.io/-Adhurojm-Se-Bashku/sitemap.xml
