@@ -3570,16 +3570,21 @@ async function deleteFileAsync(bucket, path) {
 }
 
 // ── ADMIN AUTH ──
+async function _sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
 async function adminSignIn(email, password) {
   const sb = getSB();
   if (!sb) {
-    // Offline mode fallback
+    // Offline mode fallback — passwords stored as SHA-256 hashes, never plaintext
     const OFFLINE_CREDS = [
-      { email: 'unclekraken21@gmail.com', pass: '1004faithinChrist!' },
-      { email: 'kishakanaan@gmail.com',   pass: 'Kanaan2025' },
-      { email: 'admin@local',             pass: 'kanaan2025' },
+      { email: 'unclekraken21@gmail.com', hash: '60c68218489fda8e9664c138711a8919c9647e7aba76c4f1bfbe9e7ccd6475cd' },
+      { email: 'kishakanaan@gmail.com',   hash: 'd90b79f2f5b06762cc360e20852baea1ea90719802d3db44ca0538739450c46f' },
+      { email: 'admin@local',             hash: 'fd8119ac39dfff9feadee7f65f5a0d96f37dc3cdd339ba3fc91d12ac7c3990f5' },
     ];
-    const match = OFFLINE_CREDS.find(c => c.email === email && c.pass === password);
+    const inputHash = await _sha256(password);
+    const match = OFFLINE_CREDS.find(c => c.email === email && c.hash === inputHash);
     if (match) return { user: { email } };
     return { error: { message: 'Email ose fjalëkalim i gabuar.' } };
   }
@@ -4951,7 +4956,6 @@ function downloadPDF(songId, instrument){
 // ═══════════════════════════════════════════════════════
 //  ADMIN AUTH
 // ═══════════════════════════════════════════════════════
-const ADMIN_PWD='kanaan2025';
 function openAdminLogin(){
   document.getElementById('adminLogin').style.display='flex';
   setTimeout(()=>{
@@ -7086,7 +7090,7 @@ function getSongNote(songId){ try{ return localStorage.getItem('aa_note_'+songId
 function saveSongNote(songId, text){ try{ if(text.trim()){ localStorage.setItem('aa_note_'+songId, text); } else { localStorage.removeItem('aa_note_'+songId); } }catch(e){} }
 
 // Minimal HTML escape for injecting user text into innerHTML safely.
-function escHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/`/g,'&#96;'); }
 
 // Rebuilds the "Recently Viewed" section on the home page.
 // Hides the section entirely if the list is empty.
