@@ -2839,22 +2839,23 @@ async function renderStatsDashboard() {
 DROP FUNCTION IF EXISTS public.increment_stat(bigint, text);
 DROP FUNCTION IF EXISTS public.increment_stat(integer, text);
 
--- Krijo version-in e saktë me SECURITY DEFINER (kalon RLS)
+-- Fshi version-et e vjetra (nëse ekzistojnë)
+DROP FUNCTION IF EXISTS public.increment_stat(bigint, text);
+DROP FUNCTION IF EXISTS public.increment_stat(integer, text);
+
+-- Krijo version-in e saktë (text hyrje, cast::bigint brenda — kalon RLS)
 CREATE OR REPLACE FUNCTION public.increment_stat(p_song_id text, p_type text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   INSERT INTO song_stats(song_id, views, downloads)
-  VALUES(p_song_id, CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END, CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END)
+  VALUES(p_song_id::bigint, CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END, CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END)
   ON CONFLICT(song_id) DO UPDATE SET
     views = song_stats.views + CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END,
     downloads = song_stats.downloads + CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END;
 END; $$;
 
 -- Lejo ekzekutimin nga vizitorët
-GRANT EXECUTE ON FUNCTION public.increment_stat(text, text) TO anon, authenticated;
-
--- Siguro që song_id ka UNIQUE index (nëse nuk e ka)
-CREATE UNIQUE INDEX IF NOT EXISTS song_stats_song_id_key ON song_stats(song_id);</code>
+GRANT EXECUTE ON FUNCTION public.increment_stat(text, text) TO anon, authenticated;</code>
         </div>`;
         return;
       }
