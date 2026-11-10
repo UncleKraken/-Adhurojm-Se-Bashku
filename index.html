@@ -2713,11 +2713,15 @@ async function trackStat(songId, type) {
     // Text param resolves unambiguously to the text-typed overload.
     const { error } = await sb.rpc('increment_stat', { p_song_id: String(songId), p_type: type });
     if(error){
-      if(error.message.includes('best candidate') || error.message.includes('ambiguous')){
-        console.warn('[trackStat] Overload ambiguity — run the FIX SQL in Admin → Stats to resolve.');
-      } else {
-        console.warn('[trackStat] RPC error:', error.message);
-      }
+      const hint = error.message.includes('best candidate') || error.message.includes('ambiguous')
+        ? ' — run the FIX SQL in Admin → Stats'
+        : error.message.includes('row-level security') || error.message.includes('policy')
+        ? ' — RLS is blocking writes; use SECURITY DEFINER (see Admin → Stats for SQL)'
+        : error.message.includes('no unique or exclusion constraint')
+        ? ' — song_stats needs a UNIQUE constraint on song_id (see Admin → Stats for SQL)'
+        : '';
+      console.warn('[trackStat] RPC error:', error.message + hint);
+      return; // Don't refresh hero stats if the increment failed — counter stays correct
     }
     // Bust cache & refresh hero stats so the new count appears immediately
     invalidateStatsCache();
@@ -2809,36 +2813,48 @@ async function renderStatsDashboard() {
     }catch(e){}
   }
 
-  // Check if increment_stat RPC exists and is unambiguous — show warning if broken
+  // Check if increment_stat RPC exists, is unambiguous, and can actually write — show warning if broken
   if(sb){
     try{
       // Pass as string — matches text overload; ambiguous if only bigint/integer exist
       const {error} = await sb.rpc('increment_stat', {p_song_id:'__healthcheck__', p_type:'view'});
-      const isNotExist   = error?.message.includes('not exist');
-      const isAmbiguous  = error?.message.includes('best candidate') || error?.message.includes('ambiguous');
-      if(error && (isNotExist || isAmbiguous)){
-        const headline = isAmbiguous
-          ? '⚠️ increment_stat ka dy versione konfliktuale (bigint + integer)!'
-          : '⚠️ RPC increment_stat nuk ekziston në Supabase!';
-        const desc = isAmbiguous
-          ? 'PostgreSQL nuk mund të zgjedhë mes dy version-eve. Stats nuk po ruhen. Hapi SQL-in e mëposhtëm në Supabase → SQL Editor:'
-          : 'Statistikat nuk po regjistrohen. Shko te Supabase → SQL Editor dhe krijo funksionin:';
+      if(error){
+        const isNotExist   = error.message.includes('not exist');
+        const isAmbiguous  = error.message.includes('best candidate') || error.message.includes('ambiguous');
+        const isRLS        = error.message.includes('row-level security') || error.message.includes('policy');
+        const isNoConflict = error.message.includes('no unique or exclusion constraint');
+        const headline = isAmbiguous  ? '⚠️ increment_stat ka dy versione konfliktuale (bigint + integer)!'
+                       : isNotExist   ? '⚠️ RPC increment_stat nuk ekziston në Supabase!'
+                       : isRLS        ? '⚠️ RLS po bllokon shkrimin e statistikave!'
+                       : isNoConflict ? '⚠️ Kolona song_id nuk ka UNIQUE constraint!'
+                       :                `⚠️ increment_stat dështoi: ${error.message}`;
+        const desc = isAmbiguous  ? 'PostgreSQL nuk mund të zgjedhë mes dy version-eve. Stats nuk po ruhen. Hapi SQL-in e mëposhtëm:'
+                   : isNotExist   ? 'Statistikat nuk po regjistrohen. Hapi SQL-in e mëposhtëm në Supabase → SQL Editor:'
+                   : isRLS        ? 'Row Level Security po bllokkon INSERT në tabelën song_stats. Hapi SQL-in e mëposhtëm:'
+                   : isNoConflict ? 'Tabela song_stats.song_id duhet të ketë UNIQUE constraint. Shto me SQL-in e mëposhtëm:'
+                   :                'Ka një problem me RPC-in. Hapi SQL-in e mëposhtëm për ta rregulluar:';
         container.innerHTML = `<div style="background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:18px;color:var(--red);font-size:13px;line-height:1.8">
           <strong>${headline}</strong><br>${desc}<br>
-          <code style="display:block;margin-top:8px;background:var(--bg3);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap">-- Fshi version-et konfliktuale (nëse ekzistojnë)
+          <code style="display:block;margin-top:8px;background:var(--bg3);padding:10px;border-radius:6px;font-size:11px;white-space:pre-wrap">-- Fshi version-et e vjetra (nëse ekzistojnë)
 DROP FUNCTION IF EXISTS public.increment_stat(bigint, text);
 DROP FUNCTION IF EXISTS public.increment_stat(integer, text);
 
--- Krijo version-in e saktë me text
+-- Krijo version-in e saktë me SECURITY DEFINER (kalon RLS)
 CREATE OR REPLACE FUNCTION public.increment_stat(p_song_id text, p_type text)
-RETURNS void LANGUAGE plpgsql AS $$
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   INSERT INTO song_stats(song_id, views, downloads)
   VALUES(p_song_id, CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END, CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END)
   ON CONFLICT(song_id) DO UPDATE SET
     views = song_stats.views + CASE WHEN p_type=\'view\' THEN 1 ELSE 0 END,
     downloads = song_stats.downloads + CASE WHEN p_type=\'download\' THEN 1 ELSE 0 END;
-END; $$;</code>
+END; $$;
+
+-- Lejo ekzekutimin nga vizitorët
+GRANT EXECUTE ON FUNCTION public.increment_stat(text, text) TO anon, authenticated;
+
+-- Siguro që song_id ka UNIQUE index (nëse nuk e ka)
+CREATE UNIQUE INDEX IF NOT EXISTS song_stats_song_id_key ON song_stats(song_id);</code>
         </div>`;
         return;
       }
